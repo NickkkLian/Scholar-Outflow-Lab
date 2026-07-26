@@ -253,6 +253,19 @@ def build(origin):
     }
     os.makedirs(WEB, exist_ok=True)
     path = os.path.join(WEB, f"data-{origin}.json")
+
+    # 只有实质内容变了才落盘。generated_at 每次都不同，不排除它的话，
+    # 每天的定时任务都会产生一个「只有时间戳变了」的空提交，把 git 历史刷成噪音。
+    if os.path.exists(path):
+        try:
+            old = json.load(open(path))
+            if {**old, "meta": {**old.get("meta", {}), "generated_at": None}} == \
+               {**out, "meta": {**out["meta"], "generated_at": None}}:
+                print(f"[{origin}] 实质内容无变化，保持原文件不动（不刷时间戳）")
+                return out
+        except (json.JSONDecodeError, OSError):
+            pass          # 旧文件坏了就正常覆盖
+
     with open(path, "w") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
     m = out["meta"]
