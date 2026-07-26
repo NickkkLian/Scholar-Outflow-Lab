@@ -32,7 +32,7 @@ import sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 DATA = os.path.join(ROOT, "data")
-WEB = os.path.join(ROOT, "web")
+WEB = ROOT   # 站点直接放仓库根目录：GitHub Pages 走 main 分支根目录
 
 THIS_YEAR = datetime.date.today().year
 FOLLOWUP = 5
