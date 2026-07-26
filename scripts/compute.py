@@ -104,7 +104,11 @@ def pct(d):
     out = {"n": n}
     for k in OUTCOMES:
         out[k] = round(d[k] / n, 4) if n else None
-    out["stay_ci"] = wilson(d["stay"], n)
+    ci = wilson(d["stay"], n)
+    out["stay_ci"] = ci
+    # 保守下界：排序用它而不是原始比率。样本 25 人的 40% 和样本 300 人的 30%，
+    # 前者的真实值可能低得多——按下界排，小样本的侥幸高分自己会掉下去。
+    out["stay_lb"] = ci[0] if ci else None
     return out
 
 
@@ -127,7 +131,8 @@ def build(origin):
 
     # inst[iid][stratum] / ctry[cc][stratum] / fields 只在默认分层上算
     inst = collections.defaultdict(lambda: {s: blank() for s in STRATA})
-    ifields = collections.defaultdict(lambda: collections.defaultdict(blank))
+    # 学科分解按分层各算一份——不然切了分层，学科筛选就对不上号了
+    ifields = collections.defaultdict(lambda: {s: collections.defaultdict(blank) for s in STRATA})
     ctry = collections.defaultdict(lambda: {s: blank() for s in STRATA})
     movers = 0
 
@@ -158,10 +163,10 @@ def build(origin):
                     d = inst[s["id"]][k]
                     d["n"] += 1
                     d[oc] += 1
-                if DEFAULT_STRATUM in in_strata and r.get("field"):
-                    fd = ifields[s["id"]][r["field"]]
-                    fd["n"] += 1
-                    fd[oc] += 1
+                    if r.get("field"):
+                        fd = ifields[s["id"]][k][r["field"]]
+                        fd["n"] += 1
+                        fd[oc] += 1
             for k in in_strata:
                 seen[s["cc"]].setdefault(k, oc)
         for cc, per in seen.items():
@@ -183,10 +188,14 @@ def build(origin):
         if per[DEFAULT_STRATUM]["n"] < MIN_N_INST:
             continue
         w = whitelist[iid]
-        fields = sorted(
-            [{"field": FIELD_ZH.get(f, f), "field_en": f} | pct(fd)
-             for f, fd in ifields[iid].items() if fd["n"] >= MIN_N_FIELD],
-            key=lambda x: -x["n"])[:8]
+        fields = {}
+        for k in STRATA:
+            fl = sorted(
+                [{"field": FIELD_ZH.get(f, f), "field_en": f} | pct(fd)
+                 for f, fd in ifields[iid][k].items() if fd["n"] >= MIN_N_FIELD],
+                key=lambda x: -x["n"])[:8]
+            if fl:
+                fields[k] = fl
         insts.append({
             "id": iid, "name": w["name"], "ror": w["ror"], "cc": w["cc"],
             "country": CC_NAME.get(w["cc"], (w["cc"] or "??").upper()),
@@ -195,10 +204,11 @@ def build(origin):
             "fields": fields,
         })
 
-    # Tier：按默认分层的「留下率」分位切 R1–R4。
+    # Tier：按默认分层留下率的 **Wilson 下界** 分位切 R1–R4。
     # 用分位不用绝对线——绝对值随抽样口径漂移，分位保证「同一批里的相对位置」可比。
+    # 用下界不用原始比率——25 人样本的 40% 站不住脚，按下界排它自己会掉下去。
     # 双挂不计入排序，因为它的含义本身就是暧昧的。
-    ranked = sorted(insts, key=lambda x: -(x["strata"][DEFAULT_STRATUM]["stay"] or 0))
+    ranked = sorted(insts, key=lambda x: -(x["strata"][DEFAULT_STRATUM]["stay_lb"] or 0))
     n = len(ranked)
     for i, it in enumerate(ranked):
         q = i / n if n else 0
@@ -233,6 +243,8 @@ def build(origin):
                 "在目的机构须跨 ≥2 个年份才算「去过」；2–3 年多为访问学者，务必用时长分层看",
                 "起步那年就已挂在该国的不计为「迁过去」——否则一直在当地的人会被算成迁移又留下",
                 "机构由 OpenAlex 从署名字符串自动解析，已用 ROR + 产出量白名单过滤，仍可能有错配",
+                "学科取自作者最高频 topic 的 field，颗粒很粗——大量做计算机的人被归进「工程」，"
+                "所以「计算机」这一类的覆盖机构数偏少（当前仅港新几所达标），别当成「美国没有 CS 数据」",
                 "绝对值会随口径漂移，请只做机构/国家之间的横向比较",
             ],
         },
