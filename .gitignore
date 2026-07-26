@@ -2,3 +2,4 @@ data/careers_*.jsonl
 data/*.state.json
 data/*.log
 data/institutions.json
+.env

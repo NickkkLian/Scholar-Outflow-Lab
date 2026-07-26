@@ -98,3 +98,23 @@ python3 -m http.server 8791              # 本地看：http://localhost:8791
 
 代码 MIT。数据来自 [OpenAlex](https://openalex.org)，CC0 公共领域。
 本站不提供移民、法律或财务建议。
+
+## 自动化（2026-07-25 起）
+
+`scripts/daily.sh` 由 launchd `com.scholaroutflow.daily` 每天**本地 18:00** 触发
+（PDT=01:00 UTC、PST=02:00 UTC，两种时令都稳在 OpenAlex 额度重置之后）。每轮做四件事：
+
+1. 访问量快照（GitHub traffic API **只留 14 天**，不定期存就永久丢）→ `data/traffic.jsonl`
+2. 期刊会议榜（只在 `data-venues.json` 还不存在时跑）
+3. 多来源国抓取（撞额度就干净退出，第二天自动接上）
+4. 重算指标 → **只有实质内容变了才提交推送**
+   （`generated_at` 每次都不同，不排除它会天天产生只有时间戳差异的空提交）
+
+```bash
+tail -30 data/daily.log                                   # 看跑得怎么样
+python3 scripts/traffic.py --report                       # 只看访问量，不联网
+launchctl bootout gui/$(id -u)/com.scholaroutflow.daily   # 关掉自动化
+```
+
+**凭据**：`.env`（已 gitignore，**绝不进公开仓**）放 `OPENALEX_MAILTO` 和 `GH_TRAFFIC_PAT`。
+后者是**只读**细粒度 PAT，权限只需 Metadata: Read-only。
