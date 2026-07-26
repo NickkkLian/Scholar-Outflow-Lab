@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>去向实验室 · 本土起步科研人员的流向</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#ffffff; --paper-2:#f4f5f7; --card:#ffffff; --ink:#1b1c20; --ink-soft:#6a6e76;
+  --line:#ebecef; --line-2:#dcdee3;
+  --stay:#157a72; --dual:#b07414; --ret:#566173; --onward:#bb4d2b;
+  --shadow:0 1px 2px rgba(20,22,28,.04), 0 8px 24px -16px rgba(20,22,28,.18);
+  --r:14px;
+  --serif:"Noto Serif","Noto Serif SC",Georgia,"Songti SC","Source Han Serif SC",serif;
+  --mono:"Space Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:14.5px;line-height:1.7;overflow-x:clip}
+h1,h2,h3{font-family:var(--serif);font-weight:700;margin:0}
+.mono{font-family:var(--mono)}
+button,select,input{font-family:inherit;cursor:pointer}
+a{color:var(--stay)}
+
+.topbar{position:sticky;top:0;z-index:30;background:var(--paper);border-bottom:1px solid var(--line)}
+.tb-in{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:9px;margin-right:auto}
+.brand .logo{font-size:20px;font-weight:700}
+.brand .logo b{color:var(--onward);font-style:normal}
+.brand .sub{font-size:10.5px;color:var(--ink-soft);letter-spacing:.14em;text-transform:uppercase}
+.tabs{display:flex;gap:4px;background:var(--paper-2);padding:4px;border-radius:999px;border:1px solid var(--line)}
+.tab{border:none;background:transparent;padding:6px 15px;border-radius:999px;font-weight:600;color:var(--ink-soft);font-size:13px}
+.tab.active{background:var(--ink);color:var(--paper);box-shadow:var(--shadow)}
+
+.wrap{max-width:1180px;margin:0 auto;padding:20px}
+.notice{border:1px solid var(--line-2);border-left:3px solid var(--onward);background:var(--paper-2);
+  border-radius:10px;padding:11px 15px;font-size:12.8px;color:var(--ink-soft);margin-bottom:18px}
+.notice b{color:var(--ink)}
+
+.ctrl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.seg{display:flex;gap:3px;background:var(--paper-2);padding:3px;border-radius:10px;border:1px solid var(--line)}
+.seg button{border:none;background:transparent;padding:6px 12px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--ink-soft)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+select,input[type=search]{border:1px solid var(--line-2);background:var(--card);color:var(--ink);
+  padding:7px 11px;border-radius:9px;font-size:13px}
+input[type=search]{min-width:190px}
+.lbl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);margin-bottom:14px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.c-card{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;background:var(--card);box-shadow:var(--shadow)}
+.c-head{display:flex;align-items:baseline;gap:8px;margin-bottom:9px}
+.c-head h3{font-size:16px}
+.c-head .n{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink-soft)}
+.bar{display:flex;height:13px;border-radius:7px;overflow:hidden;background:var(--paper-2)}
+.bar span{display:block}
+.bar-k{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:var(--ink-soft)}
+.bar-k b{font-family:var(--mono);color:var(--ink);font-weight:700}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);
+  font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line-2);white-space:nowrap;cursor:pointer;user-select:none}
+th.num,td.num{text-align:right}
+th:hover{color:var(--ink)}
+td{padding:9px 10px;border-bottom:1px solid var(--line)}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--paper-2)}
+.tier{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;border:1px solid}
+.tier.R1{color:#0d5b55;border-color:#9ccec9;background:#e6f3f2}
+.tier.R2{color:#7a5310;border-color:#e0c58c;background:#faf1e0}
+.tier.R3{color:#4a545f;border-color:#c9cfd6;background:#f0f2f4}
+.tier.R4{color:#8c3a20;border-color:#e2b3a2;background:#f9ebe6}
+.sbar{position:relative;height:8px;border-radius:5px;background:var(--paper-2);min-width:80px}
+.sbar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--stay)}
+.sbar u{position:absolute;top:-2px;bottom:-2px;border-left:1px solid rgba(21,122,114,.45);border-right:1px solid rgba(21,122,114,.45);
+  background:rgba(21,122,114,.13);text-decoration:none}
+.muted{color:var(--ink-soft)}
+.small{font-size:12px}
+.only-s{display:none}   /* 桌面端有独立的国家列，窄屏才把国家塞回校名下面 */
+
+.drawer{position:fixed;inset:0;z-index:60;display:none}
+.drawer.open{display:block}
+.drawer .veil{position:absolute;inset:0;background:rgba(20,22,28,.28)}
+.drawer .panel{position:absolute;right:0;top:0;bottom:0;width:min(520px,100%);background:var(--card);
+  border-left:1px solid var(--line-2);overflow:auto;padding:22px}
+.drawer h2{font-size:19px;margin-bottom:3px}
+.close{position:absolute;right:16px;top:16px;border:1px solid var(--line-2);background:var(--card);
+  border-radius:8px;padding:5px 10px;font-size:12px}
+.kv{display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-soft);margin:10px 0 18px}
+.kv span{white-space:nowrap}
+.sec-t{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:20px 0 8px}
+
+.doc{max-width:760px}
+.doc h3{font-size:15px;margin:22px 0 7px}
+.doc p,.doc li{color:#33363d;font-size:13.8px}
+.doc code{font-family:var(--mono);font-size:12.5px;background:var(--paper-2);padding:1px 5px;border-radius:5px}
+.doc ul{padding-left:20px}
+.foot{border-top:1px solid var(--line);margin-top:34px;padding:16px 0;font-size:12px;color:var(--ink-soft)}
+
+@media (max-width:720px){
+  .wrap{padding:14px}
+  .tb-in{padding:10px 14px;gap:10px}
+  .brand .sub{display:none}
+  .hide-s{display:none}
+  .only-s{display:block}
+  table{font-size:12.8px}
+  td,th{padding:8px 6px}
+  .drawer .panel{padding:18px 16px}
+}
+@media (prefers-color-scheme:dark){
+  :root{--paper:#141519;--paper-2:#1c1e23;--card:#191b1f;--ink:#e9eaec;--ink-soft:#9aa0a8;
+        --line:#26282e;--line-2:#343740;--stay:#4bab9f;--dual:#d0a04a;--ret:#8892a0;--onward:#d97a55}
+  .tier.R1{background:#123330;border-color:#1f5b54;color:#7fd0c6}
+  .tier.R2{background:#33280f;border-color:#5c4720;color:#dcb46c}
+  .tier.R3{background:#22252b;border-color:#3a3f48;color:#a7aeb8}
+  .tier.R4{background:#331d15;border-color:#5d3327;color:#e09c80}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="tb-in">
+  <div class="brand"><div class="logo">去向<b>实验室</b></div><div class="sub">Scholar Outflow Lab</div></div>
+  <div class="tabs">
+    <button class="tab active" data-view="country">目的国</button>
+    <button class="tab" data-view="inst">高校榜</button>
+    <button class="tab" data-view="doc">口径</button>
+  </div>
+</div></div>
+
+<div class="wrap">
+  <div class="notice">
+    <b>这不是移民建议，也不是签证统计。</b>
+    数据是学术署名履历的迁移代理指标，只覆盖发过论文的科研人群；「留下」指最后已知任职机构在该国，不等于拿到工签或永居。
+    绝对值受抽样口径影响大，<b>请只做机构之间的横向比较</b>。完整口径见「口径」页。
+  </div>
+
+  <div id="loading" class="muted">载入数据中…</div>
+
+  <!-- 目的国 -->
+  <section id="v-country" hidden>
+    <div class="ctrl">
+      <span class="lbl">停留时长</span>
+      <div class="seg" id="seg-stratum"></div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--stay)"></i>留下（末位只在目的国）</span>
+      <span><i style="background:var(--dual)"></i>双挂（两边都挂）</span>
+      <span><i style="background:var(--ret)"></i>回流（末位只在来源国）</span>
+      <span><i style="background:var(--onward)"></i>转道（去了第三国）</span>
+    </div>
+    <div class="grid" id="country-grid"></div>
+  </section>
+
+  <!-- 高校榜 -->
+  <section id="v-inst" hidden>
+    <div class="ctrl">
+      <span class="lbl">停留时长</span>
+      <div class="seg" id="seg-stratum2"></div>
+      <select id="f-country"></select>
+      <select id="f-field"></select>
+      <input type="search" id="f-q" placeholder="搜校名…" />
+      <span class="muted small" id="inst-count"></span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th data-sort="rank">#</th>
+          <th data-sort="name">机构</th>
+          <th data-sort="country" class="hide-s">国家/地区</th>
+          <th data-sort="stay" class="num">留下率</th>
+          <th class="hide-s">95% 区间</th>
+          <th data-sort="dual" class="num hide-s">双挂</th>
+          <th data-sort="ret" class="num hide-s">回流</th>
+          <th data-sort="n" class="num">样本</th>
+        </tr></thead>
+        <tbody id="inst-body"></tbody>
+      </table>
+    </div>
+    <p class="muted small" id="inst-empty" hidden style="padding:22px 4px">没有符合条件的机构。放宽筛选，或换一个停留时长分层试试。</p>
+  </section>
+
+  <!-- 口径 -->
+  <section id="v-doc" hidden class="doc"></section>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<div class="drawer" id="drawer">
+  <div class="veil" data-close></div>
+  <div class="panel"><button class="close" data-close>关闭</button><div id="drawer-body"></div></div>
+</div>
+
+<script>
+const S = {data:null, view:'country', stratum:'long', sortKey:'stay', sortDir:-1,
+           fCountry:'', fField:'', q:''};
+const STRATUM_LABEL = {short:'2–3 年（多为访问）', long:'≥4 年（默认）', long6:'≥6 年', all:'不限'};
+const STRATUM_ORDER = ['short','long','long6','all'];
+const OUT = [['stay','留下','var(--stay)'],['dual','双挂','var(--dual)'],
+             ['ret','回流','var(--ret)'],['onward','转道','var(--onward)']];
+const pc = v => v==null ? '—' : (v*100).toFixed(1)+'%';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function stratumSeg(el, onPick){
+  el.innerHTML = STRATUM_ORDER.map(k =>
+    `<button data-k="${k}" class="${k===S.stratum?'on':''}">${STRATUM_LABEL[k]}</button>`).join('');
+  el.onclick = e => { const b = e.target.closest('button'); if(!b) return;
+    S.stratum = b.dataset.k; render(); onPick && onPick(); };
+}
+
+function stackBar(s){
+  const parts = OUT.map(([k,,c]) => s[k] ? `<span style="width:${s[k]*100}%;background:${c}"></span>` : '').join('');
+  const keys = OUT.map(([k,label]) => `<span>${label} <b>${pc(s[k])}</b></span>`).join('');
+  return `<div class="bar">${parts}</div><div class="bar-k">${keys}</div>`;
+}
+
+function renderCountries(){
+  const g = document.getElementById('country-grid');
+  const rows = S.data.countries
+    .map(c => ({c, s:c.strata[S.stratum]}))
+    .filter(x => x.s && x.s.n >= 60)
+    // 默认按样本量排，不按留下率排：小样本国家（n<150）的留下率抖得厉害，
+    // 让它们冲到榜首等于拿噪音当结论。
+    .sort((a,b) => b.s.n - a.s.n);
+  g.innerHTML = rows.map(({c,s}) => `
+    <div class="c-card">
+      <div class="c-head"><h3>${esc(c.name)}</h3>
+        <span class="n">n=${s.n}${s.n < 150 ? ' · 样本少' : ''}</span></div>
+      ${stackBar(s)}
+    </div>`).join('') || '<p class="muted">该分层下没有样本量足够的目的国。</p>';
+}
+
+function instRows(){
+  return S.data.institutions
+    .map(it => ({it, s:it.strata[S.stratum]}))
+    .filter(({it,s}) => s && s.n >= S.data.meta.min_n_inst
+      && (!S.fCountry || it.cc === S.fCountry)
+      && (!S.fField || (it.fields||[]).some(f => f.field === S.fField))
+      && (!S.q || it.name.toLowerCase().includes(S.q.toLowerCase())))
+    .sort((a,b) => {
+      const k = S.sortKey;
+      const va = k==='rank'? a.it.rank : k==='name'? a.it.name : k==='country'? a.it.country : a.s[k];
+      const vb = k==='rank'? b.it.rank : k==='name'? b.it.name : k==='country'? b.it.country : b.s[k];
+      if(typeof va === 'string') return S.sortDir * va.localeCompare(vb, 'zh');
+      return S.sortDir * (((va??-1)) - ((vb??-1)));
+    });
+}
+
+function renderInsts(){
+  const rows = instRows();
+  document.getElementById('inst-count').textContent = `${rows.length} 所`;
+  document.getElementById('inst-empty').hidden = rows.length > 0;
+  document.getElementById('inst-body').innerHTML = rows.map(({it,s}) => {
+    const ci = s.stay_ci || [0,0];
+    return `<tr data-id="${it.id}">
+      <td><span class="tier ${it.tier}">${it.tier}</span></td>
+      <td>${esc(it.name)}<div class="muted small only-s">${esc(it.country)}</div></td>
+      <td class="hide-s">${esc(it.country)}</td>
+      <td class="num mono"><b>${pc(s.stay)}</b></td>
+      <td class="hide-s"><div class="sbar"><i style="width:${(s.stay||0)*100}%"></i>
+        <u style="left:${ci[0]*100}%;width:${Math.max((ci[1]-ci[0])*100,1)}%"></u></div></td>
+      <td class="num mono hide-s">${pc(s.dual)}</td>
+      <td class="num mono hide-s">${pc(s.ret)}</td>
+      <td class="num mono">${s.n}</td>
+    </tr>`;
+  }).join('');
+}
+
+function openInst(id){
+  const it = S.data.institutions.find(x => x.id === id);
+  if(!it) return;
+  const strataRows = STRATUM_ORDER.map(k => {
+    const s = it.strata[k];
+    if(!s || !s.n) return '';
+    return `<div style="margin:12px 0">
+      <div class="c-head"><span class="small"><b>${STRATUM_LABEL[k]}</b></span><span class="n">n=${s.n}</span></div>
+      ${stackBar(s)}</div>`;
+  }).join('');
+  const fieldRows = (it.fields||[]).length ? `
+    <div class="sec-t">按学科（默认分层 · ${STRATUM_LABEL[S.data.meta.default_stratum]}）</div>
+    <table><thead><tr><th>学科</th><th class="num">留下</th><th class="num">回流</th><th class="num">n</th></tr></thead>
+    <tbody>${it.fields.map(f => `<tr style="cursor:default"><td>${esc(f.field)}</td>
+      <td class="num mono">${pc(f.stay)}</td><td class="num mono">${pc(f.ret)}</td>
+      <td class="num mono">${f.n}</td></tr>`).join('')}</tbody></table>` : '';
+  document.getElementById('drawer-body').innerHTML = `
+    <h2>${esc(it.name)}</h2>
+    <div class="kv"><span>${esc(it.country)}</span><span>·</span>
+      <span class="mono">Tier ${it.tier} · 第 ${it.rank} 位</span><span>·</span>
+      <span>OpenAlex 收录论文 ${it.works.toLocaleString()}</span></div>
+    <div class="sec-t">各停留时长下的去向</div>
+    ${strataRows}
+    ${fieldRows}
+    <div class="sec-t">来源</div>
+    <p class="small muted">ROR <a href="https://ror.org/${esc(it.ror)}" target="_blank" rel="noopener">${esc(it.ror)}</a>
+       · <a href="https://openalex.org/${esc(it.id)}" target="_blank" rel="noopener">OpenAlex ${esc(it.id)}</a></p>`;
+  document.getElementById('drawer').classList.add('open');
+}
+
+function renderDoc(){
+  const m = S.data.meta;
+  document.getElementById('v-doc').innerHTML = `
+    <h3>这个站在量什么</h3>
+    <p>一句话：<b>在${esc(m.origin_name)}起步的科研人员，出去之后最后落在哪儿</b>——按目的国和目的高校分别统计。</p>
+    <p>它<b>不</b>回答「哪个国家好移民」，也不回答「留学生的移民成功率」。它的样本是
+       OpenAlex 里有署名记录的科研人群，本科就出国、在国内没发过论文的那一批人根本不在样本里。</p>
+
+    <h3>怎么算的</h3>
+    <ul>
+      <li><b>样本</b>：OpenAlex 中曾在${esc(m.origin_name)}机构署名、且发表 ≥${m.min_works} 篇的学者随机抽样，
+          共 <code>${m.sampled_authors.toLocaleString()}</code> 人。</li>
+      <li><b>本土起步</b>：履历最早年份所在国包含${esc(m.origin_name)} → <code>${m.home_start_authors.toLocaleString()}</code> 人。</li>
+      <li><b>一次到达</b>：起步之后在某境外机构挂名跨 ≥2 个年份（只挂 1 年视为合作署名，不计）。
+          其中 <code>${m.movers.toLocaleString()}</code> 人（${pc(m.mover_rate)}）有过这样的经历。</li>
+      <li><b>观察期</b>：只统计到达年 ≤ <code>${m.arrival_year_cutoff}</code> 的人，留足 ${m.followup_years} 年，
+          否则「还没来得及走」会被误算成留下。</li>
+      <li><b>机构白名单</b>：只认有 ROR 编号、且产出量达标的高校（共 ${m.whitelist_size.toLocaleString()} 所），
+          用来滤掉 OpenAlex 从署名字符串里解析出来的幽灵机构。</li>
+    </ul>
+
+    <h3>终局四分类（互斥，合计 100%）</h3>
+    <ul>
+      <li><b>留下</b> — 最后已知任职国含目的国、不含${esc(m.origin_name)}</li>
+      <li><b>双挂</b> — 两边都含。中国学者里非常常见（境外教职 + 国内兼聘/合作），单列出来，
+          免得把它算进任何一边虚增数字</li>
+      <li><b>回流</b> — 只含${esc(m.origin_name)}</li>
+      <li><b>转道</b> — 两个都不含，去了第三国</li>
+    </ul>
+
+    <h3>为什么一定要按停留时长分层</h3>
+    <p>2–3 年那一档以访问学者、联合培养为主——他们本来就是要回国的，混在一起会把所有学校的留下率
+       稀释成一样低。默认口径是 <b>≥4 年</b>，更接近读博/长期职位。切换分层，数字会明显分开，这本身就是结论。</p>
+
+    <h3>Tier 怎么定的</h3>
+    <p>按默认分层的留下率排序，四分位切 <code>R1</code>–<code>R4</code>。用分位而不是绝对线，
+       是因为绝对值会随抽样口径漂移，而「同一批里的相对位置」是稳的。双挂不计入排序——它的含义本身就是暧昧的。</p>
+
+    <h3>已知的坑（别装看不见）</h3>
+    <ul>${m.caveats.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+
+    <h3>数据来源</h3>
+    <p>${esc(m.source)}，CC0 公共领域授权，免 API key。生成于 <code>${esc(m.generated_at)}</code>。</p>`;
+}
+
+function render(){
+  ['country','inst','doc'].forEach(v =>
+    document.getElementById('v-'+v).hidden = (v !== S.view));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === S.view));
+  if(S.view === 'country') renderCountries();
+  if(S.view === 'inst') renderInsts();
+  if(S.view === 'doc') renderDoc();
+}
+
+function initFilters(){
+  const ccs = [...new Map(S.data.institutions.map(i => [i.cc, i.country])).entries()]
+    .sort((a,b) => a[1].localeCompare(b[1],'zh'));
+  document.getElementById('f-country').innerHTML =
+    '<option value="">全部国家/地区</option>' + ccs.map(([cc,n]) => `<option value="${cc}">${esc(n)}</option>`).join('');
+  const fields = [...new Set(S.data.institutions.flatMap(i => (i.fields||[]).map(f => f.field)))].sort();
+  document.getElementById('f-field').innerHTML =
+    '<option value="">全部学科</option>' + fields.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
+}
+
+fetch('data-cn.json').then(r => r.json()).then(d => {
+  S.data = d;
+  document.getElementById('loading').hidden = true;
+  stratumSeg(document.getElementById('seg-stratum'));
+  stratumSeg(document.getElementById('seg-stratum2'));
+  initFilters();
+  document.getElementById('foot').innerHTML =
+    `数据 ${esc(d.meta.source)} · 生成于 ${esc(d.meta.generated_at)} · ` +
+    `样本 ${d.meta.sampled_authors.toLocaleString()} 人 · 本站不提供移民/法律建议`;
+  render();
+}).catch(e => {
+  document.getElementById('loading').textContent = '数据载入失败：' + e.message
+    + '（本地需用 http 打开，例如 python3 -m http.server）';
+});
+
+document.querySelector('.tabs').onclick = e => {
+  const t = e.target.closest('.tab'); if(!t) return;
+  S.view = t.dataset.view; render();
+};
+document.getElementById('f-country').onchange = e => { S.fCountry = e.target.value; renderInsts(); };
+document.getElementById('f-field').onchange = e => { S.fField = e.target.value; renderInsts(); };
+document.getElementById('f-q').oninput = e => { S.q = e.target.value.trim(); renderInsts(); };
+document.querySelectorAll('th[data-sort]').forEach(th => th.onclick = () => {
+  const k = th.dataset.sort;
+  if(S.sortKey === k) S.sortDir *= -1;
+  else { S.sortKey = k; S.sortDir = (k === 'name' || k === 'country' || k === 'rank') ? 1 : -1; }
+  renderInsts();
+});
+document.getElementById('inst-body').onclick = e => {
+  const tr = e.target.closest('tr[data-id]'); if(tr) openInst(tr.dataset.id);
+};
+document.getElementById('drawer').onclick = e => {
+  if(e.target.dataset.close !== undefined) document.getElementById('drawer').classList.remove('open');
+};
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') document.getElementById('drawer').classList.remove('open');
+});
+</script>
+</body>
+</html>
