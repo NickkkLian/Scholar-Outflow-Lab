@@ -137,8 +137,14 @@ def build(origin):
             ends.add(r["end_cc"])
         seen = collections.defaultdict(dict)   # cc -> stratum -> outcome（同一人同一国只记一次）
         moved = False
+        start_ccs = set(r.get("start_ccs") or [])
         for s in r["spans"]:
             if s["cc"] == origin or s["y0"] < r["start"] or s["y0"] > cutoff:
+                continue
+            # 起步那年就已经挂在该国 → 不是「迁过去」，是本来就在。
+            # 不排掉的话，「一直在台湾/香港的人」会被当成迁过去又留下，把留下率顶上天
+            # （实测占 ≥4 年 arrival 的 15.2%，台湾几所校因此霸榜）。
+            if s["cc"] in start_ccs:
                 continue
             dur = s["y1"] - s["y0"] + 1
             if dur < 2:
@@ -225,6 +231,7 @@ def build(origin):
                 "「双挂」= 末位同时挂目的国与来源国；中国学者中很常见，单列以免高估任何一边",
                 f"只统计到达年 ≤ {cutoff} 的人（留足 {FOLLOWUP} 年观察期）",
                 "在目的机构须跨 ≥2 个年份才算「去过」；2–3 年多为访问学者，务必用时长分层看",
+                "起步那年就已挂在该国的不计为「迁过去」——否则一直在当地的人会被算成迁移又留下",
                 "机构由 OpenAlex 从署名字符串自动解析，已用 ROR + 产出量白名单过滤，仍可能有错配",
                 "绝对值会随口径漂移，请只做机构/国家之间的横向比较",
             ],
