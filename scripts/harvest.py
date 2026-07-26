@@ -8,6 +8,7 @@
 用法:
     python3 harvest.py cn --seeds 20            # 采样中国背景学者
     python3 harvest.py cn in ir --seeds 20      # 多个来源国
+    python3 harvest.py cn --seeds 24 --refresh  # 数据是旧版本时整份重抓（会先备份 .v1.bak）
 
 每个 seed 采 10000 人（OpenAlex sample 上限），seed 之间会有重复，按 author id 去重。
 输出: data/careers_<country>.jsonl（可重复运行，自动续采已有 seed 之外的部分）
@@ -29,6 +30,7 @@ MAILTO = os.environ.get("OPENALEX_MAILTO", "")
 SAMPLE = 10000          # OpenAlex 单次 sample 上限
 PER_PAGE = 200          # 单页上限
 MIN_WORKS = 5           # 少于 5 篇的多为噪音/重名合并残留，排除
+DATA_VERSION = 2        # v2 起 field 按全部 topic 投票；v1 只取 topics[0]
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 DATA = os.path.join(ROOT, "data")
 
@@ -105,13 +107,21 @@ def career(author, origin_cc):
     end_ccs = sorted({s["cc"] for s in spans if s["y1"] == end})
     end_cc = last_known[0] if last_known else (end_ccs[0] if end_ccs else "")
 
+    # 学科：**按全部 topic 的 count 投票**，不是取 topics[0]。
+    # v1 只取第一个 topic 的 field，导致大量做计算机的人被归进「工程」——
+    # OpenAlex 的 topic 排序不保证代表性，单看第一个太脆。投票后同时留下前三名，
+    # 方便以后判断某个人是不是跨学科。
     topics = author.get("topics") or []
-    field = ""
-    if topics:
-        f = (topics[0].get("field") or {}).get("display_name")
-        field = f or ""
+    votes = {}
+    for t in topics[:25]:
+        f = (t.get("field") or {}).get("display_name")
+        if f:
+            votes[f] = votes.get(f, 0) + (t.get("count") or 1)
+    field = max(votes, key=votes.get) if votes else ""
+    top_fields = sorted(votes.items(), key=lambda x: -x[1])[:3]
 
     return {
+        "v": 2,                          # 数据版本：v2 起 field 是投票结果，v1 是 topics[0]
         "id": author["id"].rsplit("/", 1)[-1],
         "origin_q": origin_cc,           # 采样时用的来源国口径
         "start": start,
@@ -121,14 +131,39 @@ def career(author, origin_cc):
         "end_ccs": end_ccs,
         "works": author.get("works_count") or 0,
         "field": field,
+        "top_fields": top_fields,
         "spans": spans,
     }
 
 
-def harvest(cc, seeds):
+def needs_refresh(out_path):
+    """已有数据是不是旧版本（v1：field 取 topics[0]，不是投票）。
+
+    只看第一行——同一个文件里不会混版本，因为 refresh 是整份重来。
+    """
+    if not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
+        return False
+    with open(out_path) as f:
+        line = f.readline()
+    try:
+        return json.loads(line).get("v", 1) < DATA_VERSION
+    except json.JSONDecodeError:
+        return False
+
+
+def harvest(cc, seeds, refresh=False):
     os.makedirs(DATA, exist_ok=True)
     out_path = os.path.join(DATA, f"careers_{cc}.jsonl")
     state_path = os.path.join(DATA, f"careers_{cc}.state.json")
+
+    if refresh and needs_refresh(out_path):
+        # ⚠️ 不 refresh 的话，旧的 state 文件会让所有 seed 被当成「已完成」而整个跳过，
+        # 新版本的字段永远补不上。备份旧文件而不是直接删——重抓要跨天，中途还得能回退。
+        bak = out_path + ".v1.bak"
+        os.replace(out_path, bak)
+        if os.path.exists(state_path):
+            os.replace(state_path, state_path + ".v1.bak")
+        print(f"[{cc}] 检测到 v1 数据，已备份为 {os.path.basename(bak)}，本轮重抓为 v{DATA_VERSION}", flush=True)
 
     seen, done_seeds = set(), set()
     if os.path.exists(out_path):
@@ -189,6 +224,8 @@ if __name__ == "__main__":
     seeds = 20
     if "--seeds" in sys.argv:
         seeds = int(sys.argv[sys.argv.index("--seeds") + 1])
+        args = [a for a in args if a != str(seeds)]
+    refresh = "--refresh" in sys.argv
     if not args:
         print(__doc__)
         sys.exit(1)
@@ -196,7 +233,7 @@ if __name__ == "__main__":
         if cc.isdigit():
             continue
         try:
-            n = harvest(cc.lower(), seeds)
+            n = harvest(cc.lower(), seeds, refresh)
             print(f"[{cc}] 完成，共 {n} 人 -> data/careers_{cc}.jsonl", flush=True)
         except BudgetExhausted as e:
             print(f"\n⛔ {e}\n   已抓到的都已落盘，额度恢复后重跑同一条命令会自动续上。", flush=True)
