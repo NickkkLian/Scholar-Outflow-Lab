@@ -17,7 +17,7 @@ import urllib.parse
 import urllib.request
 
 API = "https://api.openalex.org/institutions"
-MAILTO = "you@example.com"
+MAILTO = os.environ.get("OPENALEX_MAILTO", "")   # 见 harvest.py 注释：不写进公开仓
 MIN_WORKS = 500
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 DATA = os.path.join(ROOT, "data")
@@ -27,13 +27,16 @@ def main():
     os.makedirs(DATA, exist_ok=True)
     out, cursor, page = {}, "*", 0
     while cursor:
-        url = API + "?" + urllib.parse.urlencode({
+        params = {
             "filter": f"type:education,works_count:>{MIN_WORKS}",
             "per-page": 200, "cursor": cursor,
             "select": "id,display_name,country_code,ror,works_count,display_name_alternatives",
-            "mailto": MAILTO,
-        })
-        req = urllib.request.Request(url, headers={"User-Agent": f"mobility-lab (mailto:{MAILTO})"})
+        }
+        if MAILTO:
+            params["mailto"] = MAILTO
+        url = API + "?" + urllib.parse.urlencode(params)
+        req = urllib.request.Request(
+            url, headers={"User-Agent": f"mobility-lab (mailto:{MAILTO})" if MAILTO else "mobility-lab"})
         with urllib.request.urlopen(req, timeout=90) as r:
             d = json.loads(r.read().decode())
         for i in d.get("results") or []:
