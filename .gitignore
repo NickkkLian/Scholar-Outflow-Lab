@@ -2,4 +2,7 @@ data/careers_*.jsonl
 data/*.state.json
 data/*.log
 data/institutions.json
+data/traffic.jsonl
+data/*.bak
 .env
+scripts/__pycache__/

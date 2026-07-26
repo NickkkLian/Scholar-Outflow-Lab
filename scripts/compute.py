@@ -227,6 +227,10 @@ def build(origin):
             "id": iid, "name": w["name"], "ror": w["ror"], "cc": w["cc"],
             "country": CC_NAME.get(w["cc"], (w["cc"] or "??").upper()),
             "works": w["works"],
+            # education=高校，其余是研究所/医院/政府实验室等。前端按它做「只看高校」筛选，
+            # 因为非高校那批的署名错配噪音明显更重（见 institutions.py 注释）。
+            "type": w.get("type", "education"),
+            "kind": "edu" if w.get("type", "education") == "education" else "inst",
             "strata": {k: pct(v) for k, v in per.items()},
             "fields": fields,
         })
@@ -270,6 +274,10 @@ def build(origin):
                 "在目的机构须跨 ≥2 个年份才算「去过」；2–3 年多为访问学者，务必用时长分层看",
                 "起步那年就已挂在该国的不计为「迁过去」——否则一直在当地的人会被算成迁移又留下",
                 "机构由 OpenAlex 从署名字符串自动解析，已用 ROR + 产出量白名单过滤，仍可能有错配",
+                "榜单含高校与研究所（中科院/CNRS/NIH/Academia Sinica 这类）。"
+                "研究所那批的错配噪音明显更重——署名里出现「Ministry of Education」这种通用短语时，"
+                "OpenAlex 会挂到随机国家的同名实体上。已加更高产出门槛 + 通用名黑名单，"
+                "仍不敢说干净，**怀疑某条时用「只看高校」筛一遍再下结论**",
                 "学科取自作者最高频 topic 的 field，颗粒很粗——大量做计算机的人被归进「工程」，"
                 "所以「计算机」这一类的覆盖机构数偏少（当前仅港新几所达标），别当成「美国没有 CS 数据」",
                 "绝对值会随口径漂移，请只做机构/国家之间的横向比较",
