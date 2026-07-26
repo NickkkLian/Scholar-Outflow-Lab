@@ -420,7 +420,7 @@ function renderVenues(){
   if(!S.venues){
     document.getElementById('venue-count').textContent = '';
     wrap.innerHTML = `<div class="warn">期刊/会议数据还没生成。<br>
-      跑 <code>OPENALEX_MAILTO=… python3 scripts/venues.py</code> 生成 <code>web/data-venues.json</code> 即可。
+      跑 <code>OPENALEX_MAILTO=… python3 scripts/venues.py</code> 生成 <code>data-venues.json</code> 即可。
       （OpenAlex 免费额度每天 1000 次请求、UTC 零点重置，本脚本约需 80–120 次。）</div>`;
     return;
   }

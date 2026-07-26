@@ -7,7 +7,7 @@
 ⚠️ 额度：OpenAlex 免费额度是**每天 1000 次请求**（UTC 零点重置），不是无限。
    本脚本约需 80–120 次，跑之前先确认当天额度还够（harvest 很吃额度）。
 
-输出: web/data-venues.json
+输出: data-venues.json
 用法: OPENALEX_MAILTO=you@example.com python3 scripts/venues.py
 """
 
@@ -24,7 +24,7 @@ MAILTO = os.environ.get("OPENALEX_MAILTO", "")
 UA = f"mobility-lab (mailto:{MAILTO})" if MAILTO else "mobility-lab"
 MIN_WORKS = 2000          # 产出太少的刊排名没意义
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-WEB = os.path.join(ROOT, "web")
+WEB = ROOT   # 站点直接放仓库根目录：GitHub Pages 走 main 分支根目录
 
 FIELD_ZH = {
     "Medicine": "医学", "Engineering": "工程", "Computer Science": "计算机",

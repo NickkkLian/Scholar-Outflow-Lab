@@ -1,7 +1,7 @@
 # 去向实验室 · Scholar Outflow Lab
 
 > Business-Lab 项目「移民咨询网」的**零成本可执行切片**。2026-07-25 起。
-> 状态：**本地 v0，未发布任何远端**，等站长拍板要不要继续。
+> 商业项目，**不进个人导航站**；作为开源项目挂在个人网站。
 
 ## 这是什么
 
@@ -23,24 +23,32 @@
 ## 目录
 
 ```
+index.html               单文件前端（移动优先、深浅色自适应、零依赖）
+data-cn.json             算好的指标，页面直接读
 scripts/harvest.py       从 OpenAlex 抽样学者履历 → data/careers_<cc>.jsonl（可断点续跑）
 scripts/institutions.py  拉高校白名单（有 ROR + 产出达标）→ data/institutions.json
-scripts/compute.py       聚合成指标 → web/data-<cc>.json
-web/index.html           单文件前端（移动优先、深浅色自适应、零依赖）
+scripts/compute.py       聚合成指标 → data-<cc>.json
+scripts/venues.py        期刊/会议榜 → data-venues.json
 ```
+
+站点文件放在仓库根目录，因为 GitHub Pages 走 **main 分支根目录**。
+`data/` 是中间产物（几百 MB 的 jsonl），已 gitignore。
 
 ## 跑一遍
 
 ```bash
-python3 scripts/institutions.py          # 白名单，一次即可（约 1 分钟）
-python3 scripts/harvest.py cn --seeds 24 # 抽样约 24 万人（约 25 分钟，可中断续跑）
-python3 scripts/compute.py cn            # 算指标
-python3 -m http.server 8791 --directory web   # 本地看：http://localhost:8791
+export OPENALEX_MAILTO=you@example.com   # 进 OpenAlex 礼貌池；不设也能跑，限速更严
+python3 scripts/institutions.py          # 高校白名单，一次即可（约 60 次请求）
+python3 scripts/harvest.py cn --seeds 24 # 抽样约 18 万人（约 1200 次请求，可中断续跑）
+python3 scripts/compute.py cn            # 算指标，不联网
+python3 -m http.server 8791              # 本地看：http://localhost:8791
 ```
 
 换来源国：把 `cn` 换成 `in` / `ir` / `br` 等 ISO 两位码即可。
+**注意额度**：免费额度每天 1000 次请求，一个来源国 24 个 seed 就要 1200 次——
+分两天跑，或把 `--seeds` 降到 12。跑超了脚本会干净退出并提示何时重置，重跑自动续上。
 
-## 口径（写死在 web/data-*.json 的 meta 里，页面「口径」页原样展示）
+## 口径（写死在 data-*.json 的 meta 里，页面「口径」页原样展示）
 
 - **样本**：OpenAlex 中曾在来源国机构署名、发表 ≥5 篇的学者随机抽样
 - **本土起步**：履历最早年份所在国包含来源国
@@ -73,11 +81,17 @@ python3 -m http.server 8791 --directory web   # 本地看：http://localhost:879
 - **额度**：OpenAlex 免费额度是**每天 1000 次请求**（UTC 零点重置），不是无限。
   一个来源国跑 12 个 seed ≈ 600 次，所以**一天大约只能抓 1.5 个国家**。仍是零成本，但要按天排
 
-## 下一步（未做，等站长定）
+## 进度
 
-- [ ] 站长拍板：这个方向继续 / 换 Business-Lab 里别的
-- [ ] 多来源国（in / ir / br…）做对照，横向比较才更有说服力
-- [ ] 学科维度做深（现在只有默认分层的 top 8 领域，样本量够了才出分）
-- [ ] 「输入背景 → 匹配路径」交互（Business-Lab 原始需求第 3 点）
-- [ ] 学术机构 / 期刊会议榜（原始需求第 4 点）
-- [ ] 发布决策：建公开仓 + GitHub Pages + 进导航站，**需站长明确同意后才做**
+- [x] 中国来源国全量抽样（179,423 人）+ 目的国 / 高校榜
+- [x] 「输入背景 → 匹配路径」（原始需求第 3 点）：学科 × 目的地 × 打算待多久
+- [x] 期刊/会议榜脚本（原始需求第 4 点）——**数据待生成**，受当日额度限制
+- [x] 建公开仓 + GitHub Pages
+- [ ] 多来源国（in / ir / br / ru）对照——额度恢复后续跑，脚本会自动接上
+- [ ] 学科归类做细（现在被 OpenAlex 的 field 粗颗粒卡住，见上）
+- [ ] 研究所（非高校）纳入白名单——现在只收 `type:education`
+
+## 授权
+
+代码 MIT。数据来自 [OpenAlex](https://openalex.org)，CC0 公共领域。
+本站不提供移民、法律或财务建议。
