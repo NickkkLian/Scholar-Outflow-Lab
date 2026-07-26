@@ -82,6 +82,8 @@ tbody tr:hover{background:var(--paper-2)}
 .sbar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--stay)}
 .sbar u{position:absolute;top:-2px;bottom:-2px;border-left:1px solid rgba(21,122,114,.45);border-right:1px solid rgba(21,122,114,.45);
   background:rgba(21,122,114,.13);text-decoration:none}
+.kindtag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:5px;
+  border:1px solid var(--line-2);color:var(--ink-soft);vertical-align:1px}
 .muted{color:var(--ink-soft)}
 .small{font-size:12px}
 .only-s{display:none}   /* 桌面端有独立的国家列，窄屏才把国家塞回校名下面 */
@@ -177,6 +179,13 @@ tbody tr:hover{background:var(--paper-2)}
         <label>想去
           <select id="m-country"></select>
         </label>
+        <label>机构类型
+          <select id="m-kind">
+            <option value="">高校 + 研究所</option>
+            <option value="edu">只看高校</option>
+            <option value="inst">只看研究所</option>
+          </select>
+        </label>
         <label>打算待
           <select id="m-stratum">
             <option value="long">4 年以上（读博/长期职位）</option>
@@ -213,6 +222,11 @@ tbody tr:hover{background:var(--paper-2)}
     <div class="ctrl">
       <span class="lbl">停留时长</span>
       <div class="seg" id="seg-stratum2"></div>
+      <select id="f-kind">
+        <option value="">高校 + 研究所</option>
+        <option value="edu">只看高校</option>
+        <option value="inst">只看研究所</option>
+      </select>
       <select id="f-country"></select>
       <select id="f-field"></select>
       <input type="search" id="f-q" placeholder="搜校名…" />
@@ -260,8 +274,8 @@ tbody tr:hover{background:var(--paper-2)}
 
 <script>
 const S = {data:null, venues:null, origin:'cn', view:'match', stratum:'long', sortKey:'stay', sortDir:-1,
-           fCountry:'', fField:'', q:'',
-           mField:'', mCountry:'', mStratum:'long',
+           fCountry:'', fField:'', fKind:'', q:'',
+           mField:'', mCountry:'', mKind:'', mStratum:'long',
            vField:'', vType:'', vQ:''};
 const STRATUM_LABEL = {short:'2–3 年（多为访问）', long:'≥4 年（默认）', long6:'≥6 年', all:'不限'};
 const STRATUM_ORDER = ['short','long','long6','all'];
@@ -303,6 +317,7 @@ function instRows(){
   return S.data.institutions
     .map(it => ({it, s:it.strata[S.stratum]}))
     .filter(({it,s}) => s && s.n >= S.data.meta.min_n_inst
+      && (!S.fKind || (it.kind || 'edu') === S.fKind)
       && (!S.fCountry || it.cc === S.fCountry)
       && (!S.fField || ((it.fields||{})[S.stratum]||[]).some(f => f.field === S.fField))
       && (!S.q || it.name.toLowerCase().includes(S.q.toLowerCase())))
@@ -323,7 +338,8 @@ function renderInsts(){
     const ci = s.stay_ci || [0,0];
     return `<tr data-id="${it.id}">
       <td><span class="tier ${it.tier}">${it.tier}</span></td>
-      <td>${esc(it.name)}<div class="muted small only-s">${esc(it.country)}</div></td>
+      <td>${esc(it.name)}${it.kind === 'inst' ? ' <span class="kindtag">研究所</span>' : ''}
+        <div class="muted small only-s">${esc(it.country)}</div></td>
       <td class="hide-s">${esc(it.country)}</td>
       <td class="num mono"><b>${pc(s.stay)}</b></td>
       <td class="hide-s"><div class="sbar"><i style="width:${(s.stay||0)*100}%"></i>
@@ -375,6 +391,7 @@ function matchRows(){
     const s = it.strata[k];
     if(!s || !s.n) return null;
     if(cc && it.cc !== cc) return null;
+    if(S.mKind && (it.kind || 'edu') !== S.mKind) return null;
     if(!f) return {it, s, scoped:false};
     // 选了学科就必须用该学科在**同一分层**下的数字，没有就不该硬凑
     const fs = (it.fields[k] || []).find(x => x.field === f);
@@ -407,7 +424,8 @@ function renderMatch(){
       <span class="m-rank">${i+1}</span>
       <div class="m-main">
         <h3>${esc(r.it.name)}</h3>
-        <div class="muted small">${esc(r.it.country)} · Tier ${r.it.tier}${r.scoped ? ' · 已按学科细分' : ''}</div>
+        <div class="muted small">${esc(r.it.country)} · Tier ${r.it.tier}${
+          r.it.kind === 'inst' ? ' · 研究所' : ''}${r.scoped ? ' · 已按学科细分' : ''}</div>
       </div>
       <div style="flex:1 1 150px"><div class="sbar">
         <i style="width:${(r.s.stay||0)*100}%"></i>
@@ -557,7 +575,8 @@ function loadOrigin(cc){
     S.data = d;
     S.origin = cc;
     // 换来源国后旧的筛选值可能在新数据里不存在，重置掉，免得页面空白却看不出为什么
-    S.fCountry = S.fField = S.q = S.mField = S.mCountry = '';
+    S.fCountry = S.fField = S.fKind = S.q = S.mField = S.mCountry = S.mKind = '';
+    ['f-kind','m-kind'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     document.getElementById('loading').hidden = true;
     stratumSeg(document.getElementById('seg-stratum'));
     stratumSeg(document.getElementById('seg-stratum2'));
@@ -594,11 +613,13 @@ document.querySelector('.tabs').onclick = e => {
   const t = e.target.closest('.tab'); if(!t) return;
   S.view = t.dataset.view; render();
 };
+document.getElementById('f-kind').onchange = e => { S.fKind = e.target.value; renderInsts(); };
 document.getElementById('f-country').onchange = e => { S.fCountry = e.target.value; renderInsts(); };
 document.getElementById('f-field').onchange = e => { S.fField = e.target.value; renderInsts(); };
 document.getElementById('f-q').oninput = e => { S.q = e.target.value.trim(); renderInsts(); };
 document.getElementById('m-field').onchange = e => { S.mField = e.target.value; renderMatch(); };
 document.getElementById('m-country').onchange = e => { S.mCountry = e.target.value; renderMatch(); };
+document.getElementById('m-kind').onchange = e => { S.mKind = e.target.value; renderMatch(); };
 document.getElementById('m-stratum').onchange = e => { S.mStratum = e.target.value; renderMatch(); };
 document.getElementById('v-field').onchange = e => { S.vField = e.target.value; renderVenues(); };
 document.getElementById('v-type').onchange = e => { S.vType = e.target.value; renderVenues(); };
