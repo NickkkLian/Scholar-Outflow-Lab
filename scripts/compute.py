@@ -28,6 +28,7 @@ import collections
 import datetime
 import json
 import os
+import re
 import sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
@@ -121,6 +122,32 @@ def outcome(dest_cc, origin, ends):
     if has_o:
         return "ret"
     return "onward"
+
+
+def write_manifest():
+    """扫出已生成的来源国，写 origins.json 供前端做来源切换。
+
+    没有这份清单，前端只能写死一个来源国——数据抓回来了页面上也看不见。
+    严格匹配 data-<两位国码>.json，别把 data-venues.json 算进来。
+    """
+    out = []
+    for fn in sorted(os.listdir(WEB)):
+        m = re.fullmatch(r"data-([a-z]{2})\.json", fn)
+        if not m:
+            continue
+        try:
+            d = json.load(open(os.path.join(WEB, fn)))
+            meta = d["meta"]
+        except (json.JSONDecodeError, OSError, KeyError):
+            continue
+        out.append({"cc": m.group(1), "name": meta.get("origin_name", m.group(1).upper()),
+                    "sampled": meta.get("sampled_authors", 0),
+                    "movers": meta.get("movers", 0),
+                    "institutions": len(d.get("institutions", []))})
+    out.sort(key=lambda x: -x["sampled"])
+    with open(os.path.join(WEB, "origins.json"), "w") as f:
+        json.dump({"origins": out}, f, ensure_ascii=False, separators=(",", ":"))
+    return out
 
 
 def build(origin):
@@ -262,12 +289,14 @@ def build(origin):
             if {**old, "meta": {**old.get("meta", {}), "generated_at": None}} == \
                {**out, "meta": {**out["meta"], "generated_at": None}}:
                 print(f"[{origin}] 实质内容无变化，保持原文件不动（不刷时间戳）")
+                write_manifest()   # 数据没变也要保证清单在（首次加清单时会走到这条分支）
                 return out
         except (json.JSONDecodeError, OSError):
             pass          # 旧文件坏了就正常覆盖
 
     with open(path, "w") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
+    write_manifest()
     m = out["meta"]
     print(f"[{origin}] 样本 {m['sampled_authors']} / 本土起步 {m['home_start_authors']} / "
           f"出海 {movers} ({m['mover_rate']:.1%}) → 国家 {len(countries)}、机构 {len(ranked)}")

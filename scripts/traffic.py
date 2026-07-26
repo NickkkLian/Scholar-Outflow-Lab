@@ -5,7 +5,10 @@
 为什么必须存：GitHub traffic API **只保留 14 天**，不定期快照就永久丢失。
 所以本脚本按天 upsert 进 data/traffic.jsonl，历史只增不改。
 
-需要一个**只读**令牌（细粒度 PAT，权限只勾 Metadata: Read-only 即可读 traffic）：
+需要一个**只读**令牌（细粒度 PAT）。
+⚠️ 权限要勾的是 **Administration: Read-only**，不是 Metadata——
+   GitHub 对 traffic 接口的响应头写死了 `x-accepted-github-permissions: administration=read`。
+   它仍然是只读，但比 Metadata 高一档，别勾成 Read and write。
     export GH_TRAFFIC_PAT=github_pat_xxx
 或写进 mobility-lab/.env（已 gitignore，绝不进公开仓）：
     GH_TRAFFIC_PAT=github_pat_xxx
@@ -95,7 +98,8 @@ def main():
     load_env()
     token = os.environ.get("GH_TRAFFIC_PAT", "")
     if not token:
-        print("⛔ 没有 GH_TRAFFIC_PAT。建一个**只读**细粒度 PAT（权限只需 Metadata: Read-only），"
+        print("⛔ 没有 GH_TRAFFIC_PAT。建一个**只读**细粒度 PAT"
+              "（Repository permissions → Administration: Read-only），"
               "放进 mobility-lab/.env 或 export 出来。详见本文件顶部说明。")
         sys.exit(1)
 
@@ -104,8 +108,11 @@ def main():
         clones = api("traffic/clones", token)
     except urllib.error.HTTPError as e:
         if e.code in (401, 403):
-            print(f"⛔ 令牌无效或权限不足（HTTP {e.code}）。traffic 接口要求对该仓库有读权限，"
-                  "细粒度 PAT 需勾 Metadata: Read-only 且把本仓库加进 Repository access。")
+            print(f"⛔ 令牌无效或权限不足（HTTP {e.code}）。"
+                  "traffic 接口要求 **Administration: Read-only**（不是 Metadata）——"
+                  "GitHub 响应头 x-accepted-github-permissions: administration=read。"
+                  "去 PAT 设置里把 Repository permissions → Administration 改成 Read-only，"
+                  "并确认本仓库在 Repository access 里。")
         else:
             print(f"⛔ HTTP {e.code}: {e.reason}")
         sys.exit(1)
