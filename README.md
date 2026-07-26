@@ -27,9 +27,10 @@
 ```
 index.html               单文件前端（移动优先、深浅色自适应、零依赖）
 data-cn.json             算好的指标，页面直接读
+origins.json             已生成的来源国清单，驱动顶栏的来源切换器
 scripts/harvest.py       从 OpenAlex 抽样学者履历 → data/careers_<cc>.jsonl（可断点续跑）
 scripts/institutions.py  拉高校白名单（有 ROR + 产出达标）→ data/institutions.json
-scripts/compute.py       聚合成指标 → data-<cc>.json
+scripts/compute.py       聚合成指标 → data-<cc>.json，并刷新 origins.json（来源国清单）
 scripts/venues.py        期刊/会议榜 → data-venues.json
 ```
 
@@ -90,9 +91,9 @@ python3 -m http.server 8791              # 本地看：http://localhost:8791
 - [ ] 期刊/会议榜（原始需求第 4 点）——脚本 `scripts/venues.py` 已就绪，**数据未生成**，
       卡在当日额度；页面上这一页对访客显示「还在建」。**不算完成**
 - [x] 建公开仓 + GitHub Pages
-- [ ] 多来源国（in / ir / br / ru）对照——额度恢复后续跑，脚本会自动接上。
-      ⚠️ **不只是跑脚本**：前端 `index.html` 目前写死 `fetch('data-cn.json')`，
-      加来源国要连来源切换 UI 一起改，否则数据落地了页面也看不见
+- [x] 前端来源国切换（`origins.json` 清单 + 顶栏切换器）——**多来源数据一落地就能看见**，
+      只有一个来源国时切换器自动隐藏，不占地方
+- [ ] 多来源国（in / ir / br / ru）数据本身——额度恢复后由每日任务自动抓，脚本会接上
 - [ ] 学科归类做细（现在被 OpenAlex 的 field 粗颗粒卡住，见上）
 - [ ] 研究所（非高校）纳入白名单——现在只收 `type:education`
 
@@ -118,5 +119,7 @@ python3 scripts/traffic.py --report                       # 只看访问量，�
 launchctl bootout gui/$(id -u)/com.scholaroutflow.daily   # 关掉自动化
 ```
 
-**凭据**：`.env`（已 gitignore，**绝不进公开仓**）放 `OPENALEX_MAILTO` 和 `GH_TRAFFIC_PAT`。
-后者是**只读**细粒度 PAT，权限只需 Metadata: Read-only。
+**凭据**：`.env`（已 gitignore、chmod 600，**绝不进公开仓**）放 `OPENALEX_MAILTO` 和 `GH_TRAFFIC_PAT`。
+后者是**只读**细粒度 PAT，权限勾 **Administration: Read-only**——
+不是 Metadata（GitHub 对 traffic 接口的响应头写死 `x-accepted-github-permissions: administration=read`）。
+仍是只读，但比 Metadata 高一档，**别勾成 Read and write**。

@@ -27,10 +27,13 @@ a{color:var(--stay)}
 
 .topbar{position:sticky;top:0;z-index:30;background:var(--paper);border-bottom:1px solid var(--line)}
 .tb-in{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.brand{display:flex;align-items:baseline;gap:9px;margin-right:auto}
+.brand{display:flex;align-items:baseline;gap:9px}
 .brand .logo{font-size:20px;font-weight:700}
 .brand .logo b{color:var(--onward);font-style:normal}
 .brand .sub{font-size:10.5px;color:var(--ink-soft);letter-spacing:.14em;text-transform:uppercase}
+.origin-pick{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-soft);margin-right:auto}
+.origin-pick select{padding:5px 9px;font-size:13px}
 .tabs{display:flex;gap:4px;background:var(--paper-2);padding:4px;border-radius:999px;border:1px solid var(--line)}
 .tab{border:none;background:transparent;padding:6px 15px;border-radius:999px;font-weight:600;color:var(--ink-soft);font-size:13px}
 .tab.active{background:var(--ink);color:var(--paper);box-shadow:var(--shadow)}
@@ -143,6 +146,9 @@ tbody tr:hover{background:var(--paper-2)}
 
 <div class="topbar"><div class="tb-in">
   <div class="brand"><div class="logo">去向<b>实验室</b></div><div class="sub">Scholar Outflow Lab</div></div>
+  <label class="origin-pick" id="origin-wrap" hidden>
+    <span>起点</span><select id="origin-sel"></select>
+  </label>
   <div class="tabs">
     <button class="tab active" data-view="match">路径匹配</button>
     <button class="tab" data-view="country">目的国</button>
@@ -253,7 +259,7 @@ tbody tr:hover{background:var(--paper-2)}
 </div>
 
 <script>
-const S = {data:null, venues:null, view:'match', stratum:'long', sortKey:'stay', sortDir:-1,
+const S = {data:null, venues:null, origin:'cn', view:'match', stratum:'long', sortKey:'stay', sortDir:-1,
            fCountry:'', fField:'', q:'',
            mField:'', mCountry:'', mStratum:'long',
            vField:'', vType:'', vQ:''};
@@ -541,20 +547,48 @@ fetch('data-venues.json').then(r => r.ok ? r.json() : null).then(v => {
   if(S.view === 'venue') renderVenues();
 }).catch(() => {});
 
-fetch('data-cn.json').then(r => r.json()).then(d => {
-  S.data = d;
-  document.getElementById('loading').hidden = true;
-  stratumSeg(document.getElementById('seg-stratum'));
-  stratumSeg(document.getElementById('seg-stratum2'));
-  initFilters();
-  document.getElementById('foot').innerHTML =
-    `数据 ${esc(d.meta.source)} · 生成于 ${esc(d.meta.generated_at)} · ` +
-    `样本 ${d.meta.sampled_authors.toLocaleString()} 人 · 本站不提供移民/法律建议`;
-  render();
-}).catch(e => {
-  document.getElementById('loading').textContent = '数据载入失败：' + e.message
-    + '（本地需用 http 打开，例如 python3 -m http.server）';
-});
+function loadOrigin(cc){
+  document.getElementById('loading').hidden = false;
+  document.getElementById('loading').textContent = '载入数据中…';
+  return fetch(`data-${cc}.json`).then(r => {
+    if(!r.ok) throw new Error(`data-${cc}.json ${r.status}`);
+    return r.json();
+  }).then(d => {
+    S.data = d;
+    S.origin = cc;
+    // 换来源国后旧的筛选值可能在新数据里不存在，重置掉，免得页面空白却看不出为什么
+    S.fCountry = S.fField = S.q = S.mField = S.mCountry = '';
+    document.getElementById('loading').hidden = true;
+    stratumSeg(document.getElementById('seg-stratum'));
+    stratumSeg(document.getElementById('seg-stratum2'));
+    initFilters();
+    document.getElementById('f-q').value = '';
+    document.getElementById('foot').innerHTML =
+      `数据 ${esc(d.meta.source)} · 生成于 ${esc(d.meta.generated_at)} · ` +
+      `起点 ${esc(d.meta.origin_name)} · 样本 ${d.meta.sampled_authors.toLocaleString()} 人 · ` +
+      `本站不提供移民/法律建议`;
+    render();
+  }).catch(e => {
+    document.getElementById('loading').hidden = false;
+    document.getElementById('loading').textContent = '数据载入失败：' + e.message
+      + '（本地需用 http 打开，例如 python3 -m http.server）';
+  });
+}
+
+// 来源国清单：多于一个才显示切换器，只有一个时不占地方
+fetch('origins.json').then(r => r.ok ? r.json() : null).then(m => {
+  const list = (m && m.origins) || [];
+  if(list.length > 1){
+    const sel = document.getElementById('origin-sel');
+    sel.innerHTML = list.map(o =>
+      `<option value="${esc(o.cc)}">${esc(o.name)}（${o.institutions} 所）</option>`).join('');
+    sel.value = list.some(o => o.cc === S.origin) ? S.origin : list[0].cc;
+    document.getElementById('origin-wrap').hidden = false;
+    sel.onchange = e => loadOrigin(e.target.value);
+    return loadOrigin(sel.value);
+  }
+  return loadOrigin(list[0] ? list[0].cc : 'cn');
+}).catch(() => loadOrigin('cn'));
 
 document.querySelector('.tabs').onclick = e => {
   const t = e.target.closest('.tab'); if(!t) return;
