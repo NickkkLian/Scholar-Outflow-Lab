@@ -419,9 +419,11 @@ function renderVenues(){
   const wrap = document.getElementById('venue-wrap');
   if(!S.venues){
     document.getElementById('venue-count').textContent = '';
-    wrap.innerHTML = `<div class="warn">期刊/会议数据还没生成。<br>
-      跑 <code>OPENALEX_MAILTO=… python3 scripts/venues.py</code> 生成 <code>data-venues.json</code> 即可。
-      （OpenAlex 免费额度每天 1000 次请求、UTC 零点重置，本脚本约需 80–120 次。）</div>`;
+    // 给访客看的话，不是给自己看的操作步骤——缺数据时也别把命令行糊到人脸上
+    wrap.innerHTML = `<div class="warn">这一页还在建。<br>
+      期刊与会议榜要按学科分组重排，数据源每天有免费额度上限，正在分批取——取齐了会直接出现在这里。<br>
+      <span class="small">做法与进度公开在
+      <a href="https://github.com/NickkkLian/Scholar-Outflow-Lab" target="_blank" rel="noopener">GitHub 仓库</a>。</span></div>`;
     return;
   }
   const rows = S.venues.venues.filter(v =>
