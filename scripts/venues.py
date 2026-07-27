@@ -23,6 +23,11 @@ API = "https://api.openalex.org/sources"
 MAILTO = os.environ.get("OPENALEX_MAILTO", "")
 UA = f"mobility-lab (mailto:{MAILTO})" if MAILTO else "mobility-lab"
 MIN_WORKS = 2000          # 产出太少的刊排名没意义
+MIN_H = 5                 # h-index 太低的多半不是学术刊
+# 实测：不加这条会混进大量**没有被引记录的商业期刊/行业杂志**——
+# 「世界週報」「週刊東洋経済」「潮」这类 works 一两万、h=0，全被归进社会科学，
+# 把该学科的条目数从几百撑到 3335，V1/V2 的分位线整个被稀释。
+# 它们不是排在末尾就没事：分位是按条目数切的，垃圾进来会把真刊往上顶。
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 WEB = ROOT   # 站点直接放仓库根目录：GitHub Pages 走 main 分支根目录
 
@@ -61,7 +66,46 @@ def fetch(params):
         raise
 
 
+def retier(venues):
+    """学科内按 h-index 排名 + 分位分档。跨学科比 h-index 没意义，所以只在学科内比。"""
+    by_field = {}
+    for v in venues:
+        by_field.setdefault(v["field"] or "其他", []).append(v)
+    for vs in by_field.values():
+        vs.sort(key=lambda x: -x["h"])
+        n = len(vs)
+        for i, v in enumerate(vs):
+            v["field_rank"] = i + 1
+            v["field_total"] = n
+            q = i / n
+            v["tier"] = "V1" if q < 0.1 else "V2" if q < 0.3 else "V3" if q < 0.6 else "V4"
+    return by_field
+
+
+def refilter_existing():
+    """离线重跑过滤与分档，不联网——已有数据时别为了改口径再烧一次额度。"""
+    p = os.path.join(WEB, "data-venues.json")
+    d = json.load(open(p))
+    before = len(d["venues"])
+    kept = [v for v in d["venues"] if v.get("h", 0) >= MIN_H]
+    by_field = retier(kept)
+    kept.sort(key=lambda x: -x["h"])
+    d["venues"] = kept
+    d["meta"]["count"] = len(kept)
+    d["meta"]["min_h"] = MIN_H
+    d["meta"]["fields"] = sorted(by_field.keys())
+    d["meta"]["notes"] = [n for n in d["meta"]["notes"] if "h-index" not in n or "分级" in n]
+    d["meta"]["notes"].insert(1, f"只收录 h-index ≥{MIN_H} 的——否则会混进大量无被引记录的行业杂志，"
+                                 f"把学科条目数撑大、分位线稀释")
+    json.dump(d, open(p, "w"), ensure_ascii=False, separators=(",", ":"))
+    print(f"离线重排：{before} → {len(kept)} 本（剔除 h<{MIN_H} 的 {before - len(kept)} 本）")
+    for f, vs in sorted(by_field.items(), key=lambda x: -len(x[1]))[:6]:
+        print(f"    {f:8} {len(vs)}")
+
+
 def main():
+    if "--retier" in sys.argv:
+        return refilter_existing()
     out, cursor, page = [], "*", 0
     while cursor:
         d = fetch({
@@ -103,19 +147,8 @@ def main():
             print(f"  {page} 页 / {len(out)} 本", flush=True)
         time.sleep(0.2)
 
-    # 学科内按 h-index 排名 + 分位分级（同一学科里比，跨学科比 h-index 没意义）
-    by_field = {}
-    for v in out:
-        by_field.setdefault(v["field"] or "其他", []).append(v)
-    for field, vs in by_field.items():
-        vs.sort(key=lambda x: -x["h"])
-        n = len(vs)
-        for i, v in enumerate(vs):
-            v["field_rank"] = i + 1
-            v["field_total"] = n
-            q = i / n
-            v["tier"] = "V1" if q < 0.1 else "V2" if q < 0.3 else "V3" if q < 0.6 else "V4"
-
+    out = [v for v in out if v["h"] >= MIN_H]
+    by_field = retier(out)
     out.sort(key=lambda x: -x["h"])
     payload = {
         "meta": {
