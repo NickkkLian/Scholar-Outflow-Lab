@@ -82,6 +82,9 @@ tbody tr:hover{background:var(--paper-2)}
 .sbar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--stay)}
 .sbar u{position:absolute;top:-2px;bottom:-2px;border-left:1px solid rgba(21,122,114,.45);border-right:1px solid rgba(21,122,114,.45);
   background:rgba(21,122,114,.13);text-decoration:none}
+.cmp-hi{font-family:var(--mono);font-weight:700;color:var(--stay)}
+.cmp-n{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+.cmp-gap{font-family:var(--mono);font-size:12px}
 .kindtag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:5px;
   border:1px solid var(--line-2);color:var(--ink-soft);vertical-align:1px}
 .muted{color:var(--ink-soft)}
@@ -155,6 +158,7 @@ tbody tr:hover{background:var(--paper-2)}
     <button class="tab active" data-view="match">路径匹配</button>
     <button class="tab" data-view="country">目的国</button>
     <button class="tab" data-view="inst">高校榜</button>
+    <button class="tab" data-view="compare">来源对比</button>
     <button class="tab" data-view="venue">期刊会议</button>
     <button class="tab" data-view="doc">口径</button>
   </div>
@@ -250,6 +254,16 @@ tbody tr:hover{background:var(--paper-2)}
     <p class="muted small" id="inst-empty" hidden style="padding:22px 4px">没有符合条件的机构。放宽筛选，或换一个停留时长分层试试。</p>
   </section>
 
+  <!-- 来源对比 -->
+  <section id="v-compare" hidden>
+    <div class="ctrl">
+      <span class="lbl">停留时长</span>
+      <div class="seg" id="seg-stratum3"></div>
+      <span class="muted small" id="cmp-note"></span>
+    </div>
+    <div id="cmp-wrap"></div>
+  </section>
+
   <!-- 期刊会议 -->
   <section id="v-venue" hidden>
     <div class="ctrl">
@@ -273,7 +287,7 @@ tbody tr:hover{background:var(--paper-2)}
 </div>
 
 <script>
-const S = {data:null, venues:null, origin:'cn', view:'match', stratum:'long', sortKey:'stay', sortDir:-1,
+const S = {data:null, venues:null, origin:'cn', originList:null, allData:{}, view:'match', stratum:'long', sortKey:'stay', sortDir:-1,
            fCountry:'', fField:'', fKind:'', q:'',
            mField:'', mCountry:'', mKind:'', mStratum:'long',
            vField:'', vType:'', vQ:''};
@@ -473,6 +487,69 @@ function renderVenues(){
       ${S.venues.meta.notes.map(esc).join('　·　')}</p>`;
 }
 
+/* ---- 跨来源对比：同一目的国，不同起点的去向差多少 ---- */
+function renderCompare(){
+  const wrap = document.getElementById('cmp-wrap');
+  const list = S.originList || [];
+  if(list.length < 2){
+    wrap.innerHTML = `<div class="warn">只有一个来源国的数据，没得比。
+      多来源国还在按天抓（数据源每天有免费额度上限），抓齐了这一页会自己出现。</div>`;
+    return;
+  }
+  const missing = list.filter(o => !S.allData[o.cc]);
+  if(missing.length){
+    wrap.innerHTML = '<p class="muted">载入各来源数据中…</p>';
+    return;
+  }
+  const k = S.stratum;
+  // 目的国取「至少两个来源都达标」的，否则一列全是空
+  const rows = [];
+  const ccs = new Set();
+  list.forEach(o => (S.allData[o.cc].countries || []).forEach(c => ccs.add(c.cc)));
+  ccs.forEach(dc => {
+    const cells = list.map(o => {
+      const c = (S.allData[o.cc].countries || []).find(x => x.cc === dc);
+      const st = c && c.strata[k];
+      return (st && st.n >= 60) ? {name: c.name, ...st} : null;
+    });
+    if(cells.filter(Boolean).length >= 2){
+      const vals = cells.filter(Boolean).map(c => c.stay);
+      rows.push({dc, name: (cells.find(Boolean) || {}).name || dc, cells,
+                 total: cells.reduce((a,c) => a + (c ? c.n : 0), 0),
+                 gap: Math.max(...vals) - Math.min(...vals)});
+    }
+  });
+  rows.sort((a,b) => b.total - a.total);
+
+  document.getElementById('cmp-note').textContent =
+    `${rows.length} 个目的国 · ${list.length} 个起点`;
+
+  wrap.innerHTML = `<div class="warn">
+    读法：<b>同一行比着看</b>——同一个目的国，起点不同，留下率可以差好几倍。
+    这是本站唯一真正有意思的地方。<br>
+    ⚠️ 各来源国的抽样口径一致，但**样本框本身不同**（都是「曾在本国机构署名发表」的人），
+    所以跨来源比的是<b>相对高低与方向</b>，不是绝对值。</div>
+    <div style="overflow-x:auto"><table>
+    <thead><tr><th>目的国</th>${list.map(o =>
+      `<th class="num">${esc(o.name)}</th>`).join('')}<th class="num hide-s">最大差</th></tr></thead>
+    <tbody>${rows.map(r => `<tr style="cursor:default">
+      <td>${esc(r.name)}</td>
+      ${r.cells.map(c => c ? `<td class="num"><span class="cmp-hi">${pc(c.stay)}</span>
+        <div class="cmp-n">n=${c.n}</div></td>` : '<td class="num muted">—</td>').join('')}
+      <td class="num hide-s cmp-gap">${(r.gap*100).toFixed(0)} pt</td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+
+function ensureAllOrigins(){
+  const list = S.originList || [];
+  const todo = list.filter(o => !S.allData[o.cc]);
+  if(!todo.length) return Promise.resolve();
+  return Promise.all(todo.map(o =>
+    fetch(`data-${o.cc}.json`).then(r => r.ok ? r.json() : null)
+      .then(d => { if(d) S.allData[o.cc] = d; }).catch(() => {})
+  )).then(() => { if(S.view === 'compare') renderCompare(); });
+}
+
 function renderDoc(){
   const m = S.data.meta;
   document.getElementById('v-doc').innerHTML = `
@@ -524,12 +601,13 @@ function renderDoc(){
 }
 
 function render(){
-  ['match','country','inst','venue','doc'].forEach(v =>
+  ['match','country','inst','compare','venue','doc'].forEach(v =>
     document.getElementById('v-'+v).hidden = (v !== S.view));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === S.view));
   if(S.view === 'match') renderMatch();
   if(S.view === 'country') renderCountries();
   if(S.view === 'inst') renderInsts();
+  if(S.view === 'compare'){ renderCompare(); ensureAllOrigins(); }
   if(S.view === 'venue') renderVenues();
   if(S.view === 'doc') renderDoc();
 }
@@ -562,6 +640,7 @@ fetch('data-venues.json').then(r => r.ok ? r.json() : null).then(v => {
       '<option value="">全部学科</option>' +
       v.meta.fields.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
   }
+  if(S.view === 'compare'){ renderCompare(); ensureAllOrigins(); }
   if(S.view === 'venue') renderVenues();
 }).catch(() => {});
 
@@ -574,12 +653,14 @@ function loadOrigin(cc){
   }).then(d => {
     S.data = d;
     S.origin = cc;
+    S.allData[cc] = d;
     // 换来源国后旧的筛选值可能在新数据里不存在，重置掉，免得页面空白却看不出为什么
     S.fCountry = S.fField = S.fKind = S.q = S.mField = S.mCountry = S.mKind = '';
     ['f-kind','m-kind'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
     document.getElementById('loading').hidden = true;
     stratumSeg(document.getElementById('seg-stratum'));
     stratumSeg(document.getElementById('seg-stratum2'));
+    stratumSeg(document.getElementById('seg-stratum3'));
     initFilters();
     document.getElementById('f-q').value = '';
     document.getElementById('foot').innerHTML =
@@ -597,6 +678,7 @@ function loadOrigin(cc){
 // 来源国清单：多于一个才显示切换器，只有一个时不占地方
 fetch('origins.json').then(r => r.ok ? r.json() : null).then(m => {
   const list = (m && m.origins) || [];
+  S.originList = list;
   if(list.length > 1){
     const sel = document.getElementById('origin-sel');
     sel.innerHTML = list.map(o =>
