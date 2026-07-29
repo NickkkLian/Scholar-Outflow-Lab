@@ -150,8 +150,30 @@ def write_manifest():
     return out
 
 
+def pick_source(origin):
+    """在「正在重抓」期间，用行数更多的那份，别拿半截数据出榜。
+
+    升级到 v2 要整份重抓、跨好几天额度。中途 `careers_cn.jsonl` 只有一部分人，
+    直接拿它算会把线上从 18 万样本/175 所机构打成 1.9 万/3 所——**真发生过**
+    （2026-07-28 那轮定时任务就这么把残缺数据推上线了）。
+    规则很笨但可靠：谁行数多用谁。新数据抓超备份后自动切换，不需要额外的状态标记。
+    """
+    cur = os.path.join(DATA, f"careers_{origin}.jsonl")
+    bak = cur + ".v1.bak"
+    if not os.path.exists(bak):
+        return cur, None
+    n_cur = sum(1 for _ in open(cur)) if os.path.exists(cur) else 0
+    n_bak = sum(1 for _ in open(bak))
+    if n_bak > n_cur:
+        return bak, f"重抓中（新 {n_cur} < 备份 {n_bak}），本轮仍用备份出榜"
+    return cur, f"新数据已超过备份（{n_cur} ≥ {n_bak}），切回新数据"
+
+
 def build(origin):
-    rows = load_jsonl(os.path.join(DATA, f"careers_{origin}.jsonl"))
+    src, note = pick_source(origin)
+    if note:
+        print(f"[{origin}] {note}")
+    rows = load_jsonl(src)
     whitelist = json.load(open(os.path.join(DATA, "institutions.json")))
     base = [r for r in rows if origin in r.get("start_ccs", [])]
     cutoff = THIS_YEAR - FOLLOWUP
