@@ -67,9 +67,21 @@ else
 fi
 
 say "-- 重算指标（不联网）"
+# ⚠️ 重抓期间 compute.py 会自动改用 .v1.bak（行数多的那份），不会把半截数据推上线。
+# 2026-07-28 真踩过：cn 升 v2 抓到 1.9/18 万时撞额度，照常重算发布，
+# 线上从 18 万样本/175 所机构变成 1.9 万/3 所。
 for cc in cn in ir br ru; do
-  if [ -s "data/careers_$cc.jsonl" ]; then
+  if [ -s "data/careers_$cc.jsonl" ] || [ -s "data/careers_$cc.jsonl.v1.bak" ]; then
     python3 scripts/compute.py "$cc" >>"$LOG" 2>&1 && say "   $cc 已重算"
+  fi
+  # 重抓完成（新数据 ≥ 备份）就删备份，否则几百 MB 一直躺着
+  bak="data/careers_$cc.jsonl.v1.bak"
+  if [ -f "$bak" ] && [ -s "data/careers_$cc.jsonl" ]; then
+    n_new=$(wc -l < "data/careers_$cc.jsonl"); n_bak=$(wc -l < "$bak")
+    if [ "$n_new" -ge "$n_bak" ]; then
+      rm -f "$bak" "data/careers_$cc.state.json.v1.bak"
+      say "   $cc 重抓完成（$n_new ≥ $n_bak），已删除 v1 备份"
+    fi
   fi
 done
 
