@@ -50,20 +50,32 @@ else
   say "[3/5] 研究所已在白名单，跳过"
 fi
 
-say "[4/5] 多来源国（每国 12 seed ≈ 600 次请求）"
-python3 scripts/harvest.py in ir br ru --seeds 12 >>"$LOG" 2>&1 \
-  && say "      四个来源国都齐了" || say "      额度用尽，明天自动接上"
+# 来源国越多，跨来源对比越有说服力——那是本站的核心价值，
+# 所以它排在 v2 前面（v2 实测只值 +1.4%，见下）。每国 12 seed ≈ 600 次请求。
+say "[4/5] 多来源国"
+python3 scripts/harvest.py in ir br ru kr vn pk ng eg tr mx id --seeds 12 >>"$LOG" 2>&1 \
+  && say "      所有排队的来源国都齐了" || say "      额度用尽，明天自动接上"
 
-# v2 = 学科按全部 topic 投票。只在前面几步都做完后才动，因为它最贵。
-if [ -f data/careers_in.jsonl ] && [ -s data/careers_in.jsonl ] \
-   && head -1 data/careers_cn.jsonl 2>/dev/null | grep -q '"v":2'; then
-  say "[5/5] cn 已是 v2，跳过"
-elif [ -f data/careers_ru.jsonl ] && [ -s data/careers_ru.jsonl ]; then
-  say "[5/5] 前面都跑完了，开始把 cn 升到 v2（会先备份 .v1.bak，跨天续跑）"
-  python3 scripts/harvest.py cn --seeds 24 --refresh >>"$LOG" 2>&1 \
-    && say "      cn 已升到 v2" || say "      额度用尽，明天自动接上"
+# v2 = 学科按全部 topic 投票。
+# ⚠️ **原假设已被实测推翻，别再以为这一步是在修 CS 归类**（2026-07-28）：
+#   拿 v2 的 5.9 万人与 v1 备份的重叠 3.96 万人比对——
+#   计算机 3656 → 3708（+1.4%），工程 8901 → 9984；CS→工程 287 人 vs 工程→CS 222 人，净流出。
+#   17.1% 的人归类变了，但对 CS 的净效果≈0。
+#   真正的根因是 OpenAlex 的 topic→field 分类本身把偏应用的 CS 挂在 Engineering 下，
+#   多取几个 topic 投票没用——那些 topic 也指向 Engineering。
+# 仍然让它跑完：额度每天刷新且此时已无其它排队任务，机会成本≈0，
+# 跑完还能清掉「半完成」状态（否则 pick_source 的备份守卫会永久生效）。
+# 附带收益是 top_fields（前三学科及票数），以后要看跨学科的人用得上。
+# 下一个待验证方向（**验证前别开新的重抓**）：改用 topic 的 subfield 而非 field，
+# 或自建映射把 AI/ML/CV/信息系统等 CS 相邻 subfield 拉进「计算机」桶。
+# 只需几次请求就能先看清 subfield 数据长什么样，验通了再决定重抓。
+if head -1 data/careers_cn.jsonl 2>/dev/null | grep -q '"v":2' \
+   && [ "$(wc -l < data/careers_cn.jsonl)" -ge "$(wc -l < data/careers_cn.jsonl.v1.bak 2>/dev/null || echo 0)" ]; then
+  say "[5/5] cn v2 已完整，跳过"
 else
-  say "[5/5] 等前面几步跑完再升 v2（它最贵，别抢额度）"
+  say "[5/5] 续跑 cn v2（不是在修 CS 归类——那个假设已被推翻，见注释）"
+  python3 scripts/harvest.py cn --seeds 24 --refresh >>"$LOG" 2>&1 \
+    && say "      cn v2 已跑完" || say "      额度用尽，明天自动接上"
 fi
 
 say "-- 重算指标（不联网）"
