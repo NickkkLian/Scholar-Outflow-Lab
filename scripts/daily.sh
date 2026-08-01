@@ -79,10 +79,19 @@ else
 fi
 
 say "-- 重算指标（不联网）"
+done_ccs=""
 # ⚠️ 重抓期间 compute.py 会自动改用 .v1.bak（行数多的那份），不会把半截数据推上线。
 # 2026-07-28 真踩过：cn 升 v2 抓到 1.9/18 万时撞额度，照常重算发布，
 # 线上从 18 万样本/175 所机构变成 1.9 万/3 所。
-for cc in cn in ir br ru; do
+# ⚠️ 国家列表**从实际文件推导，别写死**。
+# 2026-08-01 踩过：把 8 个新来源国加进了上面的抓取命令，却忘了改这里的写死列表，
+# 结果韩国 108,768 人、越南 57,440 人都抓回来了，却永远不会被计算、更不会上线。
+for f in data/careers_*.jsonl data/careers_*.jsonl.v1.bak; do
+  [ -e "$f" ] || continue
+  cc=$(basename "$f" | sed -E 's/^careers_([a-z]{2})\.jsonl(\.v1\.bak)?$/\1/')
+  case "$cc" in [a-z][a-z]) ;; *) continue ;; esac
+  case " $done_ccs " in *" $cc "*) continue ;; esac
+  done_ccs="$done_ccs $cc"
   if [ -s "data/careers_$cc.jsonl" ] || [ -s "data/careers_$cc.jsonl.v1.bak" ]; then
     python3 scripts/compute.py "$cc" >>"$LOG" 2>&1 && say "   $cc 已重算"
   fi
