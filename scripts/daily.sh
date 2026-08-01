@@ -22,6 +22,21 @@ LOG="data/daily.log"
 mkdir -p data
 say() { echo "[$(date '+%F %T')] $*" | tee -a "$LOG"; }
 
+# 互斥锁：手动跑 harvest 时定时任务可能同时触发，两个进程往同一批 jsonl 追加、
+# 同时写 state 文件 → 数据错乱且 seed 会被错标完成。mkdir 是原子操作，够用。
+LOCK="data/.daily.lock"
+if ! mkdir "$LOCK" 2>/dev/null; then
+  owner=$(cat "$LOCK/pid" 2>/dev/null || echo "?")
+  if [ "$owner" != "?" ] && kill -0 "$owner" 2>/dev/null; then
+    say "⏭  已有一轮在跑（pid $owner），本次跳过"
+    exit 0
+  fi
+  say "⚠️  发现无主锁（pid $owner 已不存在），清理后继续"
+  rm -rf "$LOCK"; mkdir "$LOCK" || exit 1
+fi
+echo $$ > "$LOCK/pid"
+trap 'rm -rf "$LOCK"' EXIT INT TERM
+
 # .env 里有 OPENALEX_MAILTO 和 GH_TRAFFIC_PAT（已 gitignore，绝不进公开仓）
 [ -f .env ] && set -a && . ./.env && set +a
 
