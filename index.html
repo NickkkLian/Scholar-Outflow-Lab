@@ -210,6 +210,7 @@ tbody tr:hover{background:var(--paper-2)}
       <p class="ask-note">按「留下率的 95% 置信下界」排序，不是按原始比率——
         25 人样本里的 40% 站不住脚，按下界排它自己会掉下去。<b>样本量一并列出，请自己看清楚。</b></p>
     </div>
+    <div id="match-coverage"></div>
     <div id="match-summary"></div>
     <div id="match-list"></div>
   </section>
@@ -244,6 +245,7 @@ tbody tr:hover{background:var(--paper-2)}
       <input type="search" id="f-q" placeholder="搜校名…" />
       <span class="muted small" id="inst-count"></span>
     </div>
+    <div id="inst-coverage"></div>
     <div style="overflow-x:auto">
       <table>
         <thead><tr>
@@ -352,9 +354,28 @@ function instRows(){
     });
 }
 
+// 达标机构少的时候要说清为什么，否则看起来像站坏了。
+// 实测：机构数几乎完全由出海人数决定——印尼出海率 3.9%→7 所，中国 13.1%→175 所。
+function coverageNote(){
+  const m = S.data && S.data.meta;
+  if(!m) return '';
+  const n = (S.data.institutions || []).length;
+  if(n >= 40) return '';
+  const o = (S.originList || []).find(x => x.cc === S.origin) || {};
+  const rate = m.mover_rate != null ? pc(m.mover_rate) : '—';
+  return `<div class="warn"><b>${esc(m.origin_name)}只有 ${n} 所机构达标，这不是故障。</b>
+    该来源国抽样 ${m.sampled_authors.toLocaleString()} 人，本土起步 ${m.home_start_authors.toLocaleString()} 人，
+    其中有境外任职经历的只有 <b>${m.movers.toLocaleString()} 人（${rate}）</b>——
+    出海的人少，能凑够单校 ${m.min_n_inst} 人门槛的机构自然就少。
+    机构数几乎完全由出海人数决定，<b>不代表这个来源国「没人出去」，只代表样本撑不起分校统计</b>。
+    看国家层面的分布仍然有效。</div>`;
+}
+
 function renderInsts(){
   const rows = instRows();
   document.getElementById('inst-count').textContent = `${rows.length} 所`;
+  const holder = document.getElementById('inst-coverage');
+  if(holder) holder.innerHTML = coverageNote();
   document.getElementById('inst-empty').hidden = rows.length > 0;
   document.getElementById('inst-body').innerHTML = rows.map(({it,s}) => {
     const ci = s.stay_ci || [0,0];
@@ -423,6 +444,8 @@ function matchRows(){
 }
 
 function renderMatch(){
+  const mc = document.getElementById('match-coverage');
+  if(mc) mc.innerHTML = coverageNote();
   const rows = matchRows();
   const sum = document.getElementById('match-summary');
   const list = document.getElementById('match-list');
