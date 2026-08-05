@@ -142,7 +142,12 @@ def write_manifest():
             continue
         out.append({"cc": m.group(1), "name": meta.get("origin_name", m.group(1).upper()),
                     "sampled": meta.get("sampled_authors", 0),
+                    "home": meta.get("home_start_authors", 0),
                     "movers": meta.get("movers", 0),
+                    # 达标机构数几乎完全由出海人数决定（实测：印尼出海率 3.9% → 7 所，
+                    # 中国 13.1% → 175 所）。前端要拿它解释「为什么这个来源国只有几所」，
+                    # 否则用户会以为站坏了。
+                    "mover_rate": meta.get("mover_rate"),
                     "institutions": len(d.get("institutions", []))})
     out.sort(key=lambda x: -x["sampled"])
     with open(os.path.join(WEB, "origins.json"), "w") as f:
