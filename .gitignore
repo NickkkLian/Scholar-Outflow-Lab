@@ -6,3 +6,6 @@ data/traffic.jsonl
 data/*.bak
 .env
 scripts/__pycache__/
+
+# daily.sh 的互斥锁（运行时状态，pid 曾被误提交——释放锁就报「删除未提交」，永久噪音）
+data/.daily.lock/
