@@ -82,6 +82,13 @@ tbody tr:hover{background:var(--paper-2)}
 .sbar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--stay)}
 .sbar u{position:absolute;top:-2px;bottom:-2px;border-left:1px solid rgba(21,122,114,.45);border-right:1px solid rgba(21,122,114,.45);
   background:rgba(21,122,114,.13);text-decoration:none}
+/* 13 个来源国 = 15 列，窄屏要横滚 2 倍。首列不钉住的话，滚到中间就不知道在看哪个目的国了
+   （实测：第一列 left 从 14px 滚到 -371px）。钉住它，横滚时始终能看见行标签。 */
+#cmp-wrap td:first-child, #cmp-wrap th:first-child{
+  position:sticky; left:0; z-index:2; background:var(--paper);
+  box-shadow:1px 0 0 var(--line-2);
+}
+#cmp-wrap tbody tr:hover td:first-child{background:var(--paper-2)}
 .cmp-hi{font-family:var(--mono);font-weight:700;color:var(--stay)}
 .cmp-n{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
 .cmp-gap{font-family:var(--mono);font-size:12px}
