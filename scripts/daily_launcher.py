@@ -10,7 +10,7 @@ LaunchAgent 直接跑 `/bin/bash` 会被拦，读不到 Desktop 下的脚本，*
 而同机的 com.mediaflock.tick 用 `media-flock/.venv/bin/python` 跑了 13 次、退出码 0。
 
 所以 plist 指向那个**已被授权的 python**，由它 spawn bash——
-子进程按 responsible process 规则继承授权。这样不用站长再授权一次。
+子进程按 responsible process 规则继承授权。这样不用再逐个授权一次。
 
 ## 脆弱点（写在这里，免得日后莫名其妙失效）
 
