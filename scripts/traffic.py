@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 """
-读 GitHub 访问量并**存下来**（决策需要的成效信号）。
+Read GitHub traffic for the repo and **persist it**.
 
-为什么必须存：GitHub traffic API **只保留 14 天**，不定期快照就永久丢失。
-所以本脚本按天 upsert 进 data/traffic.jsonl，历史只增不改。
+Why persist: the GitHub traffic API **keeps only 14 days**. Without periodic snapshots the
+history is gone for good. This script upserts one row per day into data/traffic.jsonl —
+append-only history.
 
-需要一个**只读**令牌（细粒度 PAT）。
-⚠️ 权限要勾的是 **Administration: Read-only**，不是 Metadata——
-   GitHub 对 traffic 接口的响应头写死了 `x-accepted-github-permissions: administration=read`。
-   它仍然是只读，但比 Metadata 高一档，别勾成 Read and write。
+Needs a **read-only** fine-grained PAT.
+⚠️ The permission to grant is **Administration: Read-only**, not Metadata —
+   GitHub's response header for the traffic endpoints is fixed at
+   `x-accepted-github-permissions: administration=read`. Still read-only, just one notch above
+   Metadata; do not grant Read and write.
     export GH_TRAFFIC_PAT=github_pat_xxx
-或写进仓库根目录的 .env（已 gitignore，绝不进公开仓）：
+or put it in .env at the repository root (gitignored, never committed):
     GH_TRAFFIC_PAT=github_pat_xxx
 
-用法:
-    python3 scripts/traffic.py            # 抓取并落盘，打印摘要
-    python3 scripts/traffic.py --report   # 只看已存下来的，不联网
+Usage:
+    python3 scripts/traffic.py            # fetch, persist, print a summary
+    python3 scripts/traffic.py --report   # summarise what's on disk, no network
 """
 
 import json
@@ -31,7 +33,7 @@ OUT = os.path.join(DATA, "traffic.jsonl")
 
 
 def load_env():
-    """从 .env 读令牌（不覆盖已有环境变量）。.env 已 gitignore。"""
+    """Read the token from .env without overriding existing environment variables. .env is gitignored."""
     p = os.path.join(ROOT, ".env")
     if not os.path.exists(p):
         return
@@ -62,7 +64,7 @@ def read_rows():
         for line in f:
             try:
                 r = json.loads(line)
-                rows[r["date"]] = r          # 同日后写覆盖先写
+                rows[r["date"]] = r          # later rows for the same day win
             except json.JSONDecodeError:
                 continue
     return rows
@@ -70,21 +72,21 @@ def read_rows():
 
 def report(rows):
     if not rows:
-        print("还没有任何访问量记录。先跑一次不带 --report 的。")
+        print("No traffic rows yet. Run once without --report first.")
         return
     days = sorted(rows)
     v = sum(rows[d].get("views", 0) for d in days)
     u = sum(rows[d].get("uniques", 0) for d in days)
     c = sum(rows[d].get("clones", 0) for d in days)
-    print(f"累计 {len(days)} 天（{days[0]} → {days[-1]}）："
-          f"访问 {v} 次 / 独立访客 {u} / clone {c}")
-    print("最近 14 天：")
+    print(f"{len(days)} days on file ({days[0]} → {days[-1]}): "
+          f"{v} views / {u} unique visitors / {c} clones")
+    print("Last 14 days:")
     for d in days[-14:]:
         r = rows[d]
-        print(f"  {d}  访问 {r.get('views',0):4}  独立 {r.get('uniques',0):4}  "
-              f"clone {r.get('clones',0):3}")
+        print(f"  {d}  views {r.get('views',0):4}  uniques {r.get('uniques',0):4}  "
+              f"clones {r.get('clones',0):3}")
     if u == 0:
-        print("\n独立访客累计为 0——这本身就是结论，别等它自己变好。")
+        print("\nZero unique visitors overall — that is itself a finding; don't wait for it to improve on its own.")
 
 
 def main():
@@ -98,9 +100,9 @@ def main():
     load_env()
     token = os.environ.get("GH_TRAFFIC_PAT", "")
     if not token:
-        print("⛔ 没有 GH_TRAFFIC_PAT。建一个**只读**细粒度 PAT"
-              "（Repository permissions → Administration: Read-only），"
-              "放进仓库根目录的 .env 或 export 出来。详见本文件顶部说明。")
+        print("⛔ GH_TRAFFIC_PAT is not set. Create a **read-only** fine-grained PAT "
+              "(Repository permissions → Administration: Read-only) and put it in "
+              ".env at the repository root, or export it. See the notes at the top of this file.")
         sys.exit(1)
 
     try:
@@ -108,11 +110,11 @@ def main():
         clones = api("traffic/clones", token)
     except urllib.error.HTTPError as e:
         if e.code in (401, 403):
-            print(f"⛔ 令牌无效或权限不足（HTTP {e.code}）。"
-                  "traffic 接口要求 **Administration: Read-only**（不是 Metadata）——"
-                  "GitHub 响应头 x-accepted-github-permissions: administration=read。"
-                  "去 PAT 设置里把 Repository permissions → Administration 改成 Read-only，"
-                  "并确认本仓库在 Repository access 里。")
+            print(f"⛔ Token invalid or under-privileged (HTTP {e.code}). "
+                  "The traffic endpoints require **Administration: Read-only** (not Metadata) — "
+                  "GitHub's header says x-accepted-github-permissions: administration=read. "
+                  "In the PAT settings set Repository permissions → Administration to Read-only, "
+                  "and make sure this repo is listed under Repository access.")
         else:
             print(f"⛔ HTTP {e.code}: {e.reason}")
         sys.exit(1)
@@ -139,7 +141,7 @@ def main():
         for day in sorted(rows):
             f.write(json.dumps(rows[day], ensure_ascii=False) + "\n")
 
-    print(f"{REPO}: 抓到 {len(by_day)} 天，其中 {added} 天是新的/有变化。")
+    print(f"{REPO}: fetched {len(by_day)} days, {added} new or changed.")
     report(rows)
 
 

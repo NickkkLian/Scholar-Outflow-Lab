@@ -1,157 +1,170 @@
-# 去向实验室 · Scholar Outflow Lab
+# Scholar Outflow Lab
 
-> 「移民咨询网」这个想法的**零成本可执行切片**。2026-07-25 起。
-> **定性：作品集**（2026-07-26 定版）——不追变现、不做推广，
-> 但要有可见的成效信号，所以接了访问量快照（见「自动化」）。
-> **不进个人导航站**；作为开源项目挂在个人网站。
+**Where researchers who started their careers in one country end up** — by destination country
+and destination institution, stratified by how long they stayed. Thirteen origin countries,
+1.43 million sampled authors, built entirely on free public data with a zero-dependency stack.
 
-## 这是什么
+**Live:** https://nickkklian.github.io/Scholar-Outflow-Lab/ — English by default, 中文 toggle in the header.
 
-量一件具体的事：**在本国起步的科研人员，出去之后最后落在哪儿**——按目的国和目的高校分别统计，
-并按「在目的机构待了多久」分层（这是关键，见下）。
+![Origin comparison — the same destination, different starting points](docs/screenshot-compare.png)
 
-对标 `osr.clarelab.moe/mobility`（Open Scholar Ranking）的 Arrival / Stay / No return / Tier 思路，
-但**不 clone 它的代码或数据**，全部从 OpenAlex 公共数据自己算，口径自己定义、公开写明。
+---
 
-## 为什么零成本
+## What it answers — and what it deliberately doesn't
 
-| 项 | 花费 |
+It answers one narrow question well: *of researchers who began publishing in country X and later
+held a position abroad, where did they end up, and how does that depend on how long they stayed?*
+
+It does **not** answer "which country is easiest to immigrate to" or "what are a student's odds".
+The sample is people with authorship records in [OpenAlex](https://openalex.org); anyone who left
+before ever publishing at home is simply not in the frame, and "stayed" means *the last known
+affiliation is in that country* — not a work permit or permanent residency. Every page says so.
+
+## The finding worth seeing
+
+The **Origin Compare** view puts the same destination side by side across origins. For stays of
+four or more years in the United States:
+
+| Origin | Stay rate | n |
+|---|---|---|
+| Iran | 74.5% | 3,006 |
+| India | 52.4% | 3,926 |
+| Brazil | 40.2% | 1,442 |
+| Mainland China | 19.1% | 8,610 |
+
+Same destination, same sampling, same computation — a three- to four-fold spread, and the
+direction holds across the shared destinations. Because the *sample frames* differ by origin
+(each is "people who once published under that country's affiliation"), the site is explicit
+that only relative levels and direction are comparable, never the absolute percentages.
+
+## How it's computed
+
+| Term | Definition |
 |---|---|
-| 数据 | OpenAlex，CC0 公共领域，**免 API key、免注册、免费**（免费额度每天 1000 次请求，UTC 零点重置） |
-| 托管 | 静态单文件 HTML，可直接进 GitHub Pages（与本生态其余站点同栈） |
-| 依赖 | 纯 Python 标准库 + 原生 JS，**零第三方包** |
-| 维护者要做的操作 | 抓数据与出站全程**零**；唯一一次性动作是建一个**只读** PAT 好让脚本读访问量 |
+| **Sample** | Random sample of OpenAlex authors who ever published under an origin-country affiliation, with ≥5 works |
+| **Home start** | The earliest career year includes the origin country |
+| **Arrival** | A later foreign affiliation spanning ≥2 calendar years (a single year is treated as co-authorship, not a move) |
+| **Observation window** | Only arrivals at least 5 years old count — otherwise "hasn't left yet" is misread as "stayed" |
+| **Outcomes** | Four mutually exclusive classes on the final known affiliations: **Stayed** (destination only) · **Dual** (both) · **Returned** (origin only) · **Onward** (third country). They sum to 100% by construction |
+| **Strata** | 2–3 years · ≥4 years (default) · ≥6 years · any |
+| **Tiers** | Institutions ranked by the **Wilson 95% lower bound** of the default-stratum stay rate, cut into quartiles R1–R4 |
+| **Whitelist** | 18,211 institutions with a ROR ID and adequate output, to filter the phantom affiliations OpenAlex parses out of free-text strings |
 
-## 目录
+Two deliberate choices in the ranking: percentiles rather than absolute cutoffs (absolute values
+drift with sampling; relative position within a batch is stable), and the confidence bound rather
+than the raw rate (40% of 25 people versus 30% of 300 — ranking by the bound lets small-sample
+flukes sink on their own, with no extra rules).
+
+## Three corrections that rescued the result
+
+These are the reason the numbers are trustworthy, so they are documented rather than hidden.
+
+1. **Dual affiliation had to become its own category.** The first version reported "stayed" and
+   "did not return" as independent rates and produced *stayed 38% > did-not-return 25%* — a
+   logical impossibility. The cause: a large share of Chinese researchers hold a foreign post
+   *and* a home co-appointment at the same time. With four exclusive classes the totals are
+   100% by construction and the numbers became self-consistent.
+2. **Stratifying by length of stay is not optional.** The 2–3-year band is dominated by visiting
+   scholars and joint-training students, who were always going home; pooled, they dilute every
+   institution toward the same low rate. National University of Singapore, Chinese origin:
+   **2.1%** stayed after 2–3 years (n=144), **10.7%** after ≥4 (n=289), **13.0%** after ≥6
+   (n=185). The default stratum is ≥4 years for that reason.
+3. **People already affiliated with the destination in their first year are not movers.**
+   Without that filter, researchers who had always been in Taiwan or Hong Kong counted as
+   "moved there and stayed" — 15.2% of ≥4-year arrivals — and a few Taiwanese universities
+   topped the board. After the fix the top of the ranking returned to places that match
+   intuition.
+
+### And one hypothesis that did not survive
+
+Early data suggested that much of computer science was being filed under "Engineering" because
+the field label came from an author's *first* OpenAlex topic. The proposed fix — vote across all
+topics — was implemented, and the entire Chinese sample was re-harvested under it
+(235,059 authors, 31% larger than v1). Result: the share of CS relative to Engineering went from
+15.6% to 14.5% — no improvement once sample growth is accounted for. The root cause is OpenAlex's
+own topic→field taxonomy, which places applied CS under Engineering. The finding is recorded in
+the pipeline comments so nobody re-runs the experiment, and the limitation is stated on the site.
+
+## Known limitations
+
+- A proxy built from academic affiliation records — not visa or immigration statistics, and not
+  immigration or legal advice.
+- The sample frame excludes anyone who left before publishing at home.
+- Institutions are parsed by OpenAlex from affiliation strings; the ROR + output whitelist and a
+  generic-name blacklist remove most mismatches, not all. Research institutes are noisier than
+  universities, so the UI offers a "universities only" filter.
+- Field labels are coarse (see above). Conference coverage in OpenAlex is thin.
+- Absolute values drift with sampling choices; compare across institutions, countries and
+  origins, not against external figures.
+
+## Architecture
+
+Zero cost, zero accounts, zero third-party packages.
+
+| Layer | Choice | Why |
+|---|---|---|
+| Data | OpenAlex REST API, CC0 | Free, no key; 1,000 requests/day on the free tier |
+| Processing | Python 3 standard library only | Nothing to install; the pipeline is the documentation |
+| Front end | One static `index.html`, vanilla JS | Mobile-first, dark-mode aware, bilingual, deploys straight to GitHub Pages |
+| Hosting | GitHub Pages from `main` | The computed JSON lives next to the page; no server |
+| Automation | launchd + a shell script | Runs once a day within the quota; see below |
 
 ```
-index.html               单文件前端（移动优先、深浅色自适应、零依赖）
-data-cn.json             算好的指标，页面直接读
-origins.json             已生成的来源国清单，驱动顶栏的来源切换器
-scripts/harvest.py       从 OpenAlex 抽样学者履历 → data/careers_<cc>.jsonl（可断点续跑）
-scripts/institutions.py  拉高校白名单（有 ROR + 产出达标）→ data/institutions.json
-scripts/compute.py       聚合成指标 → data-<cc>.json，并刷新 origins.json（来源国清单）
-scripts/venues.py        期刊/会议榜 → data-venues.json
+index.html              single-file front end (EN/中文 toggle; data labels localised client-side)
+data-<cc>.json          computed metrics per origin country — what the page reads
+data-venues.json        journal / conference board (13,086 venues, 26 fields)
+origins.json            manifest of generated origins — drives the origin switcher
+scripts/harvest.py      sample author careers from OpenAlex → data/careers_<cc>.jsonl (resumable)
+scripts/institutions.py institution whitelist (ROR + output floor + generic-name blacklist)
+scripts/compute.py      aggregate → data-<cc>.json; idempotent, refuses to publish partial data
+scripts/venues.py       venue board, ranked within field by h-index
+scripts/traffic.py      daily snapshot of GitHub traffic (the API only keeps 14 days)
+scripts/daily.sh        the scheduled round, ordered by cost and unlock value
 ```
 
-站点文件放在仓库根目录，因为 GitHub Pages 走 **main 分支根目录**。
-`data/` 是中间产物（几百 MB 的 jsonl），已 gitignore。
+`data/` (hundreds of MB of intermediate JSONL) is gitignored; the site files sit in the repo root
+because GitHub Pages serves `main`'s root.
 
-## 跑一遍
+## Reproduce
 
 ```bash
-export OPENALEX_MAILTO=you@example.com   # 进 OpenAlex 礼貌池；不设也能跑，限速更严
-python3 scripts/institutions.py          # 高校白名单，一次即可（约 60 次请求）
-python3 scripts/harvest.py cn --seeds 24 # 抽样约 18 万人（约 1200 次请求，可中断续跑）
-python3 scripts/compute.py cn            # 算指标，不联网
-python3 -m http.server 8791              # 本地看：http://localhost:8791
+export OPENALEX_MAILTO=you@example.com   # joins the OpenAlex polite pool; optional but faster
+python3 scripts/institutions.py          # whitelist, once (~60 requests)
+python3 scripts/harvest.py cn --seeds 24 # ~180k authors (~1,200 requests; resumable)
+python3 scripts/compute.py cn            # offline
+python3 -m http.server 8791              # http://localhost:8791
 ```
 
-换来源国：把 `cn` 换成 `in` / `ir` / `br` 等 ISO 两位码即可。
-**注意额度**：免费额度每天 1000 次请求，一个来源国 24 个 seed 就要 1200 次——
-分两天跑，或把 `--seeds` 降到 12。跑超了脚本会干净退出并提示何时重置，重跑自动续上。
+Swap `cn` for any ISO-3166 code (`in`, `ir`, `br`, …). **Mind the quota:** the free tier is 1,000
+requests per day, and one origin at 24 seeds needs about 1,200 — split it across two days or use
+`--seeds 12`. Hitting the limit exits cleanly with the reset time; re-running the same command
+resumes from the last completed seed.
 
-## 口径（写死在 data-*.json 的 meta 里，页面「口径」页原样展示）
+## Automation, and what it learned the hard way
 
-- **样本**：OpenAlex 中曾在来源国机构署名、发表 ≥5 篇的学者随机抽样
-- **本土起步**：履历最早年份所在国包含来源国
-- **一次到达**：起步后在某境外机构挂名跨 ≥2 个年份（只挂 1 年 = 合作署名，不算）
-- **观察期**：只统计到达年 ≤ 今年-5 的人，否则「还没来得及走」会被误算成留下
-- **终局四分类**（互斥、合计 100%）：留下 / 双挂 / 回流 / 转道
+`scripts/daily.sh` runs once a day (launchd, 18:00 local — after the 00:00 UTC quota reset in
+both daylight-saving regimes). Tasks are ordered "cheapest and most unlocking first", every step
+is resumable, and a day that runs out of quota simply continues the next day.
 
-## 三个把结论救回来的修正（别改回去）
+Three guards exist because each corresponding failure actually happened:
 
-1. **双挂必须单列**。最初把「留下」和「未回流」当两个独立比率，结果出现「留下 38% > 未回流 25%」
-   这种逻辑上不可能的数——原因是大量中国学者末位**同时挂境外机构和国内机构**。
-   改成互斥四分类后合计恒为 100%，数才自洽。
-2. **必须按停留时长分层**。2–3 年那一档以访问学者/联合培养为主，他们本来就要回国，
-   混在一起会把所有学校的留下率稀释成一样低。举例（NYU）：2–3 年留下 9.1%，≥4 年 48.6%，≥6 年 58.8%。
-   **不分层的总数没有意义**，默认口径固定为 ≥4 年。
-3. **起步那年就已挂在该国的，不算「迁过去」**。不排掉的话，一直在台湾/香港的人会被当成
-   「迁过去又留下」，把留下率顶上天——实测这类占 ≥4 年 arrival 的 **15.2%**，
-   修正前台湾几所高校霸榜前三，修正后榜首回到 Caltech / UC Riverside / NYU 这类符合直觉的结果。
+- **Never publish partial data.** During a multi-day re-harvest, `compute.py` uses whichever of
+  the new file and its backup has more rows. The rule is dumb on purpose. The day before it
+  existed, a harvest hit the quota at 19k of 180k authors, the recompute ran anyway, and the
+  live site shrank from 175 institutions to 3.
+- **Only commit when the substance changed.** The generated timestamp is excluded from the
+  comparison; otherwise the daily job would produce a timestamp-only commit every day and turn
+  the history into noise. The job also stages data files only — never source — so a data commit
+  can't silently carry hand-made front-end changes under a misleading message.
+- **Derive the country list from the files on disk.** Two origins were once harvested in full and
+  then never computed or published, because a hard-coded list in the recompute loop wasn't
+  updated. The loop now scans for `careers_*.jsonl`.
 
-## 已知边界（页面上必须照实说，别为了好看藏起来）
+The job is now in maintenance mode: all queued work is complete, so a daily run does exactly two
+things — snapshot traffic and run an idempotent recompute — with zero OpenAlex quota and zero
+attention required.
 
-- 学术履历代理指标，**不是签证/移民统计，不构成移民或法律建议**
-- 样本框是「曾在国内署名发表」的人——本科就出国、国内没发过论文的那批**根本不在样本里**
-- 「留下」= 最后已知署名机构在该国，**不等于**拿到工签或永居
-- 机构由 OpenAlex 从署名字符串自动解析，已用 ROR + 产出量白名单滤过，仍可能有错配
-- 绝对值随抽样口径漂移，**只能做机构/国家之间的横向比较**
-- **学科颗粒很粗，且已知修不好的一条路**：大量做计算机的人被 OpenAlex 归进「工程」，
-  于是「计算机」达标机构只有港新几所——这是归类问题，不是「美国没有 CS 数据」。
-  ⚠️ **「多取几个 topic 投票」这条路已实测无效**（计算机 +1.4%，CS↔工程还是净流出）：
-  根因在 OpenAlex 的 topic→field 分类本身。待验证的方向是用 subfield 或自建映射，见「进度」
-- **额度**：OpenAlex 免费额度是**每天 1000 次请求**（UTC 零点重置），不是无限。
-  一个来源国跑 12 个 seed ≈ 600 次，所以**一天大约只能抓 1.5 个国家**。仍是零成本，但要按天排
+## Data and license
 
-## 进度
-
-- [x] 中国来源国全量抽样（179,423 人）+ 目的国 / 高校榜
-- [x] 「输入背景 → 匹配路径」（原始需求第 3 点）：学科 × 目的地 × 打算待多久
-- [x] 期刊/会议榜（原始需求第 4 点）：**13,086 本**期刊与会议，27 学科，学科内按 h-index 分 V1–V4
-- [x] 建公开仓 + GitHub Pages
-- [x] 前端来源国切换（`origins.json` 清单 + 顶栏切换器）——**多来源数据一落地就能看见**，
-      只有一个来源国时切换器自动隐藏，不占地方
-- [x] 多来源国：cn 179k · in 115k · ir 98k · br 113k · ru 111k（**五国齐**）
-- [x] **跨来源对比页**——同一目的国、不同起点并排看。美国：中国 19.9% / 印度 52.4% /
-      巴西 40.2% / 伊朗 74.5%，差 3–5 倍且方向在 32 个共有目的国上一致。这是本站的核心价值
-- [x] 再加 8 个来源国（kr/vn/pk/ng/eg/tr/mx/id）——**13 国全部上线**（2026-08 上旬陆续完成）
-- [x] 研究所纳入白名单：12,107 → **18,211 所**（+facility/healthcare/government/nonprofit）。
-      cn 榜 152 → 175 所，新进 23 所全是 HHMI / PNNL / CSIRO / NIH / MD Anderson / CNRS / A*STAR
-      这类；`Ministry of Education` 噪音被**整名**黑名单挡住（子串匹配会误杀
-      Massachusetts General Hospital）。前端有「只看高校 / 只看研究所」筛选
-- [✗] **学科归类做细——假设已被完整数据推翻，结案**（2026-08-11 全量验证）。
-      原以为 field 取 `topics[0]` 导致大量 CS 被归进「工程」，改成按全部 topic 投票就能修。
-      **v2 已跑完（235,059 人，样本比 v1 大 31%），最终判据：**
-      · 「计算机」达标机构 v1 **7 所** → v2 **11 所**，看着像修好了
-      · **但扣掉样本增长就没了**：CS/工程比 **15.6% → 14.5%**，反而略降；
-        绝对数 7→11 完全可由样本 +31%、总机构 +26% 解释
-      · 早先用部分数据（3.96 万人重叠）预判的「+1.4%、CS↔工程净流出」，被全量数据确认
-      根因是 **OpenAlex 的 topic→field 分类本身**把偏应用的 CS 挂在 Engineering 下。
-      subfield/自建映射方向**随项目收尾一并搁置**（2026-08-12）——方向留档在此，
-      重启条件：有人真的需要按细分学科查，且愿意为一次全量重抓花掉两天额度。
-
-## 收尾（2026-08-12，项目转入常青状态）
-
-原始需求四点全部落地 + 跨来源对比页（核心价值）。**不再投入新功能**；站点是纯静态
-GitHub Pages，不维护也不会坏。每日自动化已自然收敛到零维护：任务队列全部完成后，
-`daily.sh` 每天实际只做两件事——访问量快照（GitHub traffic API 只留 14 天，不存就丢）
-和幂等重算（内容无变化不提交）——**零 OpenAlex 额度消耗、零人工看护**。
-想彻底停机：上面「自动化」一节的 `launchctl bootout` 一行即可，站点不受影响。
-
-## 授权
-
-代码 MIT。数据来自 [OpenAlex](https://openalex.org)，CC0 公共领域。
-本站不提供移民、法律或财务建议。
-
-## 自动化（2026-07-26 起真的在跑）
-
-`scripts/daily.sh` 由 launchd `com.scholaroutflow.daily` 每天**本地 18:00** 触发
-（PDT=01:00 UTC、PST=02:00 UTC，两种时令都稳在 OpenAlex 额度重置之后）。
-任务按「便宜且解锁多」排序，一天的额度大概只够走到某一步，剩下的第二天自动接着走：
-
-1. 访问量快照（GitHub traffic API **只留 14 天**，不定期存就永久丢）→ `data/traffic.jsonl`
-2. 期刊会议榜（已有就跳过）
-3. 机构白名单含研究所（已含就跳过）
-4. 多来源国抓取（撞额度就干净退出，第二天自动接上）
-5. cn 升 v2（最贵，排最后）
-6. 重算指标 → **只有实质内容变了才提交推送**
-   （`generated_at` 每次都不同，不排除它会天天产生只有时间戳差异的空提交）
-
-⚠️ **重抓期间不会把半截数据推上线**：`compute.py` 的 `pick_source()` 在
-`careers_<cc>.jsonl` 与其 `.v1.bak` 之间选行数多的那份。
-2026-07-28 真踩过——cn 升 v2 抓到 1.9/18 万时撞额度，任务照常重算发布，
-线上从 18 万样本/175 所机构变成 **1.9 万/3 所**。
-教训：**「可断点续跑」和「续跑期间能不能对外发布」是两件事。**
-
-```bash
-tail -30 data/daily.log                                   # 看跑得怎么样
-python3 scripts/traffic.py --report                       # 只看访问量，不联网
-launchctl bootout gui/$(id -u)/com.scholaroutflow.daily   # 关掉自动化
-```
-
-**凭据**：`.env`（已 gitignore、chmod 600，**绝不进公开仓**）放 `OPENALEX_MAILTO` 和 `GH_TRAFFIC_PAT`。
-后者是**只读**细粒度 PAT，权限勾 **Administration: Read-only**——
-不是 Metadata（GitHub 对 traffic 接口的响应头写死 `x-accepted-github-permissions: administration=read`）。
-仍是只读，但比 Metadata 高一档，**别勾成 Read and write**。
+Code: MIT. Data: [OpenAlex](https://openalex.org), CC0 public domain.
+This project does not provide immigration, legal or financial advice.

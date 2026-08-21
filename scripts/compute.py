@@ -1,27 +1,34 @@
 #!/usr/bin/env python3
 """
-把 careers_*.jsonl 聚合成「出去之后落在哪」的指标，输出 web/ 用的 JSON。
+Aggregate careers_*.jsonl into "where did they end up" metrics and emit the JSON the web UI reads.
 
-口径（原样写进输出 meta，网页上必须照抄展示，不许含糊）：
-  样本    OpenAlex 中「曾在来源国机构署名、且发表 ≥5 篇」的学者随机抽样
-  本土起步 履历最早年份所在国包含来源国 —— 即「在本国起步」的科研人员
-  一次到达 之后（到达年 ≥ 起点年）在某境外机构挂名跨 ≥2 个年份
-  观察期  只统计到达年 ≤ 今年-FOLLOWUP 的人，否则「还没来得及走」会被算成留下
+Definitions (written verbatim into the output meta; the page must show them as-is, no hedging):
+  Sample      random sample of OpenAlex authors who ever published under an origin-country
+              affiliation and have ≥5 works
+  Home start  the earliest career year includes the origin country — i.e. researchers who
+              *started* at home
+  Arrival     a later (arrival year ≥ start year) foreign affiliation spanning ≥2 calendar years
+  Window      only arrivals with year ≤ this_year − FOLLOWUP count; otherwise "hasn't left yet"
+              gets misread as "stayed"
 
-  ⭐ 分层（这是本站的核心，不分层的数字会被访问学者稀释到没意义）：
-    short  在目的机构 2–3 年 —— 多为访问学者/联合培养，绝大多数本来就要回国
-    long   ≥4 年 —— 更像读博/长期职位（默认口径）
-    long6  ≥6 年 —— 长期扎根
-    all    不限时长
+  ⭐ Strata (the core of the site — unstratified numbers are diluted to meaninglessness by
+     visiting scholars):
+    short  2–3 years at the destination — mostly visiting scholars / joint training, who were
+           always going to go home
+    long   ≥4 years — closer to PhD studies / long-term positions (default)
+    long6  ≥6 years — putting down roots
+    all    any length
 
-  终局四分类（互斥、合计 100%），按最后已知年份的全部任职国判定：
-    留下 stay   末位国含目的国、不含来源国
-    双挂 dual   末位国同时含两边  ← 中国学者极常见，单列以免高估任何一边
-    回流 ret    末位国含来源国、不含目的国
-    转道 onward 两个都不含（去了第三国）
+  Four mutually exclusive outcomes (sum to 100%), judged on ALL affiliation countries in the
+  last known year:
+    stay    final countries include the destination, not the origin
+    dual    both  ← very common among Chinese researchers; kept separate so neither side is inflated
+    ret     final countries include the origin, not the destination
+    onward  neither (moved on to a third country)
 
-  ⚠️ 学术履历代理指标，不是签证/移民统计，也不构成移民建议。
-     绝对值受抽样口径影响很大，**只看机构/国家之间的相对高低**。
+  ⚠️ A proxy built from academic affiliation records — not visa/immigration statistics and not
+     immigration advice. Absolute values are sensitive to sampling; **only compare institutions
+     and countries against each other**.
 """
 
 import collections
@@ -33,19 +40,23 @@ import sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 DATA = os.path.join(ROOT, "data")
-WEB = ROOT   # 站点直接放仓库根目录：GitHub Pages 走 main 分支根目录
+WEB = ROOT   # The site lives in the repo root: GitHub Pages serves main's root directory
 
 THIS_YEAR = datetime.date.today().year
 FOLLOWUP = 5
-MIN_N_INST = 25          # 默认分层下的机构最小样本量
+MIN_N_INST = 25          # minimum sample per institution in the default stratum
 MIN_N_COUNTRY = 60
 MIN_N_FIELD = 15
 
-# 分层: key -> (最短年数, 最长年数)
+# stratum key -> (min years, max years)
 STRATA = {"short": (2, 3), "long": (4, 99), "long6": (6, 99), "all": (2, 99)}
 DEFAULT_STRATUM = "long"
 OUTCOMES = ("stay", "dual", "ret", "onward")
 
+# Canonical display labels stored in the data files (Chinese). The web UI is bilingual and
+# derives English labels client-side — countries via Intl.DisplayNames from the ISO code that
+# every record carries, fields via a dictionary keyed on these exact strings. Changing a label
+# here therefore changes the dictionary key on the front end; keep the two in step.
 CC_NAME = {
     "us": "美国", "gb": "英国", "ca": "加拿大", "au": "澳大利亚", "de": "德国",
     "fr": "法国", "jp": "日本", "sg": "新加坡", "hk": "中国香港", "tw": "中国台湾",
@@ -59,6 +70,7 @@ CC_NAME = {
     "id": "印尼", "ph": "菲律宾", "pk": "巴基斯坦", "eg": "埃及", "ng": "尼日利亚",
 }
 
+# OpenAlex field name -> stored label. The English original is kept alongside as `field_en`.
 FIELD_ZH = {
     "Medicine": "医学", "Engineering": "工程", "Computer Science": "计算机",
     "Materials Science": "材料", "Chemistry": "化学", "Physics and Astronomy": "物理天文",
@@ -90,7 +102,8 @@ def load_jsonl(path):
 
 
 def wilson(k, n, z=1.96):
-    """Wilson 95% 区间——小样本下比正态近似靠谱，页面用它标误差棒。"""
+    """Wilson 95% interval — far better behaved than the normal approximation at small n.
+    The page draws its error bars from this."""
     if not n:
         return None
     p = k / n
@@ -107,8 +120,9 @@ def pct(d):
         out[k] = round(d[k] / n, 4) if n else None
     ci = wilson(d["stay"], n)
     out["stay_ci"] = ci
-    # 保守下界：排序用它而不是原始比率。样本 25 人的 40% 和样本 300 人的 30%，
-    # 前者的真实值可能低得多——按下界排，小样本的侥幸高分自己会掉下去。
+    # Conservative lower bound: rankings use this, not the raw rate. 40% of a 25-person sample
+    # versus 30% of 300 — the former's true value may be far lower. Ranking by the bound lets
+    # small-sample flukes sink on their own, with no extra rules.
     out["stay_lb"] = ci[0] if ci else None
     return out
 
@@ -125,10 +139,11 @@ def outcome(dest_cc, origin, ends):
 
 
 def write_manifest():
-    """扫出已生成的来源国，写 origins.json 供前端做来源切换。
+    """Scan the generated origins and write origins.json, which drives the origin switcher.
 
-    没有这份清单，前端只能写死一个来源国——数据抓回来了页面上也看不见。
-    严格匹配 data-<两位国码>.json，别把 data-venues.json 算进来。
+    Without this manifest the front end can only hard-code one origin — harvested data would
+    never become visible. Match data-<two-letter code>.json strictly so data-venues.json is
+    not mistaken for an origin.
     """
     out = []
     for fn in sorted(os.listdir(WEB)):
@@ -144,9 +159,10 @@ def write_manifest():
                     "sampled": meta.get("sampled_authors", 0),
                     "home": meta.get("home_start_authors", 0),
                     "movers": meta.get("movers", 0),
-                    # 达标机构数几乎完全由出海人数决定（实测：印尼出海率 3.9% → 7 所，
-                    # 中国 13.1% → 175 所）。前端要拿它解释「为什么这个来源国只有几所」，
-                    # 否则用户会以为站坏了。
+                    # The number of qualifying institutions is driven almost entirely by the
+                    # number of movers (measured: Indonesia 3.9% movers → 7 institutions,
+                    # China 13.1% → 175). The front end uses this to explain "why does this
+                    # origin only have a handful" — otherwise it reads as a broken site.
                     "mover_rate": meta.get("mover_rate"),
                     "institutions": len(d.get("institutions", []))})
     out.sort(key=lambda x: -x["sampled"])
@@ -156,12 +172,15 @@ def write_manifest():
 
 
 def pick_source(origin):
-    """在「正在重抓」期间，用行数更多的那份，别拿半截数据出榜。
+    """While a re-harvest is in progress, use whichever file has more rows — never publish a
+    half-finished dataset.
 
-    升级到 v2 要整份重抓、跨好几天额度。中途 `careers_cn.jsonl` 只有一部分人，
-    直接拿它算会把线上从 18 万样本/175 所机构打成 1.9 万/3 所——**真发生过**
-    （2026-07-28 那轮定时任务就这么把残缺数据推上线了）。
-    规则很笨但可靠：谁行数多用谁。新数据抓超备份后自动切换，不需要额外的状态标记。
+    Upgrading to v2 means re-harvesting the whole file across several days of quota. Mid-way,
+    `careers_cn.jsonl` holds only part of the population; computing from it directly would turn
+    the live site from 180k authors / 175 institutions into 19k / 3 — **this actually happened**
+    (the 2026-07-28 scheduled run pushed exactly that). The rule is dumb but reliable: more rows
+    wins. Once the new harvest overtakes the backup it switches automatically, with no extra
+    state flag to get out of sync.
     """
     cur = os.path.join(DATA, f"careers_{origin}.jsonl")
     bak = cur + ".v1.bak"
@@ -170,8 +189,8 @@ def pick_source(origin):
     n_cur = sum(1 for _ in open(cur)) if os.path.exists(cur) else 0
     n_bak = sum(1 for _ in open(bak))
     if n_bak > n_cur:
-        return bak, f"重抓中（新 {n_cur} < 备份 {n_bak}），本轮仍用备份出榜"
-    return cur, f"新数据已超过备份（{n_cur} ≥ {n_bak}），切回新数据"
+        return bak, f"re-harvest in progress (new {n_cur} < backup {n_bak}); publishing from the backup this round"
+    return cur, f"new data has overtaken the backup ({n_cur} ≥ {n_bak}); switching back to it"
 
 
 def build(origin):
@@ -183,9 +202,10 @@ def build(origin):
     base = [r for r in rows if origin in r.get("start_ccs", [])]
     cutoff = THIS_YEAR - FOLLOWUP
 
-    # inst[iid][stratum] / ctry[cc][stratum] / fields 只在默认分层上算
+    # inst[iid][stratum] / ctry[cc][stratum]
     inst = collections.defaultdict(lambda: {s: blank() for s in STRATA})
-    # 学科分解按分层各算一份——不然切了分层，学科筛选就对不上号了
+    # Field breakdowns are computed per stratum — otherwise switching strata would leave the
+    # field filter pointing at numbers from a different population.
     ifields = collections.defaultdict(lambda: {s: collections.defaultdict(blank) for s in STRATA})
     ctry = collections.defaultdict(lambda: {s: blank() for s in STRATA})
     movers = 0
@@ -194,20 +214,22 @@ def build(origin):
         ends = set(r.get("end_ccs") or [])
         if r.get("end_cc"):
             ends.add(r["end_cc"])
-        seen = collections.defaultdict(dict)   # cc -> stratum -> outcome（同一人同一国只记一次）
+        seen = collections.defaultdict(dict)   # cc -> stratum -> outcome (one count per person per country)
         moved = False
         start_ccs = set(r.get("start_ccs") or [])
         for s in r["spans"]:
             if s["cc"] == origin or s["y0"] < r["start"] or s["y0"] > cutoff:
                 continue
-            # 起步那年就已经挂在该国 → 不是「迁过去」，是本来就在。
-            # 不排掉的话，「一直在台湾/香港的人」会被当成迁过去又留下，把留下率顶上天
-            # （实测占 ≥4 年 arrival 的 15.2%，台湾几所校因此霸榜）。
+            # Already affiliated with that country in the very first year → not a move, they
+            # were there all along. Without this filter, people who were always in Taiwan /
+            # Hong Kong get counted as "moved there and stayed" and push stay rates through the
+            # roof (measured: 15.2% of ≥4-year arrivals; a few Taiwanese universities topped
+            # the board because of it).
             if s["cc"] in start_ccs:
                 continue
             dur = s["y1"] - s["y0"] + 1
             if dur < 2:
-                continue        # 只挂 1 年 = 合作署名/短访，不算「去过」
+                continue        # a single year = co-authorship / short visit, not an arrival
             moved = True
             oc = outcome(s["cc"], origin, ends)
             in_strata = [k for k, (lo, hi) in STRATA.items() if lo <= dur <= hi]
@@ -254,18 +276,22 @@ def build(origin):
             "id": iid, "name": w["name"], "ror": w["ror"], "cc": w["cc"],
             "country": CC_NAME.get(w["cc"], (w["cc"] or "??").upper()),
             "works": w["works"],
-            # education=高校，其余是研究所/医院/政府实验室等。前端按它做「只看高校」筛选，
-            # 因为非高校那批的署名错配噪音明显更重（见 institutions.py 注释）。
+            # education = universities; everything else is research institutes / hospitals /
+            # government labs. The front end offers a "universities only" filter on this because
+            # the non-university records carry noticeably more affiliation-matching noise
+            # (see the notes in institutions.py).
             "type": w.get("type", "education"),
             "kind": "edu" if w.get("type", "education") == "education" else "inst",
             "strata": {k: pct(v) for k, v in per.items()},
             "fields": fields,
         })
 
-    # Tier：按默认分层留下率的 **Wilson 下界** 分位切 R1–R4。
-    # 用分位不用绝对线——绝对值随抽样口径漂移，分位保证「同一批里的相对位置」可比。
-    # 用下界不用原始比率——25 人样本的 40% 站不住脚，按下界排它自己会掉下去。
-    # 双挂不计入排序，因为它的含义本身就是暧昧的。
+    # Tier: quartiles R1–R4 on the **Wilson lower bound** of the default-stratum stay rate.
+    # Percentiles, not absolute cutoffs — absolute values drift with sampling; percentiles keep
+    # "relative position within the same batch" comparable.
+    # The bound, not the raw rate — 40% of 25 people doesn't hold up; ranked by the bound it
+    # sinks on its own.
+    # Dual is excluded from the ranking because its meaning is inherently ambiguous.
     ranked = sorted(insts, key=lambda x: -(x["strata"][DEFAULT_STRATUM]["stay_lb"] or 0))
     n = len(ranked)
     for i, it in enumerate(ranked):
@@ -291,6 +317,8 @@ def build(origin):
             "min_n_inst": MIN_N_INST,
             "min_n_country": MIN_N_COUNTRY,
             "whitelist_size": len(whitelist),
+            # Stored verbatim (Chinese); the web UI translates them client-side by prefix match.
+            # Do not rephrase casually — a changed sentence falls back to untranslated text.
             "caveats": [
                 "学术履历代理指标，不是签证/移民官方统计，也不构成移民或法律建议",
                 "只覆盖在 OpenAlex 有署名记录的科研人群，不代表留学生或技术移民整体",
@@ -316,25 +344,26 @@ def build(origin):
     os.makedirs(WEB, exist_ok=True)
     path = os.path.join(WEB, f"data-{origin}.json")
 
-    # 只有实质内容变了才落盘。generated_at 每次都不同，不排除它的话，
-    # 每天的定时任务都会产生一个「只有时间戳变了」的空提交，把 git 历史刷成噪音。
+    # Only write when the substance changed. generated_at differs on every run; without
+    # excluding it, the daily job would produce a "timestamp-only" commit every day and turn
+    # the git history into noise.
     if os.path.exists(path):
         try:
             old = json.load(open(path))
             if {**old, "meta": {**old.get("meta", {}), "generated_at": None}} == \
                {**out, "meta": {**out["meta"], "generated_at": None}}:
-                print(f"[{origin}] 实质内容无变化，保持原文件不动（不刷时间戳）")
-                write_manifest()   # 数据没变也要保证清单在（首次加清单时会走到这条分支）
+                print(f"[{origin}] no substantive change; leaving the file untouched (timestamp not bumped)")
+                write_manifest()   # keep the manifest present even when data is unchanged (first-run case)
                 return out
         except (json.JSONDecodeError, OSError):
-            pass          # 旧文件坏了就正常覆盖
+            pass          # a corrupt old file is simply overwritten
 
     with open(path, "w") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
     write_manifest()
     m = out["meta"]
-    print(f"[{origin}] 样本 {m['sampled_authors']} / 本土起步 {m['home_start_authors']} / "
-          f"出海 {movers} ({m['mover_rate']:.1%}) → 国家 {len(countries)}、机构 {len(ranked)}")
+    print(f"[{origin}] sampled {m['sampled_authors']} / home start {m['home_start_authors']} / "
+          f"movers {movers} ({m['mover_rate']:.1%}) → {len(countries)} countries, {len(ranked)} institutions")
     print(f"        {path} ({os.path.getsize(path)/1024:.0f} KB)")
     return out
 

@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
-从 OpenAlex 采样学者的「机构履历」，落成 jsonl 供后续算迁移指标。
+Sample researchers' institutional careers from OpenAlex into JSONL for the mobility metrics.
 
-数据源：OpenAlex(https://openalex.org) —— CC0 公共领域，免 API key，礼貌池带 mailto 即可。
-零成本：不花钱、不需要账号。
+Source: OpenAlex (https://openalex.org) — CC0 public domain, no API key; a mailto gets you into
+the polite pool. Zero cost: no money, no account.
 
-用法:
-    python3 harvest.py cn --seeds 20            # 采样中国背景学者
-    python3 harvest.py cn in ir --seeds 20      # 多个来源国
-    python3 harvest.py cn --seeds 24 --refresh  # 数据是旧版本时整份重抓（会先备份 .v1.bak）
+Usage:
+    python3 harvest.py cn --seeds 20            # sample researchers with a Chinese affiliation history
+    python3 harvest.py cn in ir --seeds 20      # several origin countries
+    python3 harvest.py cn --seeds 24 --refresh  # re-harvest an outdated file from scratch (backs up to .v1.bak first)
 
-每个 seed 采 10000 人（OpenAlex sample 上限），seed 之间会有重复，按 author id 去重。
-输出: data/careers_<country>.jsonl（可重复运行，自动续采已有 seed 之外的部分）
+Each seed draws 10,000 people (the OpenAlex sample cap); seeds overlap, so records are de-duplicated
+by author id. Output: data/careers_<country>.jsonl — safe to re-run, it resumes with the seeds not
+yet completed.
 """
 
 import json
@@ -23,14 +24,15 @@ import urllib.parse
 import urllib.request
 
 API = "https://api.openalex.org/authors"
-# 礼貌池联系邮箱：不是凭据，但**不写进公开仓**。用环境变量传：
+# Polite-pool contact address: not a credential, but **kept out of the public repo**.
+# Pass it via the environment:
 #   export OPENALEX_MAILTO=you@example.com
-# 不设也能跑，只是走公共池、限速更严。
+# Runs without it too, just on the public pool with stricter rate limits.
 MAILTO = os.environ.get("OPENALEX_MAILTO", "")
-SAMPLE = 10000          # OpenAlex 单次 sample 上限
-PER_PAGE = 200          # 单页上限
-MIN_WORKS = 5           # 少于 5 篇的多为噪音/重名合并残留，排除
-DATA_VERSION = 2        # v2 起 field 按全部 topic 投票；v1 只取 topics[0]
+SAMPLE = 10000          # OpenAlex per-sample cap
+PER_PAGE = 200          # per-page cap
+MIN_WORKS = 5           # fewer than 5 works is mostly noise / leftovers of merged namesakes
+DATA_VERSION = 2        # v2: field by vote over all topics; v1 used topics[0] only
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 DATA = os.path.join(ROOT, "data")
 
@@ -41,7 +43,7 @@ UA = f"Scholar-Outflow-Lab (mailto:{MAILTO})" if MAILTO else "Scholar-Outflow-La
 
 
 class BudgetExhausted(Exception):
-    """OpenAlex 免费额度用完（每天 1000 次请求，UTC 零点重置）。"""
+    """The OpenAlex free quota is spent (1,000 requests/day, resets at 00:00 UTC)."""
 
 
 def fetch(params, tries=3):
@@ -55,27 +57,29 @@ def fetch(params, tries=3):
                 return json.loads(r.read().decode())
         except urllib.error.HTTPError as e:
             if e.code == 429:
-                # 429 分两种：瞬时限速（等一下就好）和当日额度耗尽（等到 UTC 零点）。
-                # 后者重试多少次都没用，必须干净退出，否则会把 seed 误标成已完成。
+                # Two kinds of 429: a transient rate limit (wait a moment) and the daily quota
+                # being spent (wait until 00:00 UTC). Retrying the latter is pointless; exit
+                # cleanly instead, or the seed gets mis-marked as completed.
                 retry_after = int(e.headers.get("retry-after") or 0)
                 if retry_after > 600:
-                    raise BudgetExhausted(f"当日额度已用尽，{retry_after//3600} 小时后（UTC 零点）重置")
+                    raise BudgetExhausted(f"daily quota spent; resets in {retry_after//3600} h (00:00 UTC)")
                 time.sleep(min(retry_after or 30, 120))
                 continue
             if attempt == tries - 1:
-                print(f"    ! 放弃: {e}", flush=True)
+                print(f"    ! giving up: {e}", flush=True)
                 return None
             time.sleep(2 ** attempt * 2)
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
             if attempt == tries - 1:
-                print(f"    ! 放弃: {e}", flush=True)
+                print(f"    ! giving up: {e}", flush=True)
                 return None
             time.sleep(2 ** attempt * 2)
     return None
 
 
 def career(author, origin_cc):
-    """把一个 author 压成一条履历记录。年份缺失的机构直接丢掉——没有年份就没有先后。"""
+    """Compress one author into a career record. Affiliations without years are dropped —
+    no year means no ordering."""
     spans = []
     for a in author.get("affiliations") or []:
         inst = a.get("institution") or {}
@@ -96,9 +100,11 @@ def career(author, origin_cc):
 
     start = min(s["y0"] for s in spans)
     end = max(s["y1"] for s in spans)
-    # 起点国：最早年份那批机构的国家。跨多国则记多国，后面按「是否含 origin」判断。
+    # Starting countries: the countries of the earliest-year affiliations. Several are kept if
+    # they span countries; downstream tests "does it include the origin".
     start_ccs = sorted({s["cc"] for s in spans if s["y0"] == start})
-    # 终点国：最晚年份那批。last_known 优先（OpenAlex 自己的判断），否则用最晚年份。
+    # Ending country: the latest-year batch. last_known (OpenAlex's own judgement) takes
+    # precedence, else the latest year.
     last_known = [
         (i.get("country_code") or "").lower()
         for i in (author.get("last_known_institutions") or [])
@@ -107,10 +113,11 @@ def career(author, origin_cc):
     end_ccs = sorted({s["cc"] for s in spans if s["y1"] == end})
     end_cc = last_known[0] if last_known else (end_ccs[0] if end_ccs else "")
 
-    # 学科：**按全部 topic 的 count 投票**，不是取 topics[0]。
-    # v1 只取第一个 topic 的 field，导致大量做计算机的人被归进「工程」——
-    # OpenAlex 的 topic 排序不保证代表性，单看第一个太脆。投票后同时留下前三名，
-    # 方便以后判断某个人是不是跨学科。
+    # Field: **vote by count over all topics**, not topics[0].
+    # v1 took the first topic's field, which pushed much of computer science into
+    # "Engineering" — OpenAlex's topic ordering isn't guaranteed to be representative, so a
+    # single topic is too brittle. The top three are kept alongside for later checks on
+    # whether someone is interdisciplinary.
     topics = author.get("topics") or []
     votes = {}
     for t in topics[:25]:
@@ -121,9 +128,9 @@ def career(author, origin_cc):
     top_fields = sorted(votes.items(), key=lambda x: -x[1])[:3]
 
     return {
-        "v": 2,                          # 数据版本：v2 起 field 是投票结果，v1 是 topics[0]
+        "v": 2,                          # data version: v2 = voted field, v1 = topics[0]
         "id": author["id"].rsplit("/", 1)[-1],
-        "origin_q": origin_cc,           # 采样时用的来源国口径
+        "origin_q": origin_cc,           # the origin filter used when sampling
         "start": start,
         "end": end,
         "start_ccs": start_ccs,
@@ -137,9 +144,10 @@ def career(author, origin_cc):
 
 
 def needs_refresh(out_path):
-    """已有数据是不是旧版本（v1：field 取 topics[0]，不是投票）。
+    """Is the existing file an old version (v1: field = topics[0], not a vote)?
 
-    只看第一行——同一个文件里不会混版本，因为 refresh 是整份重来。
+    Only the first line is checked — a file never mixes versions, because a refresh always
+    starts over from scratch.
     """
     if not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
         return False
@@ -157,13 +165,14 @@ def harvest(cc, seeds, refresh=False):
     state_path = os.path.join(DATA, f"careers_{cc}.state.json")
 
     if refresh and needs_refresh(out_path):
-        # ⚠️ 不 refresh 的话，旧的 state 文件会让所有 seed 被当成「已完成」而整个跳过，
-        # 新版本的字段永远补不上。备份旧文件而不是直接删——重抓要跨天，中途还得能回退。
+        # ⚠️ Without a refresh, the old state file marks every seed "done" and the whole run is
+        # skipped — the new fields would never be filled in. Back the old file up instead of
+        # deleting it: a re-harvest spans days and must stay reversible mid-way.
         bak = out_path + ".v1.bak"
         os.replace(out_path, bak)
         if os.path.exists(state_path):
             os.replace(state_path, state_path + ".v1.bak")
-        print(f"[{cc}] 检测到 v1 数据，已备份为 {os.path.basename(bak)}，本轮重抓为 v{DATA_VERSION}", flush=True)
+        print(f"[{cc}] v1 data detected; backed up to {os.path.basename(bak)}, re-harvesting as v{DATA_VERSION}", flush=True)
 
     seen, done_seeds = set(), set()
     if os.path.exists(out_path):
@@ -175,7 +184,7 @@ def harvest(cc, seeds, refresh=False):
                     pass
     if os.path.exists(state_path):
         done_seeds = set(json.load(open(state_path)).get("seeds", []))
-    print(f"[{cc}] 已有 {len(seen)} 人，已跑过 seed {sorted(done_seeds)}", flush=True)
+    print(f"[{cc}] {len(seen)} authors on file, seeds completed: {sorted(done_seeds)}", flush=True)
 
     out = open(out_path, "a")
     for seed in range(1, seeds + 1):
@@ -205,16 +214,16 @@ def harvest(cc, seeds, refresh=False):
                     added += 1
             time.sleep(0.2)
         out.flush()
-        # ⚠️ 只有整轮页都取到了才算这个 seed 跑完。
-        # 之前不判断就标 done，结果限速那次把 6 个 seed 全标成「已完成、0 人」，
-        # 续跑时会直接跳过——数据永远补不回来。
+        # ⚠️ A seed only counts as done when every page came back.
+        # An earlier version marked it done regardless; one rate-limited run flagged six seeds
+        # as "completed, 0 people", and resumes skipped them forever — the data never came back.
         if pages_ok == SAMPLE // PER_PAGE:
             done_seeds.add(seed)
             json.dump({"seeds": sorted(done_seeds)}, open(state_path, "w"))
-            print(f"[{cc}] seed {seed} +{added} 人，累计 {len(seen)}", flush=True)
+            print(f"[{cc}] seed {seed} +{added} authors, total {len(seen)}", flush=True)
         else:
-            print(f"[{cc}] seed {seed} 只取到 {pages_ok}/{SAMPLE // PER_PAGE} 页，不标完成，"
-                  f"下次续跑（本轮 +{added} 人）", flush=True)
+            print(f"[{cc}] seed {seed} fetched only {pages_ok}/{SAMPLE // PER_PAGE} pages; not marked done, "
+                  f"will resume next run (+{added} this round)", flush=True)
     out.close()
     return len(seen)
 
@@ -234,7 +243,7 @@ if __name__ == "__main__":
             continue
         try:
             n = harvest(cc.lower(), seeds, refresh)
-            print(f"[{cc}] 完成，共 {n} 人 -> data/careers_{cc}.jsonl", flush=True)
+            print(f"[{cc}] done, {n} authors -> data/careers_{cc}.jsonl", flush=True)
         except BudgetExhausted as e:
-            print(f"\n⛔ {e}\n   已抓到的都已落盘，额度恢复后重跑同一条命令会自动续上。", flush=True)
+            print(f"\n⛔ {e}\n   Everything fetched so far is on disk; re-run the same command once the quota resets and it resumes.", flush=True)
             sys.exit(2)

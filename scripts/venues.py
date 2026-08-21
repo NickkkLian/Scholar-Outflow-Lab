@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """
-期刊 / 会议榜（原始需求第 4 点的后半）。
+Journal / conference board.
 
-从 OpenAlex sources 拉期刊与会议，按学科分组排名。零成本：同样是 CC0 公共数据。
+Pulls journals and conferences from OpenAlex `sources` and ranks them within each field.
+Zero cost: the same CC0 public data.
 
-⚠️ 额度：OpenAlex 免费额度是**每天 1000 次请求**（UTC 零点重置），不是无限。
-   本脚本约需 80–120 次，跑之前先确认当天额度还够（harvest 很吃额度）。
+⚠️ Quota: the OpenAlex free tier is **1,000 requests per day** (resets at 00:00 UTC), not
+   unlimited. This script needs roughly 80–120 requests; make sure enough of the day's quota is
+   left before running it (the harvester is the hungry one).
 
-输出: data-venues.json
-用法: OPENALEX_MAILTO=you@example.com python3 scripts/venues.py
+Output: data-venues.json
+Usage:  OPENALEX_MAILTO=you@example.com python3 scripts/venues.py
 """
 
 import json
@@ -22,15 +24,18 @@ import urllib.request
 API = "https://api.openalex.org/sources"
 MAILTO = os.environ.get("OPENALEX_MAILTO", "")
 UA = f"Scholar-Outflow-Lab (mailto:{MAILTO})" if MAILTO else "Scholar-Outflow-Lab"
-MIN_WORKS = 2000          # 产出太少的刊排名没意义
-MIN_H = 5                 # h-index 太低的多半不是学术刊
-# 实测：不加这条会混进大量**没有被引记录的商业期刊/行业杂志**——
-# 「世界週報」「週刊東洋経済」「潮」这类 works 一两万、h=0，全被归进社会科学，
-# 把该学科的条目数从几百撑到 3335，V1/V2 的分位线整个被稀释。
-# 它们不是排在末尾就没事：分位是按条目数切的，垃圾进来会把真刊往上顶。
+MIN_WORKS = 2000          # ranking venues with tiny output is meaningless
+MIN_H = 5                 # a very low h-index usually means it isn't an academic venue
+# Measured: without this floor, large numbers of **uncited commercial / trade magazines** get in —
+# weekly business and news magazines with 10–20k works and h=0, all classified as Social
+# Sciences, inflating that field from a few hundred entries to 3,335 and diluting the V1/V2
+# percentile lines. Sitting at the bottom isn't harmless: percentiles are cut by entry count,
+# so junk pushes real venues upward.
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-WEB = ROOT   # 站点直接放仓库根目录：GitHub Pages 走 main 分支根目录
+WEB = ROOT   # The site lives in the repo root: GitHub Pages serves main's root directory
 
+# Stored field labels (Chinese); the web UI maps them to English client-side by exact key, and
+# the English original is kept in `field_en`. Keep in step with the front-end dictionary.
 FIELD_ZH = {
     "Medicine": "医学", "Engineering": "工程", "Computer Science": "计算机",
     "Materials Science": "材料", "Chemistry": "化学", "Physics and Astronomy": "物理天文",
@@ -61,13 +66,14 @@ def fetch(params):
     except urllib.error.HTTPError as e:
         if e.code == 429:
             ra = int(e.headers.get("retry-after") or 0)
-            print(f"⛔ OpenAlex 额度用尽（{ra // 3600} 小时后 UTC 零点重置），已抓到的不保存。", flush=True)
+            print(f"⛔ OpenAlex quota spent (resets at 00:00 UTC, in {ra // 3600} h); nothing partial is saved.", flush=True)
             sys.exit(2)
         raise
 
 
 def retier(venues):
-    """学科内按 h-index 排名 + 分位分档。跨学科比 h-index 没意义，所以只在学科内比。"""
+    """Rank by h-index within each field and cut into percentile tiers. Comparing h-index
+    across fields is meaningless, so the comparison is strictly within-field."""
     by_field = {}
     for v in venues:
         by_field.setdefault(v["field"] or "其他", []).append(v)
@@ -83,7 +89,8 @@ def retier(venues):
 
 
 def refilter_existing():
-    """离线重跑过滤与分档，不联网——已有数据时别为了改口径再烧一次额度。"""
+    """Re-run the filter and tiering offline — don't burn another day's quota just to change
+    a threshold when the data is already on disk."""
     p = os.path.join(WEB, "data-venues.json")
     d = json.load(open(p))
     before = len(d["venues"])
@@ -98,7 +105,7 @@ def refilter_existing():
     d["meta"]["notes"].insert(1, f"只收录 h-index ≥{MIN_H} 的——否则会混进大量无被引记录的行业杂志，"
                                  f"把学科条目数撑大、分位线稀释")
     json.dump(d, open(p, "w"), ensure_ascii=False, separators=(",", ":"))
-    print(f"离线重排：{before} → {len(kept)} 本（剔除 h<{MIN_H} 的 {before - len(kept)} 本）")
+    print(f"offline re-tier: {before} → {len(kept)} venues (dropped {before - len(kept)} with h<{MIN_H})")
     for f, vs in sorted(by_field.items(), key=lambda x: -len(x[1]))[:6]:
         print(f"    {f:8} {len(vs)}")
 
@@ -117,7 +124,7 @@ def main():
         for s in d.get("results") or []:
             st = s.get("summary_stats") or {}
             topics = s.get("topics") or []
-            # 用出现最多的 field 当这本刊的学科归属
+            # The venue's field is the most frequent field across its topics
             counts = {}
             for t in topics[:25]:
                 f = (t.get("field") or {}).get("display_name")
@@ -144,7 +151,7 @@ def main():
         cursor = d["meta"].get("next_cursor")
         page += 1
         if page % 10 == 0:
-            print(f"  {page} 页 / {len(out)} 本", flush=True)
+            print(f"  {page} pages / {len(out)} venues", flush=True)
         time.sleep(0.2)
 
     out = [v for v in out if v["h"] >= MIN_H]
@@ -157,6 +164,7 @@ def main():
             "count": len(out),
             "min_works": MIN_WORKS,
             "fields": sorted(by_field.keys()),
+            # Stored verbatim (Chinese); translated client-side by prefix match.
             "notes": [
                 "只收录产出 ≥%d 篇的期刊与会议" % MIN_WORKS,
                 "分级 V1–V4 是**学科内**按 h-index 的分位，跨学科比 h-index 没有意义",
@@ -170,7 +178,7 @@ def main():
     p = os.path.join(WEB, "data-venues.json")
     with open(p, "w") as f:
         json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
-    print(f"{len(out)} 本期刊/会议 -> {p} ({os.path.getsize(p) / 1024:.0f} KB)")
+    print(f"{len(out)} journals/conferences -> {p} ({os.path.getsize(p) / 1024:.0f} KB)")
 
 
 if __name__ == "__main__":

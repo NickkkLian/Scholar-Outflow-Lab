@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>去向实验室 · 本土起步科研人员的流向</title>
+<title>Scholar Outflow Lab · Where home-grown researchers end up</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -37,6 +37,9 @@ a{color:var(--stay)}
 .tabs{display:flex;gap:4px;background:var(--paper-2);padding:4px;border-radius:999px;border:1px solid var(--line)}
 .tab{border:none;background:transparent;padding:6px 15px;border-radius:999px;font-weight:600;color:var(--ink-soft);font-size:13px}
 .tab.active{background:var(--ink);color:var(--paper);box-shadow:var(--shadow)}
+.lang-btn{border:1px solid var(--line-2);background:var(--card);color:var(--ink-soft);
+  border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600}
+.lang-btn:hover{color:var(--ink)}
 
 .wrap{max-width:1180px;margin:0 auto;padding:20px}
 .notice{border:1px solid var(--line-2);border-left:3px solid var(--onward);background:var(--paper-2);
@@ -82,8 +85,9 @@ tbody tr:hover{background:var(--paper-2)}
 .sbar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--stay)}
 .sbar u{position:absolute;top:-2px;bottom:-2px;border-left:1px solid rgba(21,122,114,.45);border-right:1px solid rgba(21,122,114,.45);
   background:rgba(21,122,114,.13);text-decoration:none}
-/* 13 个来源国 = 15 列，窄屏要横滚 2 倍。首列不钉住的话，滚到中间就不知道在看哪个目的国了
-   （实测：第一列 left 从 14px 滚到 -371px）。钉住它，横滚时始终能看见行标签。 */
+/* 13 origins = 15 columns, ~2× viewport width on small screens. Without a pinned first
+   column you lose track of which destination row you're on mid-scroll (measured: the
+   first column's left goes from 14px to -371px). Pin it so the row label stays visible. */
 #cmp-wrap td:first-child, #cmp-wrap th:first-child{
   position:sticky; left:0; z-index:2; background:var(--paper);
   box-shadow:1px 0 0 var(--line-2);
@@ -96,7 +100,7 @@ tbody tr:hover{background:var(--paper-2)}
   border:1px solid var(--line-2);color:var(--ink-soft);vertical-align:1px}
 .muted{color:var(--ink-soft)}
 .small{font-size:12px}
-.only-s{display:none}   /* 桌面端有独立的国家列，窄屏才把国家塞回校名下面 */
+.only-s{display:none}   /* Desktop gets a separate country column; small screens tuck it under the name */
 
 .drawer{position:fixed;inset:0;z-index:60;display:none}
 .drawer.open{display:block}
@@ -147,6 +151,7 @@ tbody tr:hover{background:var(--paper-2)}
 @media (prefers-color-scheme:dark){
   :root{--paper:#141519;--paper-2:#1c1e23;--card:#191b1f;--ink:#e9eaec;--ink-soft:#9aa0a8;
         --line:#26282e;--line-2:#343740;--stay:#4bab9f;--dual:#d0a04a;--ret:#8892a0;--onward:#d97a55}
+  .doc p,.doc li{color:#c6c9cf}
   .tier.R1{background:#123330;border-color:#1f5b54;color:#7fd0c6}
   .tier.R2{background:#33280f;border-color:#5c4720;color:#dcb46c}
   .tier.R3{background:#22252b;border-color:#3a3f48;color:#a7aeb8}
@@ -157,92 +162,69 @@ tbody tr:hover{background:var(--paper-2)}
 <body>
 
 <div class="topbar"><div class="tb-in">
-  <div class="brand"><div class="logo">去向<b>实验室</b></div><div class="sub">Scholar Outflow Lab</div></div>
+  <div class="brand"><div class="logo" id="brand-logo">Scholar Outflow <b>Lab</b></div><div class="sub" id="brand-sub">去向实验室</div></div>
   <label class="origin-pick" id="origin-wrap" hidden>
-    <span>起点</span><select id="origin-sel"></select>
+    <span id="origin-lbl">Origin</span><select id="origin-sel"></select>
   </label>
   <div class="tabs">
-    <button class="tab active" data-view="match">路径匹配</button>
-    <button class="tab" data-view="country">目的国</button>
-    <button class="tab" data-view="inst">高校榜</button>
-    <button class="tab" data-view="compare">来源对比</button>
-    <button class="tab" data-view="venue">期刊会议</button>
-    <button class="tab" data-view="doc">口径</button>
+    <button class="tab active" data-view="match"></button>
+    <button class="tab" data-view="country"></button>
+    <button class="tab" data-view="inst"></button>
+    <button class="tab" data-view="compare"></button>
+    <button class="tab" data-view="venue"></button>
+    <button class="tab" data-view="doc"></button>
   </div>
+  <button class="lang-btn" id="lang-btn" title="切换语言 / switch language"></button>
 </div></div>
 
 <div class="wrap">
-  <div class="notice">
-    <b>这不是移民建议，也不是签证统计。</b>
-    数据是学术署名履历的迁移代理指标，只覆盖发过论文的科研人群；「留下」指最后已知任职机构在该国，不等于拿到工签或永居。
-    绝对值受抽样口径影响大，<b>只比机构之间、国家之间、来源之间的相对高低</b>，别拿绝对值当结论。
-    完整口径见「口径」页。
-  </div>
+  <div class="notice" id="notice"></div>
 
-  <div id="loading" class="muted">载入数据中…</div>
+  <div id="loading" class="muted"></div>
 
-  <!-- 路径匹配 -->
+  <!-- Path finder -->
   <section id="v-match" hidden>
     <div class="ask">
       <div class="ask-row">
-        <label>我的学科
+        <label><span id="l-mfield"></span>
           <select id="m-field"></select>
         </label>
-        <label>想去
+        <label><span id="l-mcountry"></span>
           <select id="m-country"></select>
         </label>
-        <label>机构类型
-          <select id="m-kind">
-            <option value="">高校 + 研究所</option>
-            <option value="edu">只看高校</option>
-            <option value="inst">只看研究所</option>
-          </select>
+        <label><span id="l-mkind"></span>
+          <select id="m-kind"></select>
         </label>
-        <label>打算待
-          <select id="m-stratum">
-            <option value="long">4 年以上（读博/长期职位）</option>
-            <option value="long6">6 年以上（长期扎根）</option>
-            <option value="short">2–3 年（访问/联培）</option>
-            <option value="all">不限</option>
-          </select>
+        <label><span id="l-mstratum"></span>
+          <select id="m-stratum"></select>
         </label>
       </div>
-      <p class="ask-note">按「留下率的 95% 置信下界」排序，不是按原始比率——
-        25 人样本里的 40% 站不住脚，按下界排它自己会掉下去。<b>样本量一并列出，请自己看清楚。</b></p>
+      <p class="ask-note" id="ask-note"></p>
     </div>
     <div id="match-coverage"></div>
     <div id="match-summary"></div>
     <div id="match-list"></div>
   </section>
 
-  <!-- 目的国 -->
+  <!-- Destinations -->
   <section id="v-country" hidden>
     <div class="ctrl">
-      <span class="lbl">停留时长</span>
+      <span class="lbl" id="l-stratum1"></span>
       <div class="seg" id="seg-stratum"></div>
     </div>
-    <div class="legend">
-      <span><i style="background:var(--stay)"></i>留下（末位只在目的国）</span>
-      <span><i style="background:var(--dual)"></i>双挂（两边都挂）</span>
-      <span><i style="background:var(--ret)"></i>回流（末位只在来源国）</span>
-      <span><i style="background:var(--onward)"></i>转道（去了第三国）</span>
-    </div>
+    <div class="legend" id="legend"></div>
     <div class="grid" id="country-grid"></div>
   </section>
 
-  <!-- 高校榜 -->
+  <!-- Institutions -->
   <section id="v-inst" hidden>
     <div class="ctrl">
-      <span class="lbl">停留时长</span>
+      <span class="lbl" id="l-stratum2"></span>
       <div class="seg" id="seg-stratum2"></div>
-      <select id="f-kind">
-        <option value="">高校 + 研究所</option>
-        <option value="edu">只看高校</option>
-        <option value="inst">只看研究所</option>
-      </select>
+      <select id="f-kind"></select>
       <select id="f-country"></select>
       <select id="f-field"></select>
-      <input type="search" id="f-q" placeholder="搜校名…" />
+      <input type="search" id="f-q" />
       <span class="muted small" id="inst-count"></span>
     </div>
     <div id="inst-coverage"></div>
@@ -250,42 +232,42 @@ tbody tr:hover{background:var(--paper-2)}
       <table>
         <thead><tr>
           <th data-sort="rank">#</th>
-          <th data-sort="name">机构</th>
-          <th data-sort="country" class="hide-s">国家/地区</th>
-          <th data-sort="stay" class="num">留下率</th>
-          <th class="hide-s">95% 区间</th>
-          <th data-sort="dual" class="num hide-s">双挂</th>
-          <th data-sort="ret" class="num hide-s">回流</th>
-          <th data-sort="n" class="num">样本</th>
+          <th data-sort="name" id="th-name"></th>
+          <th data-sort="country" class="hide-s" id="th-country"></th>
+          <th data-sort="stay" class="num" id="th-stay"></th>
+          <th class="hide-s" id="th-ci"></th>
+          <th data-sort="dual" class="num hide-s" id="th-dual"></th>
+          <th data-sort="ret" class="num hide-s" id="th-ret"></th>
+          <th data-sort="n" class="num" id="th-n"></th>
         </tr></thead>
         <tbody id="inst-body"></tbody>
       </table>
     </div>
-    <p class="muted small" id="inst-empty" hidden style="padding:22px 4px">没有符合条件的机构。放宽筛选，或换一个停留时长分层试试。</p>
+    <p class="muted small" id="inst-empty" hidden style="padding:22px 4px"></p>
   </section>
 
-  <!-- 来源对比 -->
+  <!-- Origin comparison -->
   <section id="v-compare" hidden>
     <div class="ctrl">
-      <span class="lbl">停留时长</span>
+      <span class="lbl" id="l-stratum3"></span>
       <div class="seg" id="seg-stratum3"></div>
       <span class="muted small" id="cmp-note"></span>
     </div>
     <div id="cmp-wrap"></div>
   </section>
 
-  <!-- 期刊会议 -->
+  <!-- Venues -->
   <section id="v-venue" hidden>
     <div class="ctrl">
       <select id="v-field"></select>
-      <select id="v-type"><option value="">期刊 + 会议</option><option value="journal">只看期刊</option><option value="conference">只看会议</option></select>
-      <input type="search" id="v-q" placeholder="搜刊名/出版方…" />
+      <select id="v-type"></select>
+      <input type="search" id="v-q" />
       <span class="muted small" id="venue-count"></span>
     </div>
     <div id="venue-wrap"></div>
   </section>
 
-  <!-- 口径 -->
+  <!-- Methodology -->
   <section id="v-doc" hidden class="doc"></section>
 
   <div class="foot" id="foot"></div>
@@ -293,31 +275,229 @@ tbody tr:hover{background:var(--paper-2)}
 
 <div class="drawer" id="drawer">
   <div class="veil" data-close></div>
-  <div class="panel"><button class="close" data-close>关闭</button><div id="drawer-body"></div></div>
+  <div class="panel"><button class="close" data-close id="drawer-close"></button><div id="drawer-body"></div></div>
 </div>
 
 <script>
-const S = {data:null, venues:null, origin:'cn', originList:null, allData:{}, view:'match', stratum:'long', sortKey:'stay', sortDir:-1,
+/* ── i18n ─────────────────────────────────────────────────────────────
+   Default is English; the toggle persists in localStorage.
+   Data files keep their original (Chinese) labels — the pipeline is
+   untouched. English labels are derived client-side:
+   countries via Intl.DisplayNames from the ISO code that every record
+   already carries, fields/caveats/notes via the finite dictionaries
+   below (unknown strings fall back to the original text, visibly,
+   rather than being hidden). */
+const LANG_KEY = 'sol-lang';
+let LANG = localStorage.getItem(LANG_KEY) || 'en';
+
+const FIELD_EN = {
+  '人文艺术':'Arts & Humanities','免疫微生物':'Immunology & Microbiology','兽医':'Veterinary',
+  '农业生物':'Agricultural & Biological Sciences','决策科学':'Decision Sciences','化学':'Chemistry',
+  '化工':'Chemical Engineering','医学':'Medicine','卫生职业':'Health Professions','口腔':'Dentistry',
+  '商管':'Business & Management','地球科学':'Earth & Planetary Sciences','工程':'Engineering',
+  '心理学':'Psychology','护理':'Nursing','数学':'Mathematics','材料':'Materials Science',
+  '物理天文':'Physics & Astronomy','环境科学':'Environmental Science',
+  '生化遗传':'Biochemistry & Genetics','社会科学':'Social Sciences','神经科学':'Neuroscience',
+  '经济金融':'Economics & Finance','能源':'Energy','药学':'Pharmacology & Toxicology','计算机':'Computer Science'
+};
+// Keyed by a stable prefix of the Chinese sentence emitted by compute.py, so a
+// wording tweak upstream degrades to showing the original text instead of lying.
+const CAVEAT_EN = [
+  ['学术履历代理指标','A proxy built from academic affiliation records — not official visa/immigration statistics, and not immigration or legal advice'],
+  ['只覆盖在 OpenAlex','Covers only researchers with authorship records in OpenAlex — not representative of students or skilled migrants overall'],
+  ['样本框是「曾在来源国机构署名发表」','The sample frame is people who once published under an origin-country affiliation — those who left before ever publishing at home are simply not in it'],
+  ['「留下」= 最后已知署名机构','"Stayed" means the last known affiliation is in that country — it does not mean a work permit or permanent residency'],
+  ['「双挂」= 末位同时挂','"Dual" means the final affiliations span both the destination and the origin; very common among Chinese researchers, kept separate so neither side is inflated'],
+  ['只统计到达年','Only arrivals early enough to allow a 5-year observation window are counted'],
+  ['在目的机构须跨 ≥2 个年份','An affiliation must span ≥2 calendar years to count as "arrived"; 2–3-year stints are mostly visiting scholars — always read with the stay-length strata'],
+  ['起步那年就已挂在该国','People already affiliated with the destination in their first year are not counted as movers — otherwise lifelong locals would look like migrants who stayed'],
+  ['机构由 OpenAlex 从署名字符串','Institutions are parsed by OpenAlex from affiliation strings; filtered through a ROR + output whitelist, but mismatches remain'],
+  ['榜单含高校与研究所','The board includes universities and research institutes (CAS / CNRS / NIH / Academia Sinica etc.). Institute records are noisier — see the whitelist notes in the repo'],
+  ['学科取自作者最高频 topic','Field labels come from each author\'s most frequent OpenAlex topic and are coarse — much of computer science lands under "Engineering", so the CS slice under-covers institutions; a classification artifact, not a data gap'],
+  ['绝对值会随口径漂移','Absolute values drift with sampling choices — only compare institutions/countries against each other'],
+];
+const NOTE_EN = [
+  ['只收录产出 ≥2000 篇','Only venues with ≥2,000 indexed works are included'],
+  ['只收录 h-index ≥5','Only venues with h-index ≥5 — without the floor, uncited trade magazines flood in and dilute every percentile line'],
+  ['分级 V1–V4','V1–V4 are within-field h-index percentiles; comparing h-index across fields is meaningless, so there is no site-wide banding'],
+  ['OA / DOAJ 标记','OA / DOAJ flags are informational only and say nothing about APC costs'],
+];
+const ORIGIN_EN = {cn:'Mainland China'};
+let dnEN = null; try { dnEN = new Intl.DisplayNames(['en'], {type:'region'}); } catch(e){}
+
+const enCountry = (cc, fallback) => {
+  if(ORIGIN_EN[cc]) return ORIGIN_EN[cc];
+  try { const n = dnEN && dnEN.of(String(cc).toUpperCase()); if(n && n !== String(cc).toUpperCase()) return n; } catch(e){}
+  return fallback;
+};
+const country = (cc, zhName) => LANG === 'en' ? enCountry(cc, zhName) : zhName;
+const field = f => LANG === 'en' ? (FIELD_EN[f] || f) : f;
+const caveat = c => LANG === 'en' ? ((CAVEAT_EN.find(([p]) => c.startsWith(p)) || [,c])[1]) : c;
+const vnote = n => LANG === 'en' ? ((NOTE_EN.find(([p]) => n.startsWith(p)) || [,n])[1]) : n;
+const vtype = t => LANG === 'en' ? ({'期刊':'Journal','会议':'Conference'}[t] || t) : t;
+
+const T = {
+en: {
+  title:'Scholar Outflow Lab · Where home-grown researchers end up',
+  brandLogo:'Scholar Outflow <b>Lab</b>', brandSub:'去向实验室',
+  origin:'Origin', langBtn:'中文',
+  tabs:{match:'Path Finder',country:'Destinations',inst:'Institutions',compare:'Origin Compare',venue:'Venues',doc:'Methodology'},
+  notice:`<b>This is not immigration advice, and not visa statistics.</b>
+    The data is a migration proxy built from academic authorship records and covers only people who publish;
+    "stayed" means the last known affiliation is in that country, not a work permit or permanent residency.
+    Absolute values are sensitive to sampling — <b>only compare institutions, countries and origins against each other</b>.
+    Full definitions on the Methodology page.`,
+  loading:'Loading data…', loadFail:(m)=>`Failed to load data: ${m} (serve over http locally, e.g. python3 -m http.server)`,
+  strata:{short:'2–3 yrs (mostly visiting)',long:'≥4 yrs (default)',long6:'≥6 yrs',all:'Any length'},
+  out:{stay:'Stayed',dual:'Dual',ret:'Returned',onward:'Onward'},
+  legend:{stay:'Stayed (final affiliation only in destination)',dual:'Dual (both sides)',ret:'Returned (only origin)',onward:'Onward (third country)'},
+  stayLen:'Stay length',
+  lMField:'My field', lMCountry:'Destination', lMKind:'Institution type', lMStratum:'Planned stay',
+  kindOpts:['Universities + institutes','Universities only','Institutes only'],
+  mStratumOpts:{long:'4+ years (PhD / long-term role)',long6:'6+ years (putting down roots)',short:'2–3 years (visiting / joint program)',all:'Any length'},
+  askNote:`Ranked by the <b>lower bound of the 95% CI on the stay rate</b>, not the raw rate —
+    40% of a 25-person sample doesn't hold up, and ranking by the bound lets it sink on its own.
+    <b>Sample sizes are printed; read them.</b>`,
+  anyDest:'Any destination', anyFieldOverall:'Any field (overall)',
+  allCountries:'All countries/regions', allFields:'All fields',
+  searchInst:'Search institutions…', searchVenue:'Search venues / publishers…',
+  instCount:n=>`${n} institutions`, venueCount:n=>`${n} venues`,
+  instEmpty:'No institutions match. Loosen the filters, or try another stay-length stratum.',
+  th:{name:'Institution',country:'Country/Region',stay:'Stay rate',ci:'95% CI',dual:'Dual',ret:'Returned',n:'n'},
+  smallN:' · small n',
+  noCountries:'No destination country has enough sample in this stratum.',
+  instituteTag:'Institute',
+  vTypeOpts:['Journals + conferences','Journals only','Conferences only'],
+  venueTh:{tier:'Tier',name:'Venue',pub:'Publisher',h:'h-index',imp:'2-yr cites/paper',works:'Works',rank:'Rank in field'},
+  venueBuilding:`<div class="warn">This page is still being filled in.<br>
+    The venue board is regrouped by field and the data source has a daily free-tier quota, so it lands in batches —
+    it will appear here as soon as it's complete.<br>
+    <span class="small">Method and progress are public in the
+    <a href="https://github.com/NickkkLian/Scholar-Outflow-Lab" target="_blank" rel="noopener">GitHub repo</a>.</span></div>`,
+  cmpOnlyOne:`<div class="warn">Only one origin country has data — nothing to compare yet.
+    More origins are harvested day by day (the data source has a daily free quota); this page appears by itself once they land.</div>`,
+  cmpLoading:'Loading per-origin data…',
+  cmpNote:(r,o)=>`${r} destinations · ${o} origins`,
+  cmpWarn:`Read it <b>across each row</b> — same destination, different origin, and the stay rate can differ several-fold.
+    That is the one genuinely interesting thing this site has to show.<br>
+    ⚠️ Every origin uses the same sampling and computation, but the <b>sample frames differ</b>
+    (each is "people who once published under that country's affiliation"), so compare
+    <b>relative levels and direction</b>, not absolute values.`,
+  cmpThDest:'Destination', cmpThGap:'Max gap',
+  covNote:(m,n,rate)=>`<b>${esc(m.origin_name_disp)} has only ${n} qualifying institutions — that is not a malfunction.</b>
+    This origin sampled ${m.sampled_authors.toLocaleString()} authors, ${m.home_start_authors.toLocaleString()} started at home,
+    and only <b>${m.movers.toLocaleString()} (${rate})</b> ever held a foreign affiliation —
+    few movers means few institutions reach the per-institution floor of ${m.min_n_inst}.
+    Institution counts track mover counts almost perfectly: <b>it doesn't mean "nobody leaves", it means the sample can't support per-institution statistics</b>.
+    Country-level distributions remain valid.`,
+  matchNone:`<div class="warn">No institution clears the sample-size floor for this combination.
+    Showing nothing is deliberate — inventing a number would be the dishonest option. Widen the field or destination and retry.</div>`,
+  matchSummary:(f,c,s,n,thin)=>`<b>${esc(f)} · ${esc(c)} · ${esc(s)}</b>
+    ${n} qualifying institutions${thin ? ` — ${thin} of them under 40 people, so their intervals are wide` : ''}.
+    These are <b>historical outcome distributions for people like this</b> — not your personal odds, and not immigration advice.`,
+  fieldScoped:' · field-scoped', stayed:'Stayed',
+  drawerClose:'Close',
+  secStrata:'Outcomes by length of stay', secField:s=>`By field (current stratum · ${s})`, secFieldPlain:'By field',
+  fieldNoSample:'No field reaches the minimum sample size (15) in this stratum, so no numbers are shown.',
+  fieldTh:{field:'Field',stay:'Stayed',ret:'Returned',n:'n'},
+  works:'works indexed by OpenAlex', sources:'Sources', tierRank:(t,r)=>`Tier ${t} · #${r}`,
+  foot:(d)=>`Data ${esc(d.meta.source)} · generated ${esc(d.meta.generated_at)} · ` +
+    `origin ${esc(d.meta.origin_name_disp)} · sample ${d.meta.sampled_authors.toLocaleString()} authors · ` +
+    `this site does not provide immigration or legal advice`,
+  originOpt:(name,n)=>`${name} (${n} inst.)`,
+},
+zh: {
+  title:'去向实验室 · 本土起步科研人员的流向',
+  brandLogo:'去向<b>实验室</b>', brandSub:'Scholar Outflow Lab',
+  origin:'起点', langBtn:'EN',
+  tabs:{match:'路径匹配',country:'目的国',inst:'高校榜',compare:'来源对比',venue:'期刊会议',doc:'口径'},
+  notice:`<b>这不是移民建议，也不是签证统计。</b>
+    数据是学术署名履历的迁移代理指标，只覆盖发过论文的科研人群；「留下」指最后已知任职机构在该国，不等于拿到工签或永居。
+    绝对值受抽样口径影响大，<b>只比机构之间、国家之间、来源之间的相对高低</b>，别拿绝对值当结论。
+    完整口径见「口径」页。`,
+  loading:'载入数据中…', loadFail:(m)=>`数据载入失败：${m}（本地需用 http 打开，例如 python3 -m http.server）`,
+  strata:{short:'2–3 年（多为访问）',long:'≥4 年（默认）',long6:'≥6 年',all:'不限'},
+  out:{stay:'留下',dual:'双挂',ret:'回流',onward:'转道'},
+  legend:{stay:'留下（末位只在目的国）',dual:'双挂（两边都挂）',ret:'回流（末位只在来源国）',onward:'转道（去了第三国）'},
+  stayLen:'停留时长',
+  lMField:'我的学科', lMCountry:'想去', lMKind:'机构类型', lMStratum:'打算待',
+  kindOpts:['高校 + 研究所','只看高校','只看研究所'],
+  mStratumOpts:{long:'4 年以上（读博/长期职位）',long6:'6 年以上（长期扎根）',short:'2–3 年（访问/联培）',all:'不限'},
+  askNote:`按「留下率的 95% 置信下界」排序，不是按原始比率——
+    25 人样本里的 40% 站不住脚，按下界排它自己会掉下去。<b>样本量一并列出，请自己看清楚。</b>`,
+  anyDest:'不限目的地', anyFieldOverall:'不限学科（看整体）',
+  allCountries:'全部国家/地区', allFields:'全部学科',
+  searchInst:'搜校名…', searchVenue:'搜刊名/出版方…',
+  instCount:n=>`${n} 所`, venueCount:n=>`${n} 本`,
+  instEmpty:'没有符合条件的机构。放宽筛选，或换一个停留时长分层试试。',
+  th:{name:'机构',country:'国家/地区',stay:'留下率',ci:'95% 区间',dual:'双挂',ret:'回流',n:'样本'},
+  smallN:' · 样本少',
+  noCountries:'该分层下没有样本量足够的目的国。',
+  instituteTag:'研究所',
+  vTypeOpts:['期刊 + 会议','只看期刊','只看会议'],
+  venueTh:{tier:'级别',name:'刊名 / 会议',pub:'出版方',h:'h-index',imp:'2 年篇均被引',works:'收录量',rank:'学科内位次'},
+  venueBuilding:`<div class="warn">这一页还在建。<br>
+    期刊与会议榜要按学科分组重排，数据源每天有免费额度上限，正在分批取——取齐了会直接出现在这里。<br>
+    <span class="small">做法与进度公开在
+    <a href="https://github.com/NickkkLian/Scholar-Outflow-Lab" target="_blank" rel="noopener">GitHub 仓库</a>。</span></div>`,
+  cmpOnlyOne:`<div class="warn">只有一个来源国的数据，没得比。
+    多来源国还在按天抓（数据源每天有免费额度上限），抓齐了这一页会自己出现。</div>`,
+  cmpLoading:'载入各来源数据中…',
+  cmpNote:(r,o)=>`${r} 个目的国 · ${o} 个起点`,
+  cmpWarn:`读法：<b>同一行比着看</b>——同一个目的国，起点不同，留下率可以差好几倍。
+    这是本站唯一真正有意思的地方。<br>
+    ⚠️ 各来源国的抽样口径一致，但**样本框本身不同**（都是「曾在本国机构署名发表」的人），
+    所以跨来源比的是<b>相对高低与方向</b>，不是绝对值。`,
+  cmpThDest:'目的国', cmpThGap:'最大差',
+  covNote:(m,n,rate)=>`<b>${esc(m.origin_name_disp)}只有 ${n} 所机构达标，这不是故障。</b>
+    该来源国抽样 ${m.sampled_authors.toLocaleString()} 人，本土起步 ${m.home_start_authors.toLocaleString()} 人，
+    其中有境外任职经历的只有 <b>${m.movers.toLocaleString()} 人（${rate}）</b>——
+    出海的人少，能凑够单校 ${m.min_n_inst} 人门槛的机构自然就少。
+    机构数几乎完全由出海人数决定，<b>不代表这个来源国「没人出去」，只代表样本撑不起分校统计</b>。
+    看国家层面的分布仍然有效。`,
+  matchNone:`<div class="warn">这个组合下没有样本量达标的机构。
+    样本不够就不出分，是刻意的——硬凑一个数出来才是骗人。放宽学科或目的地再试。</div>`,
+  matchSummary:(f,c,s,n,thin)=>`<b>${esc(f)} · ${esc(c)} · ${esc(s)}</b>
+    共 ${n} 所达标机构${thin ? `，其中 ${thin} 所样本不足 40 人，区间会很宽` : ''}。
+    这里给的是<b>历史上同类人群的去向分布</b>，不是你个人的成功概率，更不是移民建议。`,
+  fieldScoped:' · 已按学科细分', stayed:'留下',
+  drawerClose:'关闭',
+  secStrata:'各停留时长下的去向', secField:s=>`按学科（当前分层 · ${s}）`, secFieldPlain:'按学科',
+  fieldNoSample:'该分层下没有学科达到最小样本量（15 人），不出分。',
+  fieldTh:{field:'学科',stay:'留下',ret:'回流',n:'n'},
+  works:'OpenAlex 收录论文', sources:'来源', tierRank:(t,r)=>`Tier ${t} · 第 ${r} 位`,
+  foot:(d)=>`数据 ${esc(d.meta.source)} · 生成于 ${esc(d.meta.generated_at)} · ` +
+    `起点 ${esc(d.meta.origin_name_disp)} · 样本 ${d.meta.sampled_authors.toLocaleString()} 人 · ` +
+    `本站不提供移民/法律建议`,
+  originOpt:(name,n)=>`${name}（${n} 所）`,
+},
+};
+const t = k => T[LANG][k];
+
+// Deep links: #compare, #inst, … open that view directly (and the tab bar keeps the hash in sync).
+const VIEWS = ['match','country','inst','compare','venue','doc'];
+const hashView = location.hash.slice(1);
+const S = {data:null, venues:null, origin:'cn', originList:null, allData:{},
+           view: VIEWS.includes(hashView) ? hashView : 'match', stratum:'long', sortKey:'stay', sortDir:-1,
            fCountry:'', fField:'', fKind:'', q:'',
            mField:'', mCountry:'', mKind:'', mStratum:'long',
            vField:'', vType:'', vQ:''};
-const STRATUM_LABEL = {short:'2–3 年（多为访问）', long:'≥4 年（默认）', long6:'≥6 年', all:'不限'};
-const STRATUM_ORDER = ['short','long','long6','all'];
-const OUT = [['stay','留下','var(--stay)'],['dual','双挂','var(--dual)'],
-             ['ret','回流','var(--ret)'],['onward','转道','var(--onward)']];
+const OUT_KEYS = [['stay','var(--stay)'],['dual','var(--dual)'],['ret','var(--ret)'],['onward','var(--onward)']];
 const pc = v => v==null ? '—' : (v*100).toFixed(1)+'%';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// meta.origin_name arrives in Chinese from the data files; display per language.
+const originName = m => country(m.origin, m.origin_name);
 
 function stratumSeg(el, onPick){
-  el.innerHTML = STRATUM_ORDER.map(k =>
-    `<button data-k="${k}" class="${k===S.stratum?'on':''}">${STRATUM_LABEL[k]}</button>`).join('');
+  el.innerHTML = ['short','long','long6','all'].map(k =>
+    `<button data-k="${k}" class="${k===S.stratum?'on':''}">${t('strata')[k]}</button>`).join('');
   el.onclick = e => { const b = e.target.closest('button'); if(!b) return;
     S.stratum = b.dataset.k; render(); onPick && onPick(); };
 }
 
 function stackBar(s){
-  const parts = OUT.map(([k,,c]) => s[k] ? `<span style="width:${s[k]*100}%;background:${c}"></span>` : '').join('');
-  const keys = OUT.map(([k,label]) => `<span>${label} <b>${pc(s[k])}</b></span>`).join('');
+  const parts = OUT_KEYS.map(([k,c]) => s[k] ? `<span style="width:${s[k]*100}%;background:${c}"></span>` : '').join('');
+  const keys = OUT_KEYS.map(([k]) => `<span>${t('out')[k]} <b>${pc(s[k])}</b></span>`).join('');
   return `<div class="bar">${parts}</div><div class="bar-k">${keys}</div>`;
 }
 
@@ -326,15 +506,15 @@ function renderCountries(){
   const rows = S.data.countries
     .map(c => ({c, s:c.strata[S.stratum]}))
     .filter(x => x.s && x.s.n >= 60)
-    // 默认按样本量排，不按留下率排：小样本国家（n<150）的留下率抖得厉害，
-    // 让它们冲到榜首等于拿噪音当结论。
+    // Default sort is sample size, not stay rate: small-n countries (n<150) have
+    // noisy rates, and letting them top the board treats noise as a conclusion.
     .sort((a,b) => b.s.n - a.s.n);
   g.innerHTML = rows.map(({c,s}) => `
     <div class="c-card">
-      <div class="c-head"><h3>${esc(c.name)}</h3>
-        <span class="n">n=${s.n}${s.n < 150 ? ' · 样本少' : ''}</span></div>
+      <div class="c-head"><h3>${esc(country(c.cc, c.name))}</h3>
+        <span class="n">n=${s.n}${s.n < 150 ? t('smallN') : ''}</span></div>
       ${stackBar(s)}
-    </div>`).join('') || '<p class="muted">该分层下没有样本量足够的目的国。</p>';
+    </div>`).join('') || `<p class="muted">${t('noCountries')}</p>`;
 }
 
 function instRows(){
@@ -347,33 +527,29 @@ function instRows(){
       && (!S.q || it.name.toLowerCase().includes(S.q.toLowerCase())))
     .sort((a,b) => {
       const k = S.sortKey;
-      const va = k==='rank'? a.it.rank : k==='name'? a.it.name : k==='country'? a.it.country : a.s[k];
-      const vb = k==='rank'? b.it.rank : k==='name'? b.it.name : k==='country'? b.it.country : b.s[k];
-      if(typeof va === 'string') return S.sortDir * va.localeCompare(vb, 'zh');
+      const va = k==='rank'? a.it.rank : k==='name'? a.it.name : k==='country'? country(a.it.cc, a.it.country) : a.s[k];
+      const vb = k==='rank'? b.it.rank : k==='name'? b.it.name : k==='country'? country(b.it.cc, b.it.country) : b.s[k];
+      if(typeof va === 'string') return S.sortDir * va.localeCompare(vb, LANG==='zh'?'zh':'en');
       return S.sortDir * (((va??-1)) - ((vb??-1)));
     });
 }
 
-// 达标机构少的时候要说清为什么，否则看起来像站坏了。
-// 实测：机构数几乎完全由出海人数决定——印尼出海率 3.9%→7 所，中国 13.1%→175 所。
+// When few institutions qualify, say why — otherwise it reads as a broken site.
+// Measured: qualifying-institution counts track mover counts almost exactly —
+// Indonesia 3.9% movers → 7 institutions, China 13.1% → 175.
 function coverageNote(){
   const m = S.data && S.data.meta;
   if(!m) return '';
   const n = (S.data.institutions || []).length;
   if(n >= 40) return '';
-  const o = (S.originList || []).find(x => x.cc === S.origin) || {};
   const rate = m.mover_rate != null ? pc(m.mover_rate) : '—';
-  return `<div class="warn"><b>${esc(m.origin_name)}只有 ${n} 所机构达标，这不是故障。</b>
-    该来源国抽样 ${m.sampled_authors.toLocaleString()} 人，本土起步 ${m.home_start_authors.toLocaleString()} 人，
-    其中有境外任职经历的只有 <b>${m.movers.toLocaleString()} 人（${rate}）</b>——
-    出海的人少，能凑够单校 ${m.min_n_inst} 人门槛的机构自然就少。
-    机构数几乎完全由出海人数决定，<b>不代表这个来源国「没人出去」，只代表样本撑不起分校统计</b>。
-    看国家层面的分布仍然有效。</div>`;
+  const md = Object.assign({}, m, {origin_name_disp: originName(m)});
+  return `<div class="warn">${t('covNote')(md, n, rate)}</div>`;
 }
 
 function renderInsts(){
   const rows = instRows();
-  document.getElementById('inst-count').textContent = `${rows.length} 所`;
+  document.getElementById('inst-count').textContent = t('instCount')(rows.length);
   const holder = document.getElementById('inst-coverage');
   if(holder) holder.innerHTML = coverageNote();
   document.getElementById('inst-empty').hidden = rows.length > 0;
@@ -381,9 +557,9 @@ function renderInsts(){
     const ci = s.stay_ci || [0,0];
     return `<tr data-id="${it.id}">
       <td><span class="tier ${it.tier}">${it.tier}</span></td>
-      <td>${esc(it.name)}${it.kind === 'inst' ? ' <span class="kindtag">研究所</span>' : ''}
-        <div class="muted small only-s">${esc(it.country)}</div></td>
-      <td class="hide-s">${esc(it.country)}</td>
+      <td>${esc(it.name)}${it.kind === 'inst' ? ` <span class="kindtag">${t('instituteTag')}</span>` : ''}
+        <div class="muted small only-s">${esc(country(it.cc, it.country))}</div></td>
+      <td class="hide-s">${esc(country(it.cc, it.country))}</td>
       <td class="num mono"><b>${pc(s.stay)}</b></td>
       <td class="hide-s"><div class="sbar"><i style="width:${(s.stay||0)*100}%"></i>
         <u style="left:${ci[0]*100}%;width:${Math.max((ci[1]-ci[0])*100,1)}%"></u></div></td>
@@ -397,37 +573,37 @@ function renderInsts(){
 function openInst(id){
   const it = S.data.institutions.find(x => x.id === id);
   if(!it) return;
-  const strataRows = STRATUM_ORDER.map(k => {
+  const strataRows = ['short','long','long6','all'].map(k => {
     const s = it.strata[k];
     if(!s || !s.n) return '';
     return `<div style="margin:12px 0">
-      <div class="c-head"><span class="small"><b>${STRATUM_LABEL[k]}</b></span><span class="n">n=${s.n}</span></div>
+      <div class="c-head"><span class="small"><b>${t('strata')[k]}</b></span><span class="n">n=${s.n}</span></div>
       ${stackBar(s)}</div>`;
   }).join('');
   const fl = (it.fields || {})[S.stratum] || [];
   const fieldRows = fl.length ? `
-    <div class="sec-t">按学科（当前分层 · ${STRATUM_LABEL[S.stratum]}）</div>
-    <table><thead><tr><th>学科</th><th class="num">留下</th><th class="num">回流</th><th class="num">n</th></tr></thead>
-    <tbody>${fl.map(f => `<tr style="cursor:default"><td>${esc(f.field)}</td>
+    <div class="sec-t">${t('secField')(t('strata')[S.stratum])}</div>
+    <table><thead><tr><th>${t('fieldTh').field}</th><th class="num">${t('fieldTh').stay}</th><th class="num">${t('fieldTh').ret}</th><th class="num">${t('fieldTh').n}</th></tr></thead>
+    <tbody>${fl.map(f => `<tr style="cursor:default"><td>${esc(field(f.field))}</td>
       <td class="num mono">${pc(f.stay)}</td><td class="num mono">${pc(f.ret)}</td>
       <td class="num mono">${f.n}</td></tr>`).join('')}</tbody></table>` : `
-    <div class="sec-t">按学科</div>
-    <p class="small muted">该分层下没有学科达到最小样本量（${S.data.meta.min_n_country ? 15 : 15} 人），不出分。</p>`;
+    <div class="sec-t">${t('secFieldPlain')}</div>
+    <p class="small muted">${t('fieldNoSample')}</p>`;
   document.getElementById('drawer-body').innerHTML = `
     <h2>${esc(it.name)}</h2>
-    <div class="kv"><span>${esc(it.country)}</span><span>·</span>
-      <span class="mono">Tier ${it.tier} · 第 ${it.rank} 位</span><span>·</span>
-      <span>OpenAlex 收录论文 ${it.works.toLocaleString()}</span></div>
-    <div class="sec-t">各停留时长下的去向</div>
+    <div class="kv"><span>${esc(country(it.cc, it.country))}</span><span>·</span>
+      <span class="mono">${t('tierRank')(it.tier, it.rank)}</span><span>·</span>
+      <span>${it.works.toLocaleString()} ${t('works')}</span></div>
+    <div class="sec-t">${t('secStrata')}</div>
     ${strataRows}
     ${fieldRows}
-    <div class="sec-t">来源</div>
+    <div class="sec-t">${t('sources')}</div>
     <p class="small muted">ROR <a href="https://ror.org/${esc(it.ror)}" target="_blank" rel="noopener">${esc(it.ror)}</a>
        · <a href="https://openalex.org/${esc(it.id)}" target="_blank" rel="noopener">OpenAlex ${esc(it.id)}</a></p>`;
   document.getElementById('drawer').classList.add('open');
 }
 
-/* ---- 路径匹配（需求第 3 点）---- */
+/* ---- Path finder ---- */
 function matchRows(){
   const k = S.mStratum, f = S.mField, cc = S.mCountry;
   return S.data.institutions.map(it => {
@@ -436,7 +612,8 @@ function matchRows(){
     if(cc && it.cc !== cc) return null;
     if(S.mKind && (it.kind || 'edu') !== S.mKind) return null;
     if(!f) return {it, s, scoped:false};
-    // 选了学科就必须用该学科在**同一分层**下的数字，没有就不该硬凑
+    // If a field is chosen, use that field's numbers in the SAME stratum — never
+    // fall back to the overall numbers and pretend they're field-scoped.
     const fs = (it.fields[k] || []).find(x => x.field === f);
     return fs ? {it, s:fs, scoped:true} : null;
   }).filter(Boolean)
@@ -449,19 +626,18 @@ function renderMatch(){
   const rows = matchRows();
   const sum = document.getElementById('match-summary');
   const list = document.getElementById('match-list');
-  const cName = S.mCountry ? (S.data.institutions.find(i => i.cc === S.mCountry)||{}).country : '全部目的地';
+  const cRec = S.mCountry ? S.data.institutions.find(i => i.cc === S.mCountry) : null;
+  const cName = cRec ? country(cRec.cc, cRec.country) : t('anyDest');
 
   if(!rows.length){
-    sum.innerHTML = `<div class="warn">这个组合下没有样本量达标的机构。
-      样本不够就不出分，是刻意的——硬凑一个数出来才是骗人。放宽学科或目的地再试。</div>`;
+    sum.innerHTML = t('matchNone');
     list.innerHTML = '';
     return;
   }
   const thin = rows.filter(r => r.s.n < 40).length;
-  sum.innerHTML = `<div class="warn">
-    <b>${esc(S.mField || '全学科')} · ${esc(cName)} · ${esc(STRATUM_LABEL[S.mStratum])}</b>
-    共 ${rows.length} 所达标机构${thin ? `，其中 ${thin} 所样本不足 40 人，区间会很宽` : ''}。
-    这里给的是<b>历史上同类人群的去向分布</b>，不是你个人的成功概率，更不是移民建议。</div>`;
+  sum.innerHTML = `<div class="warn">${t('matchSummary')(
+    S.mField ? field(S.mField) : (LANG==='en'?'All fields':'全学科'),
+    cName, t('strata')[S.mStratum], rows.length, thin)}</div>`;
 
   list.innerHTML = rows.slice(0, 40).map((r, i) => {
     const ci = r.s.stay_ci || [0,0];
@@ -469,8 +645,8 @@ function renderMatch(){
       <span class="m-rank">${i+1}</span>
       <div class="m-main">
         <h3>${esc(r.it.name)}</h3>
-        <div class="muted small">${esc(r.it.country)} · Tier ${r.it.tier}${
-          r.it.kind === 'inst' ? ' · 研究所' : ''}${r.scoped ? ' · 已按学科细分' : ''}</div>
+        <div class="muted small">${esc(country(r.it.cc, r.it.country))} · Tier ${r.it.tier}${
+          r.it.kind === 'inst' ? ` · ${t('instituteTag')}` : ''}${r.scoped ? t('fieldScoped') : ''}</div>
       </div>
       <div style="flex:1 1 150px"><div class="sbar">
         <i style="width:${(r.s.stay||0)*100}%"></i>
@@ -478,21 +654,18 @@ function renderMatch(){
         <div class="muted small mono" style="margin-top:4px">95% ${pc(ci[0])}–${pc(ci[1])}</div>
       </div>
       <div class="m-num"><div class="big">${pc(r.s.stay)}</div>
-        <div class="sub">留下 · n=${r.s.n}</div></div>
+        <div class="sub">${t('stayed')} · n=${r.s.n}</div></div>
     </div>`;
   }).join('');
 }
 
-/* ---- 期刊会议榜（需求第 4 点）---- */
+/* ---- Venue board ---- */
 function renderVenues(){
   const wrap = document.getElementById('venue-wrap');
   if(!S.venues){
     document.getElementById('venue-count').textContent = '';
-    // 给访客看的话，不是给自己看的操作步骤——缺数据时也别把命令行糊到人脸上
-    wrap.innerHTML = `<div class="warn">这一页还在建。<br>
-      期刊与会议榜要按学科分组重排，数据源每天有免费额度上限，正在分批取——取齐了会直接出现在这里。<br>
-      <span class="small">做法与进度公开在
-      <a href="https://github.com/NickkkLian/Scholar-Outflow-Lab" target="_blank" rel="noopener">GitHub 仓库</a>。</span></div>`;
+    // Visitor-facing copy, not operator notes — no CLI instructions in their face.
+    wrap.innerHTML = t('venueBuilding');
     return;
   }
   const rows = S.venues.venues.filter(v =>
@@ -500,14 +673,15 @@ function renderVenues(){
     (!S.vType || v.type_raw === S.vType) &&
     (!S.vQ || (v.name + ' ' + v.publisher).toLowerCase().includes(S.vQ.toLowerCase()))
   ).slice(0, 300);
-  document.getElementById('venue-count').textContent = `${rows.length} 本`;
+  document.getElementById('venue-count').textContent = t('venueCount')(rows.length);
+  const th = t('venueTh');
   wrap.innerHTML = `<div style="overflow-x:auto"><table>
-    <thead><tr><th>级别</th><th>刊名 / 会议</th><th class="hide-s">出版方</th>
-      <th class="num">h-index</th><th class="num hide-s">2 年篇均被引</th>
-      <th class="num hide-s">收录量</th><th class="hide-s">学科内位次</th></tr></thead>
+    <thead><tr><th>${th.tier}</th><th>${th.name}</th><th class="hide-s">${th.pub}</th>
+      <th class="num">${th.h}</th><th class="num hide-s">${th.imp}</th>
+      <th class="num hide-s">${th.works}</th><th class="hide-s">${th.rank}</th></tr></thead>
     <tbody>${rows.map(v => `<tr style="cursor:default">
       <td><span class="tier ${v.tier.replace('V','R')}">${esc(v.tier)}</span></td>
-      <td>${esc(v.name)}<div class="muted small only-s">${esc(v.field)} · ${esc(v.type)}</div></td>
+      <td>${esc(v.name)}<div class="muted small only-s">${esc(field(v.field))} · ${esc(vtype(v.type))}</div></td>
       <td class="hide-s muted small">${esc(v.publisher)}</td>
       <td class="num mono"><b>${v.h}</b></td>
       <td class="num mono hide-s">${v.impact}</td>
@@ -515,25 +689,24 @@ function renderVenues(){
       <td class="hide-s muted small mono">${v.field_rank}/${v.field_total}</td>
     </tr>`).join('')}</tbody></table></div>
     <p class="muted small" style="margin-top:12px">
-      ${S.venues.meta.notes.map(esc).join('　·　')}</p>`;
+      ${S.venues.meta.notes.map(n => esc(vnote(n))).join('　·　')}</p>`;
 }
 
-/* ---- 跨来源对比：同一目的国，不同起点的去向差多少 ---- */
+/* ---- Origin comparison: same destination, different starting points ---- */
 function renderCompare(){
   const wrap = document.getElementById('cmp-wrap');
   const list = S.originList || [];
   if(list.length < 2){
-    wrap.innerHTML = `<div class="warn">只有一个来源国的数据，没得比。
-      多来源国还在按天抓（数据源每天有免费额度上限），抓齐了这一页会自己出现。</div>`;
+    wrap.innerHTML = t('cmpOnlyOne');
     return;
   }
   const missing = list.filter(o => !S.allData[o.cc]);
   if(missing.length){
-    wrap.innerHTML = '<p class="muted">载入各来源数据中…</p>';
+    wrap.innerHTML = `<p class="muted">${t('cmpLoading')}</p>`;
     return;
   }
   const k = S.stratum;
-  // 目的国取「至少两个来源都达标」的，否则一列全是空
+  // Only destinations where ≥2 origins qualify — otherwise the row is mostly blanks.
   const rows = [];
   const ccs = new Set();
   list.forEach(o => (S.allData[o.cc].countries || []).forEach(c => ccs.add(c.cc)));
@@ -552,19 +725,14 @@ function renderCompare(){
   });
   rows.sort((a,b) => b.total - a.total);
 
-  document.getElementById('cmp-note').textContent =
-    `${rows.length} 个目的国 · ${list.length} 个起点`;
+  document.getElementById('cmp-note').textContent = t('cmpNote')(rows.length, list.length);
 
-  wrap.innerHTML = `<div class="warn">
-    读法：<b>同一行比着看</b>——同一个目的国，起点不同，留下率可以差好几倍。
-    这是本站唯一真正有意思的地方。<br>
-    ⚠️ 各来源国的抽样口径一致，但**样本框本身不同**（都是「曾在本国机构署名发表」的人），
-    所以跨来源比的是<b>相对高低与方向</b>，不是绝对值。</div>
+  wrap.innerHTML = `<div class="warn">${t('cmpWarn')}</div>
     <div style="overflow-x:auto"><table>
-    <thead><tr><th>目的国</th>${list.map(o =>
-      `<th class="num">${esc(o.name)}</th>`).join('')}<th class="num hide-s">最大差</th></tr></thead>
+    <thead><tr><th>${t('cmpThDest')}</th>${list.map(o =>
+      `<th class="num">${esc(country(o.cc, o.name))}</th>`).join('')}<th class="num hide-s">${t('cmpThGap')}</th></tr></thead>
     <tbody>${rows.map(r => `<tr style="cursor:default">
-      <td>${esc(r.name)}</td>
+      <td>${esc(country(r.dc, r.name))}</td>
       ${r.cells.map(c => c ? `<td class="num"><span class="cmp-hi">${pc(c.stay)}</span>
         <div class="cmp-n">n=${c.n}</div></td>` : '<td class="num muted">—</td>').join('')}
       <td class="num hide-s cmp-gap">${(r.gap*100).toFixed(0)} pt</td>
@@ -583,17 +751,104 @@ function ensureAllOrigins(){
 
 function renderDoc(){
   const m = S.data.meta;
+  const on = esc(originName(m));
+  if(LANG === 'en'){
+    document.getElementById('v-doc').innerHTML = `
+    <h3>What this site measures</h3>
+    <p>One sentence: <b>where researchers who started their careers in ${on} end up</b> — broken down
+       by destination country and destination institution.</p>
+    <p>It does <b>not</b> answer "which country is easiest to immigrate to", nor "what are international
+       students' odds". The sample is researchers with authorship records in OpenAlex; people who left
+       before ever publishing at home are simply not in the frame.</p>
+
+    <h3>How it's computed</h3>
+    <ul>
+      <li><b>Sample</b> — random sample of OpenAlex authors who ever published under a ${on}
+          affiliation with ≥${m.min_works} works: <code>${m.sampled_authors.toLocaleString()}</code> authors.</li>
+      <li><b>Home start</b> — earliest career year includes ${on}: <code>${m.home_start_authors.toLocaleString()}</code> authors.</li>
+      <li><b>Arrival</b> — a later foreign affiliation spanning ≥2 calendar years (a single year is treated
+          as co-authorship, not a move). <code>${m.movers.toLocaleString()}</code> authors (${pc(m.mover_rate)}) qualify.</li>
+      <li><b>Observation window</b> — only arrivals in <code>${m.arrival_year_cutoff}</code> or earlier count,
+          leaving ${m.followup_years} years of follow-up; otherwise "hasn't left yet" gets misread as "stayed".</li>
+      <li><b>Institution whitelist</b> — only institutions with a ROR ID and adequate output
+          (${m.whitelist_size.toLocaleString()} total), to filter the phantom affiliations OpenAlex
+          parses out of free-text strings.</li>
+    </ul>
+
+    <h3>Four mutually exclusive outcomes (sum to 100%)</h3>
+    <ul>
+      <li><b>Stayed</b> — final known affiliations include the destination, not ${on}</li>
+      <li><b>Dual</b> — both sides. Very common among Chinese researchers (foreign post + home
+          co-appointment); kept separate so it inflates neither side</li>
+      <li><b>Returned</b> — only ${on}</li>
+      <li><b>Onward</b> — neither; moved to a third country</li>
+    </ul>
+
+    <h3>Why stratify by length of stay</h3>
+    <p>The 2–3-year band is dominated by visiting scholars and joint-training students — people who were
+       always going home. Pooling them dilutes every institution's stay rate toward the same low number.
+       The default stratum is <b>≥4 years</b>, closer to PhD studies and long-term positions. Switch strata
+       and watch the numbers separate — that separation is itself the finding.</p>
+
+    <h3>How Tiers are assigned</h3>
+    <p>Institutions are ranked by the <b>lower bound of the 95% CI</b> on the default-stratum stay rate,
+       then cut into quartiles <code>R1</code>–<code>R4</code>. Two deliberate choices:</p>
+    <ul>
+      <li><b>Percentiles, not absolute cutoffs</b> — absolute values drift with sampling; relative position
+          within the same batch is stable.</li>
+      <li><b>The bound, not the raw rate</b> — 40% of 25 people versus 30% of 300: the former's true value
+          may be far lower. Ranking by the bound lets small-sample flukes sink on their own, with no extra
+          rules needed.</li>
+    </ul>
+    <p>Dual counts toward neither side of the ranking — its meaning is inherently ambiguous.</p>
+
+    <h3>What cross-origin comparison can and cannot tell you</h3>
+    <p>The Origin Compare page puts the same destination's stay rates side by side across origins.
+       <b>It is the one genuinely interesting thing this site has to show</b> — the same destination can
+       differ three- to five-fold by origin, and the direction is consistent across dozens of shared
+       destinations. That is not noise.</p>
+    <p>But be precise about what it supports:</p>
+    <ul>
+      <li><b>Valid</b>: relative levels and direction. Every origin uses the same sampling and computation,
+          so "A's stay rate is higher than B's" holds up.</li>
+      <li><b>Not valid</b>: absolute values. The <b>sample frames differ</b> — each is "people who once
+          published under that country's affiliation", and research scale, motives to leave, and publishing
+          habits differ by country. The absolute percentages are not quotable statistics.</li>
+      <li>A destination appears only when <b>at least two origins qualify</b> (n ≥ 60 each) — otherwise
+          a nearly empty row would look like information while carrying none.</li>
+    </ul>
+
+    <h3>How the venue board is ranked</h3>
+    <ul>
+      <li>Only venues with ≥2,000 indexed works and <b>h-index ≥5</b>. The floor isn't cosmetic —
+          without it, uncited trade magazines (tens of thousands of works, h=0) flood in, inflate the
+          per-field counts and dilute every percentile line.</li>
+      <li><code>V1</code>–<code>V4</code> are <b>within-field</b> h-index percentiles (top 10% / 30% / 60% / rest).
+          <b>Comparing h-index across fields is meaningless</b>, so there is no site-wide banding.</li>
+      <li>h-index and 2-year mean citedness come from OpenAlex <code>summary_stats</code> —
+          <b>not the same measure as the JCR impact factor</b>; don't map one to the other.</li>
+      <li>Conference coverage in OpenAlex is far thinner than journals, and some conferences split by year
+          (e.g. CVPR appears as "2022 IEEE/CVF Conference on…"). <b>Treat the conference list as rough.</b></li>
+    </ul>
+
+    <h3>Known limitations (stated, not hidden)</h3>
+    <ul>${m.caveats.map(c => `<li>${esc(caveat(c))}</li>`).join('')}</ul>
+
+    <h3>Data source</h3>
+    <p>${esc(m.source)}, CC0 public domain, no API key required. Generated <code>${esc(m.generated_at)}</code>.</p>`;
+    return;
+  }
   document.getElementById('v-doc').innerHTML = `
     <h3>这个站在量什么</h3>
-    <p>一句话：<b>在${esc(m.origin_name)}起步的科研人员，出去之后最后落在哪儿</b>——按目的国和目的高校分别统计。</p>
+    <p>一句话：<b>在${on}起步的科研人员，出去之后最后落在哪儿</b>——按目的国和目的高校分别统计。</p>
     <p>它<b>不</b>回答「哪个国家好移民」，也不回答「留学生的移民成功率」。它的样本是
        OpenAlex 里有署名记录的科研人群，本科就出国、在国内没发过论文的那一批人根本不在样本里。</p>
 
     <h3>怎么算的</h3>
     <ul>
-      <li><b>样本</b>：OpenAlex 中曾在${esc(m.origin_name)}机构署名、且发表 ≥${m.min_works} 篇的学者随机抽样，
+      <li><b>样本</b>：OpenAlex 中曾在${on}机构署名、且发表 ≥${m.min_works} 篇的学者随机抽样，
           共 <code>${m.sampled_authors.toLocaleString()}</code> 人。</li>
-      <li><b>本土起步</b>：履历最早年份所在国包含${esc(m.origin_name)} → <code>${m.home_start_authors.toLocaleString()}</code> 人。</li>
+      <li><b>本土起步</b>：履历最早年份所在国包含${on} → <code>${m.home_start_authors.toLocaleString()}</code> 人。</li>
       <li><b>一次到达</b>：起步之后在某境外机构挂名跨 ≥2 个年份（只挂 1 年视为合作署名，不计）。
           其中 <code>${m.movers.toLocaleString()}</code> 人（${pc(m.mover_rate)}）有过这样的经历。</li>
       <li><b>观察期</b>：只统计到达年 ≤ <code>${m.arrival_year_cutoff}</code> 的人，留足 ${m.followup_years} 年，
@@ -604,10 +859,10 @@ function renderDoc(){
 
     <h3>终局四分类（互斥，合计 100%）</h3>
     <ul>
-      <li><b>留下</b> — 最后已知任职国含目的国、不含${esc(m.origin_name)}</li>
+      <li><b>留下</b> — 最后已知任职国含目的国、不含${on}</li>
       <li><b>双挂</b> — 两边都含。中国学者里非常常见（境外教职 + 国内兼聘/合作），单列出来，
           免得把它算进任何一边虚增数字</li>
-      <li><b>回流</b> — 只含${esc(m.origin_name)}</li>
+      <li><b>回流</b> — 只含${on}</li>
       <li><b>转道</b> — 两个都不含，去了第三国</li>
     </ul>
 
@@ -661,7 +916,7 @@ function renderDoc(){
 function render(){
   ['match','country','inst','compare','venue','doc'].forEach(v =>
     document.getElementById('v-'+v).hidden = (v !== S.view));
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === S.view));
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.view === S.view));
   if(S.view === 'match') renderMatch();
   if(S.view === 'country') renderCountries();
   if(S.view === 'inst') renderInsts();
@@ -674,37 +929,117 @@ function allFields(){
   const set = new Set();
   S.data.institutions.forEach(i =>
     Object.values(i.fields || {}).forEach(list => list.forEach(f => set.add(f.field))));
-  return [...set].sort((a,b) => a.localeCompare(b,'zh'));
+  return [...set].sort((a,b) => field(a).localeCompare(field(b), LANG==='zh'?'zh':'en'));
 }
 
 function initFilters(){
   const ccs = [...new Map(S.data.institutions.map(i => [i.cc, i.country])).entries()]
-    .sort((a,b) => a[1].localeCompare(b[1],'zh'));
+    .map(([cc, zh]) => [cc, country(cc, zh)])
+    .sort((a,b) => a[1].localeCompare(b[1], LANG==='zh'?'zh':'en'));
   const ccOpts = ccs.map(([cc,n]) => `<option value="${cc}">${esc(n)}</option>`).join('');
   const fields = allFields();
-  const fOpts = fields.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
+  const fOpts = fields.map(f => `<option value="${esc(f)}">${esc(field(f))}</option>`).join('');
 
-  document.getElementById('f-country').innerHTML = '<option value="">全部国家/地区</option>' + ccOpts;
-  document.getElementById('f-field').innerHTML = '<option value="">全部学科</option>' + fOpts;
-  document.getElementById('m-country').innerHTML = '<option value="">不限目的地</option>' + ccOpts;
-  document.getElementById('m-field').innerHTML = '<option value="">不限学科（看整体）</option>' + fOpts;
+  document.getElementById('f-country').innerHTML = `<option value="">${t('allCountries')}</option>` + ccOpts;
+  document.getElementById('f-field').innerHTML = `<option value="">${t('allFields')}</option>` + fOpts;
+  document.getElementById('m-country').innerHTML = `<option value="">${t('anyDest')}</option>` + ccOpts;
+  document.getElementById('m-field').innerHTML = `<option value="">${t('anyFieldOverall')}</option>` + fOpts;
+  // Restore current picks after a language switch rebuilds the option lists.
+  document.getElementById('f-country').value = S.fCountry;
+  document.getElementById('f-field').value = S.fField;
+  document.getElementById('m-country').value = S.mCountry;
+  document.getElementById('m-field').value = S.mField;
 }
 
-// 期刊会议数据是可选的：没生成就让那一页自己说明怎么生成，不要整站挂掉
+/* ── static chrome (everything not rebuilt by a render function) ── */
+function applyChrome(){
+  document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-CN';
+  document.title = t('title');
+  document.getElementById('brand-logo').innerHTML = t('brandLogo');
+  document.getElementById('brand-sub').textContent = t('brandSub');
+  document.getElementById('origin-lbl').textContent = t('origin');
+  document.getElementById('lang-btn').textContent = t('langBtn');
+  document.querySelectorAll('.tab').forEach(b => b.textContent = t('tabs')[b.dataset.view]);
+  document.getElementById('notice').innerHTML = t('notice');
+  const ld = document.getElementById('loading');
+  if(!ld.hidden && !ld.dataset.err) ld.textContent = t('loading');
+  document.getElementById('l-mfield').textContent = t('lMField');
+  document.getElementById('l-mcountry').textContent = t('lMCountry');
+  document.getElementById('l-mkind').textContent = t('lMKind');
+  document.getElementById('l-mstratum').textContent = t('lMStratum');
+  document.getElementById('ask-note').innerHTML = t('askNote');
+  const kindHTML = ['','edu','inst'].map((v,i) => `<option value="${v}">${t('kindOpts')[i]}</option>`).join('');
+  const mk = document.getElementById('m-kind'); const mkVal = S.mKind; mk.innerHTML = kindHTML; mk.value = mkVal;
+  const fk = document.getElementById('f-kind'); const fkVal = S.fKind; fk.innerHTML = kindHTML; fk.value = fkVal;
+  const ms = document.getElementById('m-stratum'); const msVal = S.mStratum;
+  ms.innerHTML = ['long','long6','short','all'].map(k => `<option value="${k}">${t('mStratumOpts')[k]}</option>`).join('');
+  ms.value = msVal;
+  ['l-stratum1','l-stratum2','l-stratum3'].forEach(id => document.getElementById(id).textContent = t('stayLen'));
+  document.getElementById('legend').innerHTML = OUT_KEYS.map(([k,c]) =>
+    `<span><i style="background:${c}"></i>${t('legend')[k]}</span>`).join('');
+  const th = t('th');
+  document.getElementById('th-name').textContent = th.name;
+  document.getElementById('th-country').textContent = th.country;
+  document.getElementById('th-stay').textContent = th.stay;
+  document.getElementById('th-ci').textContent = th.ci;
+  document.getElementById('th-dual').textContent = th.dual;
+  document.getElementById('th-ret').textContent = th.ret;
+  document.getElementById('th-n').textContent = th.n;
+  document.getElementById('f-q').placeholder = t('searchInst');
+  document.getElementById('inst-empty').textContent = t('instEmpty');
+  const vt = document.getElementById('v-type'); const vtVal = S.vType;
+  vt.innerHTML = ['','journal','conference'].map((v,i) => `<option value="${v}">${t('vTypeOpts')[i]}</option>`).join('');
+  vt.value = vtVal;
+  document.getElementById('v-q').placeholder = t('searchVenue');
+  document.getElementById('drawer-close').textContent = t('drawerClose');
+  refreshOriginSel();
+  if(S.data){
+    const d = S.data;
+    d.meta.origin_name_disp = originName(d.meta);
+    document.getElementById('foot').innerHTML = t('foot')(d);
+  }
+}
+
+function refreshOriginSel(){
+  const list = S.originList || [];
+  if(list.length <= 1) return;
+  const sel = document.getElementById('origin-sel');
+  const val = sel.value || S.origin;
+  sel.innerHTML = list.map(o =>
+    `<option value="${esc(o.cc)}">${esc(t('originOpt')(country(o.cc, o.name), o.institutions))}</option>`).join('');
+  sel.value = list.some(o => o.cc === val) ? val : list[0].cc;
+}
+
+document.getElementById('lang-btn').onclick = () => {
+  LANG = LANG === 'en' ? 'zh' : 'en';
+  localStorage.setItem(LANG_KEY, LANG);
+  applyChrome();
+  if(S.data){
+    initFilters();
+    stratumSeg(document.getElementById('seg-stratum'));
+    stratumSeg(document.getElementById('seg-stratum2'));
+    stratumSeg(document.getElementById('seg-stratum3'));
+    render();
+  }
+};
+
+// The venue data is optional: if it hasn't been generated, that page explains
+// itself instead of taking the whole site down.
 fetch('data-venues.json').then(r => r.ok ? r.json() : null).then(v => {
   S.venues = v;
   if(v){
     document.getElementById('v-field').innerHTML =
-      '<option value="">全部学科</option>' +
-      v.meta.fields.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
+      `<option value="">${t('allFields')}</option>` +
+      v.meta.fields.map(f => `<option value="${esc(f)}">${esc(field(f))}</option>`).join('');
   }
   if(S.view === 'compare'){ renderCompare(); ensureAllOrigins(); }
   if(S.view === 'venue') renderVenues();
 }).catch(() => {});
 
 function loadOrigin(cc){
-  document.getElementById('loading').hidden = false;
-  document.getElementById('loading').textContent = '载入数据中…';
+  const ld = document.getElementById('loading');
+  ld.hidden = false; delete ld.dataset.err;
+  ld.textContent = t('loading');
   return fetch(`data-${cc}.json`).then(r => {
     if(!r.ok) throw new Error(`data-${cc}.json ${r.status}`);
     return r.json();
@@ -712,35 +1047,32 @@ function loadOrigin(cc){
     S.data = d;
     S.origin = cc;
     S.allData[cc] = d;
-    // 换来源国后旧的筛选值可能在新数据里不存在，重置掉，免得页面空白却看不出为什么
+    d.meta.origin_name_disp = originName(d.meta);
+    // Filters picked for the previous origin may not exist in the new data;
+    // reset them so the page doesn't go silently blank.
     S.fCountry = S.fField = S.fKind = S.q = S.mField = S.mCountry = S.mKind = '';
     ['f-kind','m-kind'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-    document.getElementById('loading').hidden = true;
+    ld.hidden = true;
     stratumSeg(document.getElementById('seg-stratum'));
     stratumSeg(document.getElementById('seg-stratum2'));
     stratumSeg(document.getElementById('seg-stratum3'));
     initFilters();
     document.getElementById('f-q').value = '';
-    document.getElementById('foot').innerHTML =
-      `数据 ${esc(d.meta.source)} · 生成于 ${esc(d.meta.generated_at)} · ` +
-      `起点 ${esc(d.meta.origin_name)} · 样本 ${d.meta.sampled_authors.toLocaleString()} 人 · ` +
-      `本站不提供移民/法律建议`;
+    document.getElementById('foot').innerHTML = t('foot')(d);
     render();
   }).catch(e => {
-    document.getElementById('loading').hidden = false;
-    document.getElementById('loading').textContent = '数据载入失败：' + e.message
-      + '（本地需用 http 打开，例如 python3 -m http.server）';
+    ld.hidden = false; ld.dataset.err = '1';
+    ld.textContent = t('loadFail')(e.message);
   });
 }
 
-// 来源国清单：多于一个才显示切换器，只有一个时不占地方
+// Origin list: the switcher only shows with more than one origin.
 fetch('origins.json').then(r => r.ok ? r.json() : null).then(m => {
   const list = (m && m.origins) || [];
   S.originList = list;
   if(list.length > 1){
     const sel = document.getElementById('origin-sel');
-    sel.innerHTML = list.map(o =>
-      `<option value="${esc(o.cc)}">${esc(o.name)}（${o.institutions} 所）</option>`).join('');
+    refreshOriginSel();
     sel.value = list.some(o => o.cc === S.origin) ? S.origin : list[0].cc;
     document.getElementById('origin-wrap').hidden = false;
     sel.onchange = e => loadOrigin(e.target.value);
@@ -749,9 +1081,12 @@ fetch('origins.json').then(r => r.ok ? r.json() : null).then(m => {
   return loadOrigin(list[0] ? list[0].cc : 'cn');
 }).catch(() => loadOrigin('cn'));
 
+applyChrome();
+
 document.querySelector('.tabs').onclick = e => {
-  const t = e.target.closest('.tab'); if(!t) return;
-  S.view = t.dataset.view; render();
+  const b = e.target.closest('.tab'); if(!b) return;
+  S.view = b.dataset.view; render();
+  history.replaceState(null, '', S.view === 'match' ? location.pathname : '#' + S.view);
 };
 document.getElementById('f-kind').onchange = e => { S.fKind = e.target.value; renderInsts(); };
 document.getElementById('f-country').onchange = e => { S.fCountry = e.target.value; renderInsts(); };
