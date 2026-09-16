@@ -55,6 +55,33 @@ drift with sampling; relative position within a batch is stable), and the confid
 than the raw rate (40% of 25 people versus 30% of 300 — ranking by the bound lets small-sample
 flukes sink on their own, with no extra rules).
 
+### Pipeline
+
+```mermaid
+flowchart LR
+  OA["OpenAlex API<br/>CC0, no key"] --> INST["scripts/institutions.py<br/>ROR whitelist"]
+  OA --> HARV["scripts/harvest.py<br/>sampled careers per origin"]
+  INST --> COMP["scripts/compute.py<br/>outcomes · strata · Wilson bounds · tiers"]
+  HARV --> COMP
+  COMP --> DATA["data-{cc}.json + origins.json"]
+  OA --> VEN["scripts/venues.py"] --> VJ["data-venues.json"]
+  DATA --> PAGE["index.html"]
+  VJ --> PAGE
+```
+
+`compute.py` refuses to publish when the careers file holds only part of a harvest, and
+`scripts/daily.sh` runs the rounds on a schedule within the free quota.
+
+### Download the data
+
+The published JSON is the dataset, derived from OpenAlex's CC0 records. Every file sits next to the page:
+`data-{cc}.json` (one per origin, e.g.
+[data-cn.json](https://nickkklian.github.io/Scholar-Outflow-Lab/data-cn.json)),
+[origins.json](https://nickkklian.github.io/Scholar-Outflow-Lab/origins.json) (the origins and their
+sample sizes) and
+[data-venues.json](https://nickkklian.github.io/Scholar-Outflow-Lab/data-venues.json) (the venue
+board). The Methodology page on the site links all of them.
+
 ## Three corrections that rescued the result
 
 These are the reason the numbers are trustworthy, so they are documented rather than hidden.
