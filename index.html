@@ -2,167 +2,269 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script>/* appearance boot — runs before any stylesheet so the stored palette and light/dark apply on the first paint */(function(){try{var d=document.documentElement,L=window.localStorage,t=L.getItem('nl-theme'),s=L.getItem('nl-scheme');if(s===null){var o=L.getItem('theme')||L.getItem('qm-theme');if(o==='dark'||o==='light')s=o;}if(t==='paper'||t==='ink')d.setAttribute('data-theme',t);if(s==='dark'||s==='light')d.setAttribute('data-scheme',s);}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="description" content="Scholar Outflow Lab: where researchers who started their careers in 13 countries ended up — stay rates by destination and institution, stratified by length of stay, from OpenAlex authorship records.">
+<meta name="theme-color" content="#faece9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12110c" media="(prefers-color-scheme: dark)">
 <title>Scholar Outflow Lab · Where home-grown researchers end up</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..600;1,9..144,400&family=Inter:wght@400..600&family=Space+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="design-tokens.css">
 <style>
+/* Scholar Outflow Lab — consumes design tokens only (design-tokens.css). */
+/* ===== Fallback faces: until the web fonts load (or if they never do), system fonts are scaled to the measured widths so line lengths and column widths do not jump ===== */
+@font-face{font-family:"Fraunces Fallback";src:local("Georgia"),local("Times New Roman");size-adjust:93.3%}
+@font-face{font-family:"Inter Fallback";src:local("Helvetica Neue"),local("Arial"),local("Segoe UI");size-adjust:106.5%}
+@font-face{font-family:"Space Mono Fallback";src:local("Menlo"),local("Consolas"),local("DejaVu Sans Mono");size-adjust:101.7%}
 :root{
-  --paper:#ffffff; --paper-2:#f4f5f7; --card:#ffffff; --ink:#1b1c20; --ink-soft:#6a6e76;
-  --line:#ebecef; --line-2:#dcdee3;
-  --stay:#157a72; --dual:#b07414; --ret:#566173; --onward:#bb4d2b;
-  --shadow:0 1px 2px rgba(20,22,28,.04), 0 8px 24px -16px rgba(20,22,28,.18);
-  --r:14px;
-  --serif:"Noto Serif","Noto Serif SC",Georgia,"Songti SC","Source Han Serif SC",serif;
-  --mono:"Space Mono",ui-monospace,monospace;
+  /* the four outcomes are categorical marks: the validated categorical palette, never text colours */
+  --o-stay:var(--viz-1); --o-dual:var(--viz-2); --o-ret:var(--viz-3); --o-onward:var(--viz-4);
 }
-*{box-sizing:border-box}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 html,body{margin:0;padding:0}
-body{background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:14.5px;line-height:1.7;overflow-x:clip}
-h1,h2,h3{font-family:var(--serif);font-weight:700;margin:0}
-.mono{font-family:var(--mono)}
-button,select,input{font-family:inherit;cursor:pointer}
-a{color:var(--stay)}
+body{background:var(--bg);color:var(--text);font:var(--weight-regular) var(--text-md)/var(--leading-normal) var(--font-sans);overflow-x:clip;-webkit-tap-highlight-color:transparent;font-variant-numeric:lining-nums}
+::selection{background:var(--selection-bg)}
+:focus-visible{outline:var(--border-focus-width) solid var(--focus);outline-offset:2px;border-radius:var(--radius-xs)}
+h1,h2,h3{margin:0;font-family:var(--font-display);font-weight:var(--display-weight);line-height:var(--leading-tight);text-wrap:balance;letter-spacing:var(--tracking-title);font-variation-settings:"opsz" var(--opsz-title)}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums lining-nums}
+button,select,input{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--accent-text);text-underline-offset:.18em;text-decoration-thickness:from-font}
+[hidden]{display:none!important}
+.skip{position:absolute;left:var(--space-2);top:-48px;background:var(--surface);padding:var(--space-2) var(--space-3);border:1px solid var(--border-input);border-radius:var(--radius-sm);z-index:var(--z-toast)}
+.skip:focus{top:var(--space-2)}
 
-.topbar{position:sticky;top:0;z-index:30;background:var(--paper);border-bottom:1px solid var(--line)}
-.tb-in{max-width:1180px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.brand{display:flex;align-items:baseline;gap:9px}
-.brand .logo{font-size:20px;font-weight:700}
-.brand .logo b{color:var(--onward);font-style:normal}
-.brand .sub{font-size:10.5px;color:var(--ink-soft);letter-spacing:.14em;text-transform:uppercase}
-.origin-pick{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.09em;
-  text-transform:uppercase;color:var(--ink-soft);margin-right:auto}
-.origin-pick select{padding:5px 9px;font-size:13px}
-.tabs{display:flex;gap:4px;background:var(--paper-2);padding:4px;border-radius:999px;border:1px solid var(--line)}
-.tab{border:none;background:transparent;padding:6px 15px;border-radius:999px;font-weight:600;color:var(--ink-soft);font-size:13px}
-.tab.active{background:var(--ink);color:var(--paper);box-shadow:var(--shadow)}
-.lang-btn{border:1px solid var(--line-2);background:var(--card);color:var(--ink-soft);
-  border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600}
-.lang-btn:hover{color:var(--ink)}
+/* ===== topbar ===== */
+.topbar{position:sticky;top:0;z-index:var(--z-sticky);background:var(--band);border-bottom:1px solid var(--band-line);color:var(--on-band)}
+.tb-in{max-width:var(--content-max);margin:0 auto;padding:var(--space-2) var(--gutter);display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;min-height:var(--topbar-h)}
+.brand{display:flex;align-items:center;gap:var(--space-2);color:inherit;text-decoration:none;min-width:0}
+.brand svg{flex:none}
+.brand .logo{font-family:var(--font-display);font-weight:var(--display-weight);font-size:var(--text-lg);white-space:nowrap;letter-spacing:-0.01em;font-variation-settings:"opsz" var(--opsz-title)}
+.brand .logo b{font-weight:inherit}
+.brand .sub{font-size:var(--text-xs);color:var(--on-band-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.origin-pick{display:flex;align-items:center;gap:var(--space-2);font:var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--on-band-2);margin-right:auto}
+.origin-pick select{height:30px;padding:0 var(--space-2);font:var(--weight-regular) var(--text-sm)/1 var(--font-sans);text-transform:none;letter-spacing:normal;color:var(--text)}
+.tabs{display:flex;gap:2px;background:transparent;padding:3px;border-radius:var(--radius-md);max-width:100%;overflow-x:auto;border:1px solid var(--band-line)}
+.tab{border:none;background:transparent;height:30px;padding:0 var(--space-3);border-radius:var(--radius-sm);font-weight:var(--weight-medium);color:var(--on-band-2);font-size:var(--text-sm);white-space:nowrap;transition:background-color var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out)}
+@media (hover:hover) and (pointer:fine){.tab:hover{color:var(--on-band)}}
+.tab.active{background:var(--band-line);color:var(--on-band);box-shadow:inset 0 0 0 1px var(--on-band-2);font-weight:var(--weight-medium)}
+.icon-btn,.lang-btn,.gh{display:inline-flex;align-items:center;justify-content:center;height:30px;min-width:30px;padding:0 var(--space-2);border-radius:var(--radius-sm);border:1px solid transparent;background:transparent;color:var(--on-band-2);font-size:var(--text-sm);font-weight:var(--weight-medium);text-decoration:none;transition:background-color var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out)}
+@media (hover:hover) and (pointer:fine){.icon-btn:hover,.lang-btn:hover,.gh:hover{background:var(--band-line);color:var(--on-band)}}
 
-.wrap{max-width:1180px;margin:0 auto;padding:20px}
-.notice{border:1px solid var(--line-2);border-left:3px solid var(--onward);background:var(--paper-2);
-  border-radius:10px;padding:11px 15px;font-size:12.8px;color:var(--ink-soft);margin-bottom:18px}
-.notice b{color:var(--ink)}
+.wrap{max-width:var(--content-max);margin:0 auto;padding:var(--space-5) var(--gutter)}
 
-.ctrl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
-.seg{display:flex;gap:3px;background:var(--paper-2);padding:3px;border-radius:10px;border:1px solid var(--line)}
-.seg button{border:none;background:transparent;padding:6px 12px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--ink-soft)}
-.seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
-select,input[type=search]{border:1px solid var(--line-2);background:var(--card);color:var(--ink);
-  padding:7px 11px;border-radius:9px;font-size:13px}
-input[type=search]{min-width:190px}
-.lbl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+/* ===== the finding (first screen) ===== */
+.finding{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-1);padding:var(--space-5);margin-bottom:var(--space-4)}
+.finding .eyebrow{font:var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--text-3);margin-bottom:var(--space-2)}
+.finding h1{font-size:var(--text-2xl);max-width:26ch}
+.finding .lede{color:var(--text-2);font-size:var(--text-sm);margin:var(--space-2) 0 var(--space-4);max-width:68ch}
+.f-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-3)}
+.f-cell{border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-3);background:var(--bg);min-width:0}
+.f-cell h2{font-size:var(--text-md);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f-big{font:var(--weight-semibold) var(--text-3xl)/1.1 var(--font-mono);font-variant-numeric:tabular-nums;margin:var(--space-1) 0}
+.f-meta{font:var(--weight-regular) var(--text-2xs)/1.5 var(--font-mono);color:var(--text-3)}
+.f-cell .bar{margin-top:var(--space-2)}
+.f-foot{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-4);margin-top:var(--space-4)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-1);height:var(--control-h);padding:0 var(--space-4);border-radius:var(--radius-sm);border:1px solid var(--border-input);background:var(--paper);color:var(--text);font-size:var(--text-sm);font-weight:var(--weight-medium);text-decoration:none;white-space:nowrap;transition:background-color var(--dur-fast) var(--ease-out),border-color var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out)}
+@media (hover:hover) and (pointer:fine){.btn:hover{background:var(--surface-hover)}}
+.btn:active{transform:scale(var(--press-scale))}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+@media (hover:hover) and (pointer:fine){.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}}
 
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);margin-bottom:14px}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.notice{border:1px solid var(--border);border-left:3px solid var(--warning);background:var(--surface);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--text-2);margin-bottom:var(--space-4);max-width:none}
+.notice b{color:var(--text)}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
-.c-card{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;background:var(--card);box-shadow:var(--shadow)}
-.c-head{display:flex;align-items:baseline;gap:8px;margin-bottom:9px}
-.c-head h3{font-size:16px}
-.c-head .n{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink-soft)}
-.bar{display:flex;height:13px;border-radius:7px;overflow:hidden;background:var(--paper-2)}
+.ctrl{display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center;margin-bottom:var(--space-4)}
+.seg{display:flex;gap:2px;background:var(--surface-2);padding:3px;border-radius:var(--radius-md);max-width:100%;overflow-x:auto;border:1px solid var(--border)}
+.seg button{border:none;background:transparent;height:28px;padding:0 var(--space-3);border-radius:var(--radius-sm);font-size:var(--text-xs);font-weight:var(--weight-medium);color:var(--text-2);white-space:nowrap}
+.seg button.on{background:var(--paper);color:var(--text);box-shadow:var(--shadow-1),inset 0 0 0 1px var(--border-input)}
+select,input[type=search]{border:1px solid var(--border-input);background:var(--surface);color:var(--text);height:var(--control-h);padding:0 var(--space-3);border-radius:var(--radius-sm);font-size:var(--text-sm);max-width:100%}
+input[type=search]{min-width:190px;flex:1 1 190px}
+.lbl{font:var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--text-3)}
+
+.legend{display:flex;gap:var(--space-4);flex-wrap:wrap;font-size:var(--text-xs);color:var(--text-2);margin-bottom:var(--space-3)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:var(--space-1);vertical-align:-1px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:var(--space-3)}
+.c-card{border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-4);background:var(--paper);box-shadow:var(--shadow-1);min-width:0}
+.c-head{display:flex;align-items:baseline;gap:var(--space-2);margin-bottom:var(--space-2)}
+.c-head h3{font-size:var(--text-md)}
+.c-head .n{margin-left:auto;font:var(--weight-regular) var(--text-2xs)/1 var(--font-mono);color:var(--text-3)}
+.bar{display:flex;height:12px;border-radius:var(--radius-xs);overflow:hidden;background:var(--surface-2);gap:1px}
 .bar span{display:block}
-.bar-k{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:var(--ink-soft)}
-.bar-k b{font-family:var(--mono);color:var(--ink);font-weight:700}
+.bar-k{display:flex;gap:var(--space-3);flex-wrap:wrap;margin-top:var(--space-2);font-size:var(--text-xs);color:var(--text-2)}
+.bar-k b{font-family:var(--font-mono);color:var(--text);font-weight:var(--weight-semibold)}
 
-table{width:100%;border-collapse:collapse;font-size:13.5px}
-th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);
-  font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line-2);white-space:nowrap;cursor:pointer;user-select:none}
+table{width:100%;border-collapse:collapse;font-size:var(--text-sm);background:var(--surface)}
+th{text-align:left;font:var(--weight-medium) var(--text-xs)/1.2 var(--font-sans);color:var(--text-2);background:var(--surface-2);padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0}
 th.num,td.num{text-align:right}
-th:hover{color:var(--ink)}
-td{padding:9px 10px;border-bottom:1px solid var(--line)}
+@media (hover:hover) and (pointer:fine){th:hover{color:var(--text)}}
+td{padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--hairline);font-variant-numeric:tabular-nums}
 tbody tr{cursor:pointer}
-tbody tr:hover{background:var(--paper-2)}
-.tier{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;border:1px solid}
-.tier.R1{color:#0d5b55;border-color:#9ccec9;background:#e6f3f2}
-.tier.R2{color:#7a5310;border-color:#e0c58c;background:#faf1e0}
-.tier.R3{color:#4a545f;border-color:#c9cfd6;background:#f0f2f4}
-.tier.R4{color:#8c3a20;border-color:#e2b3a2;background:#f9ebe6}
-.sbar{position:relative;height:8px;border-radius:5px;background:var(--paper-2);min-width:80px}
-.sbar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--stay)}
-.sbar u{position:absolute;top:-2px;bottom:-2px;border-left:1px solid rgba(21,122,114,.45);border-right:1px solid rgba(21,122,114,.45);
-  background:rgba(21,122,114,.13);text-decoration:none}
-/* 13 origins = 15 columns, ~2× viewport width on small screens. Without a pinned first
-   column you lose track of which destination row you're on mid-scroll (measured: the
-   first column's left goes from 14px to -371px). Pin it so the row label stays visible. */
-#cmp-wrap td:first-child, #cmp-wrap th:first-child{
-  position:sticky; left:0; z-index:2; background:var(--paper);
-  box-shadow:1px 0 0 var(--line-2);
-}
-#cmp-wrap tbody tr:hover td:first-child{background:var(--paper-2)}
-.cmp-hi{font-family:var(--mono);font-weight:700;color:var(--stay)}
-.cmp-n{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
-.cmp-gap{font-family:var(--mono);font-size:12px}
-.kindtag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:5px;
-  border:1px solid var(--line-2);color:var(--ink-soft);vertical-align:1px}
-.muted{color:var(--ink-soft)}
-.small{font-size:12px}
-.only-s{display:none}   /* Desktop gets a separate country column; small screens tuck it under the name */
+@media (hover:hover) and (pointer:fine){tbody tr:hover{background:var(--surface-hover)}}
+.tier{display:inline-flex;align-items:center;gap:3px;font:var(--weight-semibold) var(--text-2xs)/1 var(--font-mono);padding:2px 6px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface-2);color:var(--text)}
+.tier::after{content:"";display:inline-block;width:18px;height:6px;border-radius:1px;background:linear-gradient(90deg,var(--text-2) var(--tier-fill),var(--border-strong) var(--tier-fill))}
+.tier.R1{--tier-fill:100%}.tier.R2{--tier-fill:75%}.tier.R3{--tier-fill:50%}.tier.R4{--tier-fill:25%}
+.sbar{position:relative;height:8px;border-radius:var(--radius-xs);background:var(--surface-2);min-width:80px}
+.sbar i{position:absolute;left:0;top:0;bottom:0;border-radius:var(--radius-xs);background:var(--o-stay)}
+.sbar u{position:absolute;top:-2px;bottom:-2px;border-left:1px solid var(--text-2);border-right:1px solid var(--text-2);background:transparent;text-decoration:none}
+#cmp-wrap td:first-child,#cmp-wrap th:first-child{position:sticky;left:0;z-index:2;background:var(--surface);box-shadow:1px 0 0 var(--border-strong)}
+#cmp-wrap th:first-child{background:var(--surface-2)}
+@media (hover:hover) and (pointer:fine){#cmp-wrap tbody tr:hover td:first-child{background:var(--surface-hover)}}
+.cmp-hi{font-family:var(--font-mono);font-weight:var(--weight-semibold);color:var(--text)}
+.cmp-n{font:var(--weight-regular) var(--text-2xs)/1.3 var(--font-mono);color:var(--text-3)}
+.cmp-gap{font-family:var(--font-mono);font-size:var(--text-xs)}
+.kindtag{display:inline-block;font-size:var(--text-2xs);padding:1px 6px;border-radius:var(--radius-xs);border:1px solid var(--border);color:var(--text-2);vertical-align:1px}
+.muted{color:var(--text-2)}
+.small{font-size:var(--text-xs)}
+.only-s{display:none}
 
-.drawer{position:fixed;inset:0;z-index:60;display:none}
+/* ===== compare chart ===== */
+.chart{--ci-label:176px;--ci-val:96px;background:var(--paper);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-4);margin-bottom:var(--space-4);box-shadow:var(--shadow-1)}
+.chart-head{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3);margin-bottom:var(--space-3)}
+.chart-head h3{font-size:var(--text-md);margin-right:auto}
+.ci-row{display:grid;grid-template-columns:var(--ci-label) minmax(0,1fr) var(--ci-val);align-items:center;gap:var(--space-3);min-height:28px;font-size:var(--text-sm)}
+.ci-row .who{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-track{position:relative;height:18px;background:linear-gradient(90deg,var(--viz-grid) 1px,transparent 1px) 0 0/25% 100%;border-left:1px solid var(--viz-axis)}
+.ci-track i{position:absolute;top:5px;height:8px;border-radius:2px;background:var(--o-stay)}
+.ci-track u{position:absolute;top:2px;bottom:2px;border-left:1px solid var(--text);border-right:1px solid var(--text);text-decoration:none}
+.ci-track u::after{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px solid var(--text)}
+.ci-val{text-align:right;font:var(--weight-regular) var(--text-xs)/1.2 var(--font-mono);font-variant-numeric:tabular-nums}
+.ci-val small{display:block;color:var(--text-3);font-size:var(--text-2xs)}
+.ci-axis{display:grid;grid-template-columns:var(--ci-label) minmax(0,1fr) var(--ci-val);gap:var(--space-3);font:var(--weight-regular) var(--text-2xs)/1 var(--font-mono);color:var(--text-3);margin-top:var(--space-1)}
+.ci-axis .ticks{position:relative;height:1em}
+.ci-axis .ticks b{position:absolute;top:0;transform:translateX(-50%);font-weight:var(--weight-regular)}
+.ci-axis .ticks b:first-child{transform:none}
+.ci-axis .ticks b:last-child{transform:translateX(-100%)}
+.ci-cap{margin:var(--space-2) 0 0;font-size:var(--text-2xs);color:var(--text-3)}
+
+.drawer{position:fixed;inset:0;z-index:var(--z-drawer);display:none}
 .drawer.open{display:block}
-.drawer .veil{position:absolute;inset:0;background:rgba(20,22,28,.28)}
-.drawer .panel{position:absolute;right:0;top:0;bottom:0;width:min(520px,100%);background:var(--card);
-  border-left:1px solid var(--line-2);overflow:auto;padding:22px}
-.drawer h2{font-size:19px;margin-bottom:3px}
-.close{position:absolute;right:16px;top:16px;border:1px solid var(--line-2);background:var(--card);
-  border-radius:8px;padding:5px 10px;font-size:12px}
-.kv{display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-soft);margin:10px 0 18px}
+.drawer .veil{position:absolute;inset:0;background:var(--overlay)}
+.drawer .panel{position:absolute;right:0;top:0;bottom:0;width:min(520px,100%);background:var(--surface-raised);border-left:1px solid var(--border);box-shadow:var(--shadow-2);overflow:auto;padding:var(--space-5)}
+.drawer h2{font-size:var(--text-xl);margin-bottom:var(--space-1);padding-right:5em}
+.close{position:absolute;right:var(--space-4);top:var(--space-4);border:1px solid var(--border-input);background:var(--surface);border-radius:var(--radius-sm);height:30px;padding:0 var(--space-3);font-size:var(--text-xs)}
+.kv{display:flex;gap:var(--space-2) var(--space-3);flex-wrap:wrap;font-size:var(--text-xs);color:var(--text-2);margin:var(--space-2) 0 var(--space-4)}
 .kv span{white-space:nowrap}
-.sec-t{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:20px 0 8px}
+.sec-t{font:var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--text-3);margin:var(--space-5) 0 var(--space-2)}
 
-.ask{border:1px solid var(--line-2);border-radius:var(--r);padding:16px 18px;background:var(--paper-2);margin-bottom:18px}
-.ask-row{display:flex;gap:14px;flex-wrap:wrap}
-.ask-row label{display:flex;flex-direction:column;gap:5px;font-size:11px;letter-spacing:.09em;
-  text-transform:uppercase;color:var(--ink-soft);flex:1 1 190px}
-.ask-row select{width:100%}
-.ask-note{margin:12px 0 0;font-size:12.3px;color:var(--ink-soft)}
-.ask-note b{color:var(--ink)}
-.m-card{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;background:var(--card);
-  box-shadow:var(--shadow);margin-bottom:10px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
-.m-rank{font-family:var(--mono);font-size:12px;color:var(--ink-soft);min-width:26px}
+.ask{border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-4);background:var(--paper);margin-bottom:var(--space-4)}
+.ask-row{display:flex;gap:var(--space-3);flex-wrap:wrap}
+.ask-row label{display:flex;flex-direction:column;gap:var(--space-1);font:var(--weight-semibold) var(--text-2xs)/1.2 var(--font-sans);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--text-3);flex:1 1 190px;min-width:0}
+.ask-row select{width:100%;text-transform:none;letter-spacing:normal;font-weight:var(--weight-regular)}
+.ask-note{margin:var(--space-3) 0 0;font-size:var(--text-xs);color:var(--text-2);max-width:68ch}
+.ask-note b{color:var(--text)}
+.m-card{border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-4);background:var(--paper);box-shadow:var(--shadow-1);margin-bottom:var(--space-2);display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap;cursor:pointer}
+@media (hover:hover) and (pointer:fine){.m-card:hover{background:var(--surface-hover)}}
+.m-rank{font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-3);min-width:26px}
 .m-main{flex:1 1 220px;min-width:0}
-.m-main h3{font-size:15.5px}
+.m-main h3{font-size:var(--text-md)}
 .m-num{text-align:right;min-width:96px}
-.m-num .big{font-family:var(--mono);font-size:19px;font-weight:700;color:var(--stay)}
-.m-num .sub{font-size:11px;color:var(--ink-soft);font-family:var(--mono)}
-.warn{border-left:3px solid var(--dual);background:var(--paper-2);border-radius:8px;
-  padding:10px 14px;font-size:12.6px;color:var(--ink-soft);margin-bottom:14px}
-.doc{max-width:760px}
-.doc h3{font-size:15px;margin:22px 0 7px}
-.doc p,.doc li{color:#33363d;font-size:13.8px}
-.doc code{font-family:var(--mono);font-size:12.5px;background:var(--paper-2);padding:1px 5px;border-radius:5px}
+.m-num .big{font:var(--weight-semibold) var(--text-xl)/1.1 var(--font-mono);color:var(--text)}
+.m-num .sub{font-size:var(--text-2xs);color:var(--text-3);font-family:var(--font-mono)}
+.warn{border-left:3px solid var(--warning);background:var(--surface);border-radius:var(--radius-sm);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--text-2);margin-bottom:var(--space-3)}
+.doc{max-width:68ch}
+.doc h3{font-size:var(--text-lg);margin:var(--space-5) 0 var(--space-2)}
+.doc p,.doc li{color:var(--text);font-size:var(--text-md)}
+.doc code{font-family:var(--font-mono);font-size:.92em;background:var(--surface-2);padding:1px 5px;border-radius:var(--radius-xs)}
 .doc ul{padding-left:20px}
-.foot{border-top:1px solid var(--line);margin-top:34px;padding:16px 0;font-size:12px;color:var(--ink-soft)}
+.pipe{list-style:none;margin:var(--space-3) 0 var(--space-2);padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--space-2);counter-reset:pipe}
+.pipe li{border:1px solid var(--border);border-radius:var(--radius-md);background:var(--paper);box-shadow:var(--shadow-1);padding:var(--space-3);display:grid;align-content:start;gap:var(--space-1);font-size:var(--text-sm);min-width:0}
+.pipe li::before{counter-increment:pipe;content:counter(pipe);font:var(--weight-semibold) var(--text-2xs)/1 var(--font-mono);color:var(--text-3)}
+.pipe li span{font-size:var(--text-xs);color:var(--text-2);overflow-wrap:anywhere}
+.pipe li code{font-size:var(--text-xs)}
+.pipe-note,.dl-all{font-size:var(--text-sm);color:var(--text-2)}
+#loading{padding:var(--space-4) 0}
 
+/* ===== footer (honest block) ===== */
+.honest{border-top:1px solid var(--band-line);font-size:var(--text-xs);color:var(--on-band-2);background:var(--band);padding:var(--space-10) var(--gutter) var(--space-12)}
+.honest dl{margin:0}
+.honest dt{font-weight:var(--weight-semibold);color:var(--on-band);font-family:var(--font-sans);font-size:var(--text-2xs);letter-spacing:var(--tracking-caps);text-transform:uppercase;margin-bottom:var(--space-2)}
+.honest dd{margin:0;max-width:68ch;line-height:var(--leading-relaxed)}
+.foot{font:var(--weight-regular) var(--text-2xs)/1.5 var(--font-mono);color:var(--text-3);margin-bottom:var(--space-3)}
+
+@media (max-width:900px){
+  .f-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 @media (max-width:720px){
-  .wrap{padding:14px}
-  .tb-in{padding:10px 14px;gap:10px}
+  .wrap{padding:var(--space-3) var(--gutter)}
+  .tb-in{gap:var(--space-2)}
   .brand .sub{display:none}
+  .origin-pick{margin-right:auto}
+  .tabs{order:9;flex:1 1 100%}
   .hide-s{display:none}
   .only-s{display:block}
-  table{font-size:12.8px}
-  td,th{padding:8px 6px}
-  .drawer .panel{padding:18px 16px}
+  table{font-size:var(--text-xs)}
+  td,th{padding:var(--space-2)}
+  .drawer .panel{padding:var(--space-4)}
+  .finding{padding:var(--space-4)}
+  .finding h1{font-size:var(--text-xl)}
+  .f-big{font-size:var(--text-2xl)}
+  .chart{--ci-label:96px;--ci-val:64px}
+  .ci-row,.ci-axis{gap:var(--space-2)}
+  .gh{display:none}
 }
-@media (prefers-color-scheme:dark){
-  :root{--paper:#141519;--paper-2:#1c1e23;--card:#191b1f;--ink:#e9eaec;--ink-soft:#9aa0a8;
-        --line:#26282e;--line-2:#343740;--stay:#4bab9f;--dual:#d0a04a;--ret:#8892a0;--onward:#d97a55}
-  .doc p,.doc li{color:#c6c9cf}
-  .tier.R1{background:#123330;border-color:#1f5b54;color:#7fd0c6}
-  .tier.R2{background:#33280f;border-color:#5c4720;color:#dcb46c}
-  .tier.R3{background:#22252b;border-color:#3a3f48;color:#a7aeb8}
-  .tier.R4{background:#331d15;border-color:#5d3327;color:#e09c80}
+/* ===== Family layer v3.1: band surfaces, pressed and focus states, touch targets =====
+   The band (top bar, signature panel, footer) is the anchor surface: deep in Plaster and Ink, a whiter paper in
+   Paper. Everything on it uses the --on-band pair; focus rings and text selection get their own colours there
+   because --focus and --selection-bg are solved for light surfaces. Hover sits behind (hover:hover) so a tap on
+   a touch screen does not leave a stuck highlight. */
+.topbar .pill{border-color:var(--band-line);color:var(--on-band-2);background:transparent;font-weight:var(--weight-regular)}
+.topbar .pill::before{background:var(--warning)}
+.topbar .btn,.plate .btn{background:transparent;border-color:var(--band-line);color:var(--on-band)}
+.topbar .btn-ghost,.plate .btn-ghost{border-color:transparent}
+.topbar .btn-primary,.plate .btn-primary{background:var(--on-band);border-color:var(--on-band);color:var(--band)}
+@media (hover:hover) and (pointer:fine){
+  .topbar .btn:hover,.plate .btn:hover{background:var(--band-line);border-color:var(--band-line)}
+  .topbar .btn-primary:hover,.plate .btn-primary:hover{background:var(--on-band-2);border-color:var(--on-band-2)}
 }
+.topbar :focus-visible,.plate :focus-visible,.honest :focus-visible{outline-color:var(--on-band)}
+.topbar ::selection,.plate ::selection,.honest ::selection{background:var(--on-band-2);color:var(--band)}
+.honest-in{max-width:var(--content-max);margin:0 auto;display:grid;gap:var(--space-6);grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.honest a{color:var(--on-band);text-decoration-color:var(--band-line)}
+.honest code{color:var(--on-band)}
+/* Pressed: the whole control scales, content included (reads as pushed in, not moved). Reduced motion keeps a
+   colour change instead of the scale. */
+.seg button:active,.tab:active,.icon-btn:active,.lang-btn:active,.close:active{transform:scale(var(--press-scale))}
+@media (prefers-reduced-motion:reduce){.btn:active,.seg button:active,.tab:active,.icon-btn:active,.lang-btn:active,.close:active{transform:none;background:var(--neutral-tint)}}
+/* Touch: 44px targets on coarse pointers. */
+@media (pointer:coarse){.btn,.nav a{min-height:var(--touch-min)}.btn-icon{min-width:var(--touch-min)}}
+/* Text fields: the edge darkens and a same-hue ring appears; the outline is for keyboard focus. */
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),select,textarea{transition:border-color var(--dur-fast) var(--ease-out),box-shadow var(--dur-fast) var(--ease-out)}
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):focus,select:focus,textarea:focus{outline:none;border-color:var(--accent-text);box-shadow:0 0 0 3px var(--accent-tint)}
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):focus-visible,select:focus-visible,textarea:focus-visible{outline:var(--border-focus-width) solid var(--focus);outline-offset:1px}
+::placeholder{color:var(--text-3)}
+/* Numeric columns: header text and figures share one right edge, by rule rather than by accident. */
+table.data th.num,table.data td.num{text-align:right}
+table.data th.num button{justify-content:flex-end;width:100%}
+/* Scholar Outflow Lab: view tabs, language and icon buttons sit on the band */
+.honest .foot{color:var(--on-band-2)}
+/* phone width: brand, language and light/dark share the first row; origin and the view tabs get full rows */
+@media (max-width:720px){
+  .brand{flex:1 1 auto}
+  .lang-btn,.icon-btn{order:1}
+  .origin-pick{order:2;flex:1 1 100%;margin-right:0}
+  .origin-pick select{flex:1 1 auto;min-width:0}
+  .tabs{order:9}
+}
+@media (max-width:767px){#theme{display:none}}
+#nl-settings-button{flex:none}
+/* touch: the bar's own controls reach 44px too (the family rule only knows .btn / .nav a) */
+@media (pointer:coarse){.tab,.icon-btn,.lang-btn,.gh{min-height:var(--touch-min)}.icon-btn{min-width:var(--touch-min)}}
+/* ===== end of family layer v3.1 ===== */
 </style>
 </head>
 <body>
 
+<a class="skip" href="#main" id="skip">Skip to content</a>
 <div class="topbar"><div class="tb-in">
-  <div class="brand"><div class="logo" id="brand-logo">Scholar Outflow <b>Lab</b></div><div class="sub" id="brand-sub">去向实验室</div></div>
+  <a class="brand" href="./" aria-label="Scholar Outflow Lab home">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" aria-hidden="true" focusable="false"><rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="currentColor" stroke-width="2"/><rect x="14" y="6" width="4" height="4" rx="1" fill="var(--point)"/><path d="M7.5 15.5h.01" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M11 15.5h6.5m0 0L15 13m2.5 2.5L15 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="logo" id="brand-logo">Scholar Outflow <b>Lab</b></div><div class="sub" id="brand-sub"></div>
+  </a>
   <label class="origin-pick" id="origin-wrap" hidden>
     <span id="origin-lbl">Origin</span><select id="origin-sel"></select>
   </label>
@@ -175,9 +277,22 @@ tbody tr:hover{background:var(--paper-2)}
     <button class="tab" data-view="doc"></button>
   </div>
   <button class="lang-btn" id="lang-btn" title="切换语言 / switch language"></button>
+  <button class="icon-btn" id="theme" aria-label="Dark mode" aria-pressed="false" title="Dark mode"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
+  <button type="button" class="icon-btn" id="nl-settings-button" aria-haspopup="dialog" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10.34 5.10L10.58 2.51L13.42 2.51L13.66 5.10A7.1 7.1 0 0 1 15.71 5.95L17.71 4.28L19.72 6.29L18.05 8.29A7.1 7.1 0 0 1 18.90 10.34L21.49 10.58L21.49 13.42L18.90 13.66A7.1 7.1 0 0 1 18.05 15.71L19.72 17.71L17.71 19.72L15.71 18.05A7.1 7.1 0 0 1 13.66 18.90L13.42 21.49L10.58 21.49L10.34 18.90A7.1 7.1 0 0 1 8.29 18.05L6.29 19.72L4.28 17.71L5.95 15.71A7.1 7.1 0 0 1 5.10 13.66L2.51 13.42L2.51 10.58L5.10 10.34A7.1 7.1 0 0 1 5.95 8.29L4.28 6.29L6.29 4.28L8.29 5.95A7.1 7.1 0 0 1 10.34 5.10Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  <a class="gh" href="https://github.com/NickkkLian/Scholar-Outflow-Lab" rel="noopener">GitHub</a>
 </div></div>
 
-<div class="wrap">
+<main class="wrap" id="main" tabindex="-1">
+  <section class="finding" id="finding" hidden aria-labelledby="finding-h">
+    <div class="eyebrow" id="finding-eyebrow"></div>
+    <h1 id="finding-h"></h1>
+    <p class="lede" id="finding-lede"></p>
+    <div class="f-grid" id="finding-grid"></div>
+    <div class="f-foot">
+      <button class="btn btn-primary" id="finding-cta" type="button"></button>
+      <div class="legend" id="finding-legend" style="margin:0"></div>
+    </div>
+  </section>
   <div class="notice" id="notice"></div>
 
   <div id="loading" class="muted"></div>
@@ -253,6 +368,7 @@ tbody tr:hover{background:var(--paper-2)}
       <div class="seg" id="seg-stratum3"></div>
       <span class="muted small" id="cmp-note"></span>
     </div>
+    <div id="cmp-chart"></div>
     <div id="cmp-wrap"></div>
   </section>
 
@@ -270,14 +386,22 @@ tbody tr:hover{background:var(--paper-2)}
   <!-- Methodology -->
   <section id="v-doc" hidden class="doc"></section>
 
+</main>
+<footer class="honest">
   <div class="foot" id="foot"></div>
-</div>
+  <dl class="honest-in">
+    <div><dt id="h-about-t"></dt><dd id="h-about"></dd></div>
+    <div><dt id="h-nv-t"></dt><dd id="h-nv"></dd></div>
+    <div><dt id="h-src-t"></dt><dd><a href="https://github.com/NickkkLian/Scholar-Outflow-Lab" rel="noopener">github.com/NickkkLian/Scholar-Outflow-Lab</a> · <span id="h-src"></span></dd></div>
+  </dl>
+</footer>
 
 <div class="drawer" id="drawer">
   <div class="veil" data-close></div>
   <div class="panel"><button class="close" data-close id="drawer-close"></button><div id="drawer-body"></div></div>
 </div>
 
+<script src="appearance.js"></script>
 <script>
 /* ── i18n ─────────────────────────────────────────────────────────────
    Default is English; the toggle persists in localStorage.
@@ -339,9 +463,19 @@ const vtype = t => LANG === 'en' ? ({'期刊':'Journal','会议':'Conference'}[t
 const T = {
 en: {
   title:'Scholar Outflow Lab · Where home-grown researchers end up',
-  brandLogo:'Scholar Outflow <b>Lab</b>', brandSub:'去向实验室',
+  brandLogo:'Scholar Outflow <b>Lab</b>', brandSub:'Where researchers who started in 13 countries ended up',
+  skip:'Skip to content',
+  fEyebrow:'The finding', fTitle:'Same destination, different starting points',
+  fLede:'Researchers who started publishing in each country and later spent four or more years in the United States — the share whose last known affiliation is still there. Same sampling, same computation; compare relative levels, not the absolute percentages.',
+  fStay:'stayed in the US', fMeta:(n,ci)=>`n = ${n.toLocaleString()}<br>95% CI ${ci}`,
+  fCta:'Compare all origins', fLoading:'Loading the four origins…', fFail:'The headline figures could not be loaded.',
+  cmpChartTitle:(dest,s)=>`Stay rate in ${dest} by starting country · ${s}`, cmpChartDest:'Destination', cmpChartAxis:'Bar: stay rate. Whisker: 95% confidence interval. Sorted by stay rate.',
+  hAboutT:'About this data', hAbout:'Every number is computed by scripts/compute.py from OpenAlex authorship records (CC0) and served as static JSON; nothing is modelled or estimated by hand. The pipeline, its tests and the three corrections that made the numbers self-consistent are in the repository.',
+  hNvT:'Not verified here', hNv:'Not visa or immigration statistics and not advice. The sample frame excludes anyone who left before publishing at home; "stayed" means the last known affiliation, not residency. Institutions are parsed from affiliation strings and some mismatches remain; field labels are coarse. Absolute values drift with sampling choices.',
+  hSrcT:'Source', hSrc:'MIT · data OpenAlex, CC0 · built by Nick Lian',
   origin:'Origin', langBtn:'中文',
   tabs:{match:'Path Finder',country:'Destinations',inst:'Institutions',compare:'Origin Compare',venue:'Venues',doc:'Methodology'},
+  darkMode:'Dark mode', settingsBtn:'Settings',
   notice:`<b>This is not immigration advice, and not visa statistics.</b>
     The data is a migration proxy built from academic authorship records and covers only people who publish;
     "stayed" means the last known affiliation is in that country, not a work permit or permanent residency.
@@ -408,9 +542,19 @@ en: {
 },
 zh: {
   title:'去向实验室 · 本土起步科研人员的流向',
-  brandLogo:'去向<b>实验室</b>', brandSub:'Scholar Outflow Lab',
+  brandLogo:'去向<b>实验室</b>', brandSub:'13 个国家起步的研究者最后去了哪里',
+  skip:'跳到正文',
+  fEyebrow:'核心发现', fTitle:'同一个目的地，起点不同，去向差好几倍',
+  fLede:'在各国起步发表、之后在美国待满 4 年及以上的研究者中，最后已知任职机构仍在美国的比例。抽样与算法一致；比相对高低，不比绝对百分比。',
+  fStay:'留在美国', fMeta:(n,ci)=>`样本 ${n.toLocaleString()}<br>95% 区间 ${ci}`,
+  fCta:'对比全部起点', fLoading:'正在载入四个起点的数据…', fFail:'核心数字载入失败。',
+  cmpChartTitle:(dest,s)=>`${dest} 的留下率 · 按起点 · ${s}`, cmpChartDest:'目的国', cmpChartAxis:'实心条：留下率。须线：95% 置信区间。按留下率排序。',
+  hAboutT:'关于这些数据', hAbout:'每个数字都由 scripts/compute.py 从 OpenAlex 署名记录（CC0）算出，以静态 JSON 提供；没有人工估算或建模。流水线、测试与让数字自洽的三处口径修正都在仓库里。',
+  hNvT:'这里没有核实的', hNv:'不是签证或移民统计，也不构成建议。样本框不含本科即出国、在国内没发过论文的人；「留下」指最后已知任职机构，不等于居留身份。机构从署名字符串解析，仍有错配；学科标签很粗。绝对值随口径漂移。',
+  hSrcT:'来源', hSrc:'MIT · 数据 OpenAlex，CC0 · Nick Lian 制作',
   origin:'起点', langBtn:'EN',
   tabs:{match:'路径匹配',country:'目的国',inst:'高校榜',compare:'来源对比',venue:'期刊会议',doc:'口径'},
+  darkMode:'深色模式', settingsBtn:'设置',
   notice:`<b>这不是移民建议，也不是签证统计。</b>
     数据是学术署名履历的迁移代理指标，只覆盖发过论文的科研人群；「留下」指最后已知任职机构在该国，不等于拿到工签或永居。
     绝对值受抽样口径影响大，<b>只比机构之间、国家之间、来源之间的相对高低</b>，别拿绝对值当结论。
@@ -477,12 +621,12 @@ const t = k => T[LANG][k];
 // Deep links: #compare, #inst, … open that view directly (and the tab bar keeps the hash in sync).
 const VIEWS = ['match','country','inst','compare','venue','doc'];
 const hashView = location.hash.slice(1);
-const S = {data:null, venues:null, origin:'cn', originList:null, allData:{},
+const S = {data:null, venues:null, origin:'cn', originList:null, allData:{}, cmpDest:null,
            view: VIEWS.includes(hashView) ? hashView : 'match', stratum:'long', sortKey:'stay', sortDir:-1,
            fCountry:'', fField:'', fKind:'', q:'',
            mField:'', mCountry:'', mKind:'', mStratum:'long',
            vField:'', vType:'', vQ:''};
-const OUT_KEYS = [['stay','var(--stay)'],['dual','var(--dual)'],['ret','var(--ret)'],['onward','var(--onward)']];
+const OUT_KEYS = [['stay','var(--o-stay)'],['dual','var(--o-dual)'],['ret','var(--o-ret)'],['onward','var(--o-onward)']];
 const pc = v => v==null ? '—' : (v*100).toFixed(1)+'%';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 // meta.origin_name arrives in Chinese from the data files; display per language.
@@ -698,6 +842,7 @@ function renderCompare(){
   const list = S.originList || [];
   if(list.length < 2){
     wrap.innerHTML = t('cmpOnlyOne');
+    document.getElementById('cmp-chart').innerHTML = '';
     return;
   }
   const missing = list.filter(o => !S.allData[o.cc]);
@@ -726,6 +871,7 @@ function renderCompare(){
   rows.sort((a,b) => b.total - a.total);
 
   document.getElementById('cmp-note').textContent = t('cmpNote')(rows.length, list.length);
+  renderCompareChart(rows, list);
 
   wrap.innerHTML = `<div class="warn">${t('cmpWarn')}</div>
     <div style="overflow-x:auto"><table>
@@ -739,6 +885,66 @@ function renderCompare(){
     </tr>`).join('')}</tbody></table></div>`;
 }
 
+/* ── the finding: four origins, one destination, computed from the published files ── */
+const FINDING_ORIGINS = ['ir','in','br','cn'];
+function loadData(cc){
+  if(S.allData[cc]) return Promise.resolve(S.allData[cc]);
+  return fetch(`data-${cc}.json`).then(r => { if(!r.ok) throw new Error(`data-${cc}.json ${r.status}`); return r.json(); })
+    .then(d => (S.allData[cc] = d));
+}
+function renderFinding(){
+  const box = document.getElementById('finding');
+  box.hidden = S.view !== 'match';
+  if(box.hidden) return;
+  document.getElementById('finding-eyebrow').textContent = t('fEyebrow');
+  document.getElementById('finding-h').textContent = t('fTitle');
+  document.getElementById('finding-lede').textContent = t('fLede');
+  document.getElementById('finding-cta').textContent = t('fCta');
+  document.getElementById('finding-legend').innerHTML = OUT_KEYS.map(([k,c]) => `<span><i style="background:${c}"></i>${t('out')[k]}</span>`).join('');
+  const grid = document.getElementById('finding-grid');
+  const ready = FINDING_ORIGINS.every(cc => S.allData[cc]);
+  if(!ready){
+    grid.innerHTML = `<p class="muted small">${t('fLoading')}</p>`;
+    Promise.all(FINDING_ORIGINS.map(loadData)).then(renderFinding).catch(() => { grid.innerHTML = `<p class="muted small">${t('fFail')}</p>`; });
+    return;
+  }
+  const rows = FINDING_ORIGINS.map(cc => {
+    const d = S.allData[cc];
+    const us = (d.countries || []).find(c => c.cc === 'us');
+    return us && us.strata.long ? {cc, name: originName(d.meta), s: us.strata.long} : null;
+  }).filter(Boolean).sort((a,b) => b.s.stay - a.s.stay);
+  grid.innerHTML = rows.map(r => `<div class="f-cell">
+      <h2>${esc(r.name)}</h2>
+      <div class="f-big">${pc(r.s.stay)}</div>
+      <div class="f-meta">${t('fStay')}<br>${t('fMeta')(r.s.n, r.s.stay_ci ? pc(r.s.stay_ci[0]) + '–' + pc(r.s.stay_ci[1]) : '—')}</div>
+      <div class="bar" role="img" aria-label="${OUT_KEYS.map(([k]) => t('out')[k] + ' ' + pc(r.s[k])).join(', ')}">${OUT_KEYS.map(([k,c]) => r.s[k] ? `<span style="width:${r.s[k]*100}%;background:${c}"></span>` : '').join('')}</div>
+    </div>`).join('');
+}
+
+/* ── compare chart: one destination, every origin, stay rate with its 95% interval ── */
+function renderCompareChart(rows, list){
+  const el = document.getElementById('cmp-chart');
+  if(!rows.length){ el.innerHTML = ''; return; }
+  if(!S.cmpDest || !rows.some(r => r.dc === S.cmpDest)) S.cmpDest = rows.some(r => r.dc === 'us') ? 'us' : rows[0].dc;
+  const row = rows.find(r => r.dc === S.cmpDest);
+  const destName = country(row.dc, row.name);
+  const items = list.map((o, i) => ({o, c: row.cells[i]})).filter(x => x.c).sort((a,b) => b.c.stay - a.c.stay);
+  const opts = rows.map(r => `<option value="${esc(r.dc)}"${r.dc === S.cmpDest ? ' selected' : ''}>${esc(country(r.dc, r.name))}</option>`).join('');
+  el.innerHTML = `<div class="chart">
+    <div class="chart-head"><h3>${esc(t('cmpChartTitle')(destName, t('strata')[S.stratum]))}</h3>
+      <label class="lbl" for="cmp-dest">${t('cmpChartDest')}</label><select id="cmp-dest">${opts}</select></div>
+    ${items.map(({o, c}) => {
+      const lo = c.stay_ci ? c.stay_ci[0] : c.stay, hi = c.stay_ci ? c.stay_ci[1] : c.stay;
+      return `<div class="ci-row"><span class="who">${esc(country(o.cc, o.name))}</span>
+        <span class="ci-track" role="img" aria-label="${esc(country(o.cc, o.name))}: ${pc(c.stay)}, 95% CI ${pc(lo)} to ${pc(hi)}, n ${c.n}"><i style="left:0;width:${c.stay*100}%"></i><u style="left:${lo*100}%;width:${Math.max((hi-lo)*100, 0.4)}%"></u></span>
+        <span class="ci-val">${pc(c.stay)}<small>n=${c.n.toLocaleString()}</small></span></div>`;
+    }).join('')}
+    <div class="ci-axis" aria-hidden="true"><span></span><span class="ticks">${[0,25,50,75,100].map(v => `<b style="left:${v}%">${v}%</b>`).join('')}</span><span></span></div>
+    <p class="ci-cap">${t('cmpChartAxis')}</p>
+  </div>`;
+  el.querySelector('#cmp-dest').onchange = e => { S.cmpDest = e.target.value; renderCompare(); };
+}
+
 function ensureAllOrigins(){
   const list = S.originList || [];
   const todo = list.filter(o => !S.allData[o.cc]);
@@ -747,6 +953,15 @@ function ensureAllOrigins(){
     fetch(`data-${o.cc}.json`).then(r => r.ok ? r.json() : null)
       .then(d => { if(d) S.allData[o.cc] = d; }).catch(() => {})
   )).then(() => { if(S.view === 'compare') renderCompare(); });
+}
+
+// Links to every origin's file, so the whole dataset is one click per country away.
+function dataLinks(){
+  const list = S.originList || [];
+  if(list.length < 2) return '';
+  const label = LANG === 'en' ? 'Every origin:' : '全部来源国：';
+  return `<p class="dl-all">${label} ` + list.map(o =>
+    `<a href="data-${esc(o.cc)}.json" download>${esc(country(o.cc, o.name))}</a>`).join(' · ') + '</p>';
 }
 
 function renderDoc(){
@@ -774,6 +989,25 @@ function renderDoc(){
           (${m.whitelist_size.toLocaleString()} total), to filter the phantom affiliations OpenAlex
           parses out of free-text strings.</li>
     </ul>
+
+    <h3>Pipeline</h3>
+    <ol class="pipe" aria-label="Data pipeline, in order">
+      <li><b>OpenAlex</b><span>authors, institutions and sources APIs · CC0, no key</span></li>
+      <li><code>institutions.py</code><span>whitelist: ROR ID, output floor, generic-name blacklist</span></li>
+      <li><code>harvest.py</code><span>sampled author careers per origin, resumable</span></li>
+      <li><code>compute.py</code><span>arrivals, four outcomes, strata, Wilson bounds, tiers; refuses partial data</span></li>
+      <li><b>This page</b><span>reads the JSON files below; nothing runs on a server</span></li>
+    </ol>
+    <p class="pipe-note"><code>venues.py</code> builds the venue board from the same API, and <code>daily.sh</code> runs the
+       rounds within the free quota of 1,000 requests a day.</p>
+
+    <h3>Download the data</h3>
+    <ul>
+      <li><a href="data-${esc(m.origin)}.json" download>data-${esc(m.origin)}.json</a> — every number on this page for ${on}</li>
+      <li><a href="origins.json" download>origins.json</a> — the ${(S.originList || []).length || 'available'} origins with their sample sizes</li>
+      <li><a href="data-venues.json" download>data-venues.json</a> — the journal and conference board</li>
+    </ul>
+    ${dataLinks()}
 
     <h3>Four mutually exclusive outcomes (sum to 100%)</h3>
     <ul>
@@ -857,6 +1091,24 @@ function renderDoc(){
           用来滤掉 OpenAlex 从署名字符串里解析出来的幽灵机构。</li>
     </ul>
 
+    <h3>数据流水线</h3>
+    <ol class="pipe" aria-label="数据流水线，按顺序">
+      <li><b>OpenAlex</b><span>学者、机构、期刊接口 · CC0，免 key</span></li>
+      <li><code>institutions.py</code><span>白名单：ROR 编号、产出下限、通用名黑名单</span></li>
+      <li><code>harvest.py</code><span>按来源国抽样学者履历，可断点续跑</span></li>
+      <li><code>compute.py</code><span>到达、四分类、分层、Wilson 下界、Tier；数据不全拒绝发布</span></li>
+      <li><b>本页</b><span>只读下面这些 JSON，没有服务器在算</span></li>
+    </ol>
+    <p class="pipe-note"><code>venues.py</code> 用同一个接口生成期刊会议榜；<code>daily.sh</code> 在每天 1,000 次免费额度内排着跑。</p>
+
+    <h3>下载数据</h3>
+    <ul>
+      <li><a href="data-${esc(m.origin)}.json" download>data-${esc(m.origin)}.json</a> —— ${on}这一页上的全部数字</li>
+      <li><a href="origins.json" download>origins.json</a> —— ${(S.originList || []).length || '全部'}个来源国及样本量</li>
+      <li><a href="data-venues.json" download>data-venues.json</a> —— 期刊会议榜</li>
+    </ul>
+    ${dataLinks()}
+
     <h3>终局四分类（互斥，合计 100%）</h3>
     <ul>
       <li><b>留下</b> — 最后已知任职国含目的国、不含${on}</li>
@@ -917,6 +1169,7 @@ function render(){
   ['match','country','inst','compare','venue','doc'].forEach(v =>
     document.getElementById('v-'+v).hidden = (v !== S.view));
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.view === S.view));
+  renderFinding();
   if(S.view === 'match') renderMatch();
   if(S.view === 'country') renderCountries();
   if(S.view === 'inst') renderInsts();
@@ -959,8 +1212,16 @@ function applyChrome(){
   document.getElementById('brand-sub').textContent = t('brandSub');
   document.getElementById('origin-lbl').textContent = t('origin');
   document.getElementById('lang-btn').textContent = t('langBtn');
+  // the two top-bar icon buttons are named in the page language (◐ keeps one fixed name; aria-pressed carries its state)
+  [['theme', 'darkMode'], ['nl-settings-button', 'settingsBtn']].forEach(([id, key]) => {
+    const b = document.getElementById(id); if(b){ b.setAttribute('aria-label', t(key)); b.title = t(key); } });
   document.querySelectorAll('.tab').forEach(b => b.textContent = t('tabs')[b.dataset.view]);
   document.getElementById('notice').innerHTML = t('notice');
+  document.getElementById('skip').textContent = t('skip');
+  ['hAboutT','hNvT','hSrcT'].forEach(k => document.getElementById({hAboutT:'h-about-t',hNvT:'h-nv-t',hSrcT:'h-src-t'}[k]).textContent = t(k));
+  document.getElementById('h-about').textContent = t('hAbout');
+  document.getElementById('h-nv').textContent = t('hNv');
+  document.getElementById('h-src').textContent = t('hSrc');
   const ld = document.getElementById('loading');
   if(!ld.hidden && !ld.dataset.err) ld.textContent = t('loading');
   document.getElementById('l-mfield').textContent = t('lMField');
@@ -1020,7 +1281,7 @@ document.getElementById('lang-btn').onclick = () => {
     stratumSeg(document.getElementById('seg-stratum2'));
     stratumSeg(document.getElementById('seg-stratum3'));
     render();
-  }
+  } else renderFinding();
 };
 
 // The venue data is optional: if it hasn't been generated, that page explains
@@ -1082,6 +1343,13 @@ fetch('origins.json').then(r => r.ok ? r.json() : null).then(m => {
 }).catch(() => loadOrigin('cn'));
 
 applyChrome();
+renderFinding();
+Appearance.bindToggle(document.getElementById('theme'));   // ◐ switches light/dark only (appearance.js)
+Appearance.bindSettings(document.getElementById('nl-settings-button'), () => ({ strings: Appearance.STRINGS[LANG === 'en' ? 'en' : 'zh'] }));   // Settings, in the page language
+document.getElementById('finding-cta').onclick = () => {
+  S.view = 'compare'; render(); history.replaceState(null, '', '#compare');
+  document.getElementById('v-compare').scrollIntoView({block: 'start'});
+};
 
 document.querySelector('.tabs').onclick = e => {
   const b = e.target.closest('.tab'); if(!b) return;
