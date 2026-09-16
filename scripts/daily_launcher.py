@@ -5,7 +5,7 @@ launchd entry shim — it does exactly one thing: start daily.sh.
 ## Why this layer exists (don't remove it)
 
 Folders such as Desktop are protected by macOS TCC, and **TCC grants access per executable**.
-A LaunchAgent that runs `/bin/bash` directly gets blocked from reading scripts under Desktop
+A LaunchAgent that runs `/bin/bash` directly gets blocked from reading scripts in such a folder
 and dies with **exit code 126**. Observed first-hand: the first registration of
 com.scholaroutflow.daily failed exactly like that (runs=1, exit 126), while another agent on
 the same machine using a project venv's python had run 13 times with exit 0.
@@ -16,8 +16,9 @@ approvals needed.
 
 ## Fragility (written down so a future failure isn't a mystery)
 
-This depends on the TCC grant held by a virtualenv's python named in the LaunchAgent plist. If that venv is rebuilt or
-deleted, the grant may go with it and this job reverts to 126. The self-check below **reports
+This depends on the TCC grant held by the Python interpreter the plist names (a virtualenv's python on
+the maintainer's machine). If that venv is rebuilt or deleted, the grant may go with it and this job
+reverts to 126. The self-check below **reports
 that case explicitly** instead of failing silently — "no error" is not the same as "working".
 """
 

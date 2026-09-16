@@ -1,0 +1,191 @@
+{
+ "countries": {
+  "ca": {
+   "all": {
+    "dual": 1,
+    "n": 28,
+    "onward": 1,
+    "ret": 12,
+    "stay": 14
+   },
+   "long": {
+    "dual": 1,
+    "n": 25,
+    "onward": 1,
+    "ret": 10,
+    "stay": 13
+   },
+   "long6": {
+    "dual": 0,
+    "n": 15,
+    "onward": 1,
+    "ret": 2,
+    "stay": 12
+   },
+   "short": {
+    "dual": 0,
+    "n": 3,
+    "onward": 0,
+    "ret": 2,
+    "stay": 1
+   }
+  },
+  "us": {
+   "all": {
+    "dual": 24,
+    "n": 132,
+    "onward": 14,
+    "ret": 41,
+    "stay": 53
+   },
+   "long": {
+    "dual": 22,
+    "n": 116,
+    "onward": 10,
+    "ret": 35,
+    "stay": 49
+   },
+   "long6": {
+    "dual": 19,
+    "n": 75,
+    "onward": 5,
+    "ret": 12,
+    "stay": 39
+   },
+   "short": {
+    "dual": 2,
+    "n": 16,
+    "onward": 4,
+    "ret": 6,
+    "stay": 4
+   }
+  }
+ },
+ "home_start": 197,
+ "institutions": {
+  "I9000001": {
+   "all": {
+    "dual": 8,
+    "n": 44,
+    "onward": 8,
+    "ret": 13,
+    "stay": 15
+   },
+   "long": {
+    "dual": 8,
+    "n": 43,
+    "onward": 8,
+    "ret": 12,
+    "stay": 15
+   },
+   "long6": {
+    "dual": 5,
+    "n": 27,
+    "onward": 4,
+    "ret": 6,
+    "stay": 12
+   },
+   "short": {
+    "dual": 0,
+    "n": 1,
+    "onward": 0,
+    "ret": 1,
+    "stay": 0
+   }
+  },
+  "I9000002": {
+   "all": {
+    "dual": 13,
+    "n": 63,
+    "onward": 5,
+    "ret": 16,
+    "stay": 29
+   },
+   "long": {
+    "dual": 12,
+    "n": 52,
+    "onward": 2,
+    "ret": 13,
+    "stay": 25
+   },
+   "long6": {
+    "dual": 12,
+    "n": 36,
+    "onward": 1,
+    "ret": 4,
+    "stay": 19
+   },
+   "short": {
+    "dual": 1,
+    "n": 11,
+    "onward": 3,
+    "ret": 3,
+    "stay": 4
+   }
+  },
+  "I9000003": {
+   "all": {
+    "dual": 3,
+    "n": 25,
+    "onward": 1,
+    "ret": 12,
+    "stay": 9
+   },
+   "long": {
+    "dual": 2,
+    "n": 21,
+    "onward": 0,
+    "ret": 10,
+    "stay": 9
+   },
+   "long6": {
+    "dual": 2,
+    "n": 12,
+    "onward": 0,
+    "ret": 2,
+    "stay": 8
+   },
+   "short": {
+    "dual": 1,
+    "n": 4,
+    "onward": 1,
+    "ret": 2,
+    "stay": 0
+   }
+  },
+  "I9000004": {
+   "all": {
+    "dual": 1,
+    "n": 28,
+    "onward": 1,
+    "ret": 12,
+    "stay": 14
+   },
+   "long": {
+    "dual": 1,
+    "n": 25,
+    "onward": 1,
+    "ret": 10,
+    "stay": 13
+   },
+   "long6": {
+    "dual": 0,
+    "n": 15,
+    "onward": 1,
+    "ret": 2,
+    "stay": 12
+   },
+   "short": {
+    "dual": 0,
+    "n": 3,
+    "onward": 0,
+    "ret": 2,
+    "stay": 1
+   }
+  }
+ },
+ "movers": 160,
+ "origin": "xa",
+ "sampled": 200,
+ "this_year": 2026
+}

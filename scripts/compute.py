@@ -363,7 +363,7 @@ def build(origin):
     write_manifest()
     m = out["meta"]
     print(f"[{origin}] sampled {m['sampled_authors']} / home start {m['home_start_authors']} / "
-          f"movers {movers} ({m['mover_rate']:.1%}) → {len(countries)} countries, {len(ranked)} institutions")
+          f"movers {movers} ({(m['mover_rate'] or 0):.1%}) → {len(countries)} countries, {len(ranked)} institutions")
     print(f"        {path} ({os.path.getsize(path)/1024:.0f} KB)")
     return out
 

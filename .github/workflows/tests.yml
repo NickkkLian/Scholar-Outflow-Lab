@@ -1,0 +1,56 @@
+name: tests
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: pipeline on the synthetic fixture + invariants on the published data
+        run: python -m unittest discover -s tests -v
+
+  break:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: a corrupted fixture record must fail the suite
+        run: |
+          if SOL_BREAK=1 python -m unittest discover -s tests; then
+            echo "::error::SOL_BREAK=1 passed; the fixture comparison is not guarding anything"
+            exit 1
+          fi
+          echo "SOL_BREAK=1 failed as it must"
+
+  mutations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: every guarded rule and invariant is caught when broken
+        run: python tests/mutations.py
+
+  fixture-is-reproducible:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: regenerating the fixture gives the committed bytes
+        run: |
+          python tests/make_fixture.py
+          git diff --exit-code -- tests/fixtures
