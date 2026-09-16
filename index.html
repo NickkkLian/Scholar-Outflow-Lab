@@ -37,6 +37,7 @@ a{color:var(--accent-text);text-underline-offset:.18em;text-decoration-thickness
 [hidden]{display:none!important}
 .skip{position:absolute;left:var(--space-2);top:-48px;background:var(--surface);padding:var(--space-2) var(--space-3);border:1px solid var(--border-input);border-radius:var(--radius-sm);z-index:var(--z-toast)}
 .skip:focus{top:var(--space-2)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;white-space:nowrap;clip-path:inset(50%)}
 
 /* ===== topbar ===== */
 .topbar{position:sticky;top:0;z-index:var(--z-sticky);background:var(--band);border-bottom:1px solid var(--band-line);color:var(--on-band)}
@@ -92,7 +93,7 @@ input[type=search]{min-width:190px;flex:1 1 190px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:var(--space-3)}
 .c-card{border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-4);background:var(--paper);box-shadow:var(--shadow-1);min-width:0}
 .c-head{display:flex;align-items:baseline;gap:var(--space-2);margin-bottom:var(--space-2)}
-.c-head h3{font-size:var(--text-md)}
+.c-head h2{font-size:var(--text-md)}
 .c-head .n{margin-left:auto;font:var(--weight-regular) var(--text-2xs)/1 var(--font-mono);color:var(--text-3)}
 .bar{display:flex;height:12px;border-radius:var(--radius-xs);overflow:hidden;background:var(--surface-2);gap:1px}
 .bar span{display:block}
@@ -126,7 +127,7 @@ tbody tr{cursor:pointer}
 /* ===== compare chart ===== */
 .chart{--ci-label:176px;--ci-val:96px;background:var(--paper);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-4);margin-bottom:var(--space-4);box-shadow:var(--shadow-1)}
 .chart-head{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3);margin-bottom:var(--space-3)}
-.chart-head h3{font-size:var(--text-md);margin-right:auto}
+.chart-head h2{font-size:var(--text-md);margin-right:auto}
 .ci-row{display:grid;grid-template-columns:var(--ci-label) minmax(0,1fr) var(--ci-val);align-items:center;gap:var(--space-3);min-height:28px;font-size:var(--text-sm)}
 .ci-row .who{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ci-track{position:relative;height:18px;background:linear-gradient(90deg,var(--viz-grid) 1px,transparent 1px) 0 0/25% 100%;border-left:1px solid var(--viz-axis)}
@@ -168,7 +169,7 @@ tbody tr{cursor:pointer}
 .m-num .sub{font-size:var(--text-2xs);color:var(--text-3);font-family:var(--font-mono)}
 .warn{border-left:3px solid var(--warning);background:var(--surface);border-radius:var(--radius-sm);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--text-2);margin-bottom:var(--space-3)}
 .doc{max-width:68ch}
-.doc h3{font-size:var(--text-lg);margin:var(--space-5) 0 var(--space-2)}
+.doc h2{font-size:var(--text-lg);margin:var(--space-5) 0 var(--space-2)}
 .doc p,.doc li{color:var(--text);font-size:var(--text-md)}
 .doc code{font-family:var(--font-mono);font-size:.92em;background:var(--surface-2);padding:1px 5px;border-radius:var(--radius-xs)}
 .doc ul{padding-left:20px}
@@ -261,7 +262,7 @@ table.data th.num button{justify-content:flex-end;width:100%}
 <body>
 
 <a class="skip" href="#main" id="skip">Skip to content</a>
-<div class="topbar"><div class="tb-in">
+<header class="topbar"><div class="tb-in">
   <a class="brand" href="./" aria-label="Scholar Outflow Lab home">
     <svg viewBox="0 0 24 24" width="24" height="24" fill="none" aria-hidden="true" focusable="false"><rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="currentColor" stroke-width="2"/><rect x="14" y="6" width="4" height="4" rx="1" fill="var(--point)"/><path d="M7.5 15.5h.01" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M11 15.5h6.5m0 0L15 13m2.5 2.5L15 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <div class="logo" id="brand-logo">Scholar Outflow <b>Lab</b></div><div class="sub" id="brand-sub"></div>
@@ -281,9 +282,10 @@ table.data th.num button{justify-content:flex-end;width:100%}
   <button class="icon-btn" id="theme" aria-label="Dark mode" aria-pressed="false" title="Dark mode"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
   <button type="button" class="icon-btn" id="nl-settings-button" aria-haspopup="dialog" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10.34 5.10L10.58 2.51L13.42 2.51L13.66 5.10A7.1 7.1 0 0 1 15.71 5.95L17.71 4.28L19.72 6.29L18.05 8.29A7.1 7.1 0 0 1 18.90 10.34L21.49 10.58L21.49 13.42L18.90 13.66A7.1 7.1 0 0 1 18.05 15.71L19.72 17.71L17.71 19.72L15.71 18.05A7.1 7.1 0 0 1 13.66 18.90L13.42 21.49L10.58 21.49L10.34 18.90A7.1 7.1 0 0 1 8.29 18.05L6.29 19.72L4.28 17.71L5.95 15.71A7.1 7.1 0 0 1 5.10 13.66L2.51 13.42L2.51 10.58L5.10 10.34A7.1 7.1 0 0 1 5.95 8.29L4.28 6.29L6.29 4.28L8.29 5.95A7.1 7.1 0 0 1 10.34 5.10Z"/><circle cx="12" cy="12" r="3"/></svg></button>
   <a class="gh" href="https://github.com/NickkkLian/Scholar-Outflow-Lab" rel="noopener">GitHub</a>
-</div></div>
+</div></header>
 
 <main class="wrap" id="main" tabindex="-1">
+  <h1 class="sr-only" id="view-h" hidden></h1>
   <section class="finding" id="finding" hidden aria-labelledby="finding-h">
     <div class="eyebrow" id="finding-eyebrow"></div>
     <h1 id="finding-h"></h1>
@@ -495,6 +497,7 @@ en: {
     <b>Sample sizes are printed; read them.</b>`,
   anyDest:'Any destination', anyFieldOverall:'Any field (overall)',
   allCountries:'All countries/regions', allFields:'All fields',
+  fKindLbl:'Institution type', fCountryLbl:'Country or region', fFieldLbl:'Field', vFieldLbl:'Field', vTypeLbl:'Venue type',
   searchInst:'Search institutions…', searchVenue:'Search venues / publishers…',
   instCount:n=>`${n} institutions`, venueCount:n=>`${n} venues`,
   instEmpty:'No institutions match. Loosen the filters, or try another stay-length stratum.',
@@ -572,6 +575,7 @@ zh: {
     25 人样本里的 40% 站不住脚，按下界排它自己会掉下去。<b>样本量一并列出，请自己看清楚。</b>`,
   anyDest:'不限目的地', anyFieldOverall:'不限学科（看整体）',
   allCountries:'全部国家/地区', allFields:'全部学科',
+  fKindLbl:'机构类型', fCountryLbl:'国家/地区', fFieldLbl:'学科', vFieldLbl:'学科', vTypeLbl:'期刊或会议',
   searchInst:'搜校名…', searchVenue:'搜刊名/出版方…',
   instCount:n=>`${n} 所`, venueCount:n=>`${n} 本`,
   instEmpty:'没有符合条件的机构。放宽筛选，或换一个停留时长分层试试。',
@@ -656,7 +660,7 @@ function renderCountries(){
     .sort((a,b) => b.s.n - a.s.n);
   g.innerHTML = rows.map(({c,s}) => `
     <div class="c-card">
-      <div class="c-head"><h3>${esc(country(c.cc, c.name))}</h3>
+      <div class="c-head"><h2>${esc(country(c.cc, c.name))}</h2>
         <span class="n">n=${s.n}${s.n < 150 ? t('smallN') : ''}</span></div>
       ${stackBar(s)}
     </div>`).join('') || `<p class="muted">${t('noCountries')}</p>`;
@@ -932,7 +936,7 @@ function renderCompareChart(rows, list){
   const items = list.map((o, i) => ({o, c: row.cells[i]})).filter(x => x.c).sort((a,b) => b.c.stay - a.c.stay);
   const opts = rows.map(r => `<option value="${esc(r.dc)}"${r.dc === S.cmpDest ? ' selected' : ''}>${esc(country(r.dc, r.name))}</option>`).join('');
   el.innerHTML = `<div class="chart">
-    <div class="chart-head"><h3>${esc(t('cmpChartTitle')(destName, t('strata')[S.stratum]))}</h3>
+    <div class="chart-head"><h2>${esc(t('cmpChartTitle')(destName, t('strata')[S.stratum]))}</h2>
       <label class="lbl" for="cmp-dest">${t('cmpChartDest')}</label><select id="cmp-dest">${opts}</select></div>
     ${items.map(({o, c}) => {
       const lo = c.stay_ci ? c.stay_ci[0] : c.stay, hi = c.stay_ci ? c.stay_ci[1] : c.stay;
@@ -970,14 +974,14 @@ function renderDoc(){
   const on = esc(originName(m));
   if(LANG === 'en'){
     document.getElementById('v-doc').innerHTML = `
-    <h3>What this site measures</h3>
+    <h2>What this site measures</h2>
     <p>One sentence: <b>where researchers who started their careers in ${on} end up</b> — broken down
        by destination country and destination institution.</p>
     <p>It does <b>not</b> answer "which country is easiest to immigrate to", nor "what are international
        students' odds". The sample is researchers with authorship records in OpenAlex; people who left
        before ever publishing at home are simply not in the frame.</p>
 
-    <h3>How it's computed</h3>
+    <h2>How it's computed</h2>
     <ul>
       <li><b>Sample</b> — random sample of OpenAlex authors who ever published under a ${on}
           affiliation with ≥${m.min_works} works: <code>${m.sampled_authors.toLocaleString()}</code> authors.</li>
@@ -991,7 +995,7 @@ function renderDoc(){
           parses out of free-text strings.</li>
     </ul>
 
-    <h3>Pipeline</h3>
+    <h2>Pipeline</h2>
     <ol class="pipe" aria-label="Data pipeline, in order">
       <li><b>OpenAlex</b><span>authors, institutions and sources APIs · CC0, no key</span></li>
       <li><code>institutions.py</code><span>whitelist: ROR ID, output floor, generic-name blacklist</span></li>
@@ -1002,7 +1006,7 @@ function renderDoc(){
     <p class="pipe-note"><code>venues.py</code> builds the venue board from the same API, and <code>daily.sh</code> runs the
        rounds within the free quota of 1,000 requests a day.</p>
 
-    <h3>Download the data</h3>
+    <h2>Download the data</h2>
     <ul>
       <li><a href="data-${esc(m.origin)}.json" download>data-${esc(m.origin)}.json</a> — every number on this page for ${on}</li>
       <li><a href="origins.json" download>origins.json</a> — the ${(S.originList || []).length || 'available'} origins with their sample sizes</li>
@@ -1010,7 +1014,7 @@ function renderDoc(){
     </ul>
     ${dataLinks()}
 
-    <h3>Four mutually exclusive outcomes (sum to 100%)</h3>
+    <h2>Four mutually exclusive outcomes (sum to 100%)</h2>
     <ul>
       <li><b>Stayed</b> — final known affiliations include the destination, not ${on}</li>
       <li><b>Dual</b> — both sides. Very common among Chinese researchers (foreign post + home
@@ -1019,13 +1023,13 @@ function renderDoc(){
       <li><b>Onward</b> — neither; moved to a third country</li>
     </ul>
 
-    <h3>Why stratify by length of stay</h3>
+    <h2>Why stratify by length of stay</h2>
     <p>The 2–3-year band is dominated by visiting scholars and joint-training students — people who were
        always going home. Pooling them dilutes every institution's stay rate toward the same low number.
        The default stratum is <b>≥4 years</b>, closer to PhD studies and long-term positions. Switch strata
        and watch the numbers separate — that separation is itself the finding.</p>
 
-    <h3>How Tiers are assigned</h3>
+    <h2>How Tiers are assigned</h2>
     <p>Institutions are ranked by the <b>lower bound of the 95% CI</b> on the default-stratum stay rate,
        then cut into quartiles <code>R1</code>–<code>R4</code>. Two deliberate choices:</p>
     <ul>
@@ -1037,7 +1041,7 @@ function renderDoc(){
     </ul>
     <p>Dual counts toward neither side of the ranking — its meaning is inherently ambiguous.</p>
 
-    <h3>What cross-origin comparison can and cannot tell you</h3>
+    <h2>What cross-origin comparison can and cannot tell you</h2>
     <p>The Origin Compare page puts the same destination's stay rates side by side across origins.
        <b>It is the one genuinely interesting thing this site has to show</b> — the same destination can
        differ three- to five-fold by origin, and the direction is consistent across dozens of shared
@@ -1053,7 +1057,7 @@ function renderDoc(){
           a nearly empty row would look like information while carrying none.</li>
     </ul>
 
-    <h3>How the venue board is ranked</h3>
+    <h2>How the venue board is ranked</h2>
     <ul>
       <li>Only venues with ≥2,000 indexed works and <b>h-index ≥5</b>. The floor isn't cosmetic —
           without it, uncited trade magazines (tens of thousands of works, h=0) flood in, inflate the
@@ -1066,20 +1070,20 @@ function renderDoc(){
           (e.g. CVPR appears as "2022 IEEE/CVF Conference on…"). <b>Treat the conference list as rough.</b></li>
     </ul>
 
-    <h3>Known limitations (stated, not hidden)</h3>
+    <h2>Known limitations (stated, not hidden)</h2>
     <ul>${m.caveats.map(c => `<li>${esc(caveat(c))}</li>`).join('')}</ul>
 
-    <h3>Data source</h3>
+    <h2>Data source</h2>
     <p>${esc(m.source)}, CC0 public domain, no API key required. Generated <code>${esc(m.generated_at)}</code>.</p>`;
     return;
   }
   document.getElementById('v-doc').innerHTML = `
-    <h3>这个站在量什么</h3>
+    <h2>这个站在量什么</h2>
     <p>一句话：<b>在${on}起步的科研人员，出去之后最后落在哪儿</b>——按目的国和目的高校分别统计。</p>
     <p>它<b>不</b>回答「哪个国家好移民」，也不回答「留学生的移民成功率」。它的样本是
        OpenAlex 里有署名记录的科研人群，本科就出国、在国内没发过论文的那一批人根本不在样本里。</p>
 
-    <h3>怎么算的</h3>
+    <h2>怎么算的</h2>
     <ul>
       <li><b>样本</b>：OpenAlex 中曾在${on}机构署名、且发表 ≥${m.min_works} 篇的学者随机抽样，
           共 <code>${m.sampled_authors.toLocaleString()}</code> 人。</li>
@@ -1092,7 +1096,7 @@ function renderDoc(){
           用来滤掉 OpenAlex 从署名字符串里解析出来的幽灵机构。</li>
     </ul>
 
-    <h3>数据流水线</h3>
+    <h2>数据流水线</h2>
     <ol class="pipe" aria-label="数据流水线，按顺序">
       <li><b>OpenAlex</b><span>学者、机构、期刊接口 · CC0，免 key</span></li>
       <li><code>institutions.py</code><span>白名单：ROR 编号、产出下限、通用名黑名单</span></li>
@@ -1102,7 +1106,7 @@ function renderDoc(){
     </ol>
     <p class="pipe-note"><code>venues.py</code> 用同一个接口生成期刊会议榜；<code>daily.sh</code> 在每天 1,000 次免费额度内排着跑。</p>
 
-    <h3>下载数据</h3>
+    <h2>下载数据</h2>
     <ul>
       <li><a href="data-${esc(m.origin)}.json" download>data-${esc(m.origin)}.json</a> —— ${on}这一页上的全部数字</li>
       <li><a href="origins.json" download>origins.json</a> —— ${(S.originList || []).length || '全部'}个来源国及样本量</li>
@@ -1110,7 +1114,7 @@ function renderDoc(){
     </ul>
     ${dataLinks()}
 
-    <h3>终局四分类（互斥，合计 100%）</h3>
+    <h2>终局四分类（互斥，合计 100%）</h2>
     <ul>
       <li><b>留下</b> — 最后已知任职国含目的国、不含${on}</li>
       <li><b>双挂</b> — 两边都含。中国学者里非常常见（境外教职 + 国内兼聘/合作），单列出来，
@@ -1119,11 +1123,11 @@ function renderDoc(){
       <li><b>转道</b> — 两个都不含，去了第三国</li>
     </ul>
 
-    <h3>为什么一定要按停留时长分层</h3>
+    <h2>为什么一定要按停留时长分层</h2>
     <p>2–3 年那一档以访问学者、联合培养为主——他们本来就是要回国的，混在一起会把所有学校的留下率
        稀释成一样低。默认口径是 <b>≥4 年</b>，更接近读博/长期职位。切换分层，数字会明显分开，这本身就是结论。</p>
 
-    <h3>Tier 怎么定的</h3>
+    <h2>Tier 怎么定的</h2>
     <p>按默认分层留下率的 <b>95% 置信下界</b>排序，四分位切 <code>R1</code>–<code>R4</code>。两个刻意的选择：</p>
     <ul>
       <li><b>用分位不用绝对线</b>——绝对值会随抽样口径漂移，而「同一批里的相对位置」是稳的。</li>
@@ -1132,7 +1136,7 @@ function renderDoc(){
     </ul>
     <p>双挂不计入排序——它的含义本身就是暧昧的。</p>
 
-    <h3>跨来源怎么比才算数</h3>
+    <h2>跨来源怎么比才算数</h2>
     <p>「来源对比」页把同一个目的国、不同起点的留下率并排放。<b>这是本站唯一真正有意思的地方</b>——
        同一个目的国，起点不同，留下率能差三到五倍，而且这个方向在几十个共有目的国上是一致的，
        不是噪音。</p>
@@ -1146,7 +1150,7 @@ function renderDoc(){
           否则一列全是空，看着像有信息其实没有。</li>
     </ul>
 
-    <h3>期刊会议榜怎么排</h3>
+    <h2>期刊会议榜怎么排</h2>
     <ul>
       <li>只收录产出 ≥2000 篇、且 <b>h-index ≥5</b> 的期刊与会议。
           h 的下限不是为了好看——不设它会混进大量<b>没有被引记录的行业杂志</b>
@@ -1159,16 +1163,24 @@ function renderDoc(){
           （例如 CVPR 会出现「2022 IEEE/CVF Conference on…」）。<b>会议榜只能当粗略参考。</b></li>
     </ul>
 
-    <h3>已知的坑（别装看不见）</h3>
+    <h2>已知的坑（别装看不见）</h2>
     <ul>${m.caveats.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
 
-    <h3>数据来源</h3>
+    <h2>数据来源</h2>
     <p>${esc(m.source)}，CC0 公共领域授权，免 API key。生成于 <code>${esc(m.generated_at)}</code>。</p>`;
+}
+
+/* one h1 per view: Path Finder has the finding's visible h1, the other views get the tab name for screen readers */
+function syncViewHeading(){
+  const vh = document.getElementById('view-h');
+  vh.textContent = t('tabs')[S.view] || '';
+  vh.hidden = S.view === 'match';
 }
 
 function render(){
   ['match','country','inst','compare','venue','doc'].forEach(v =>
     document.getElementById('v-'+v).hidden = (v !== S.view));
+  syncViewHeading();
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.view === S.view));
   renderFinding();
   if(S.view === 'match') renderMatch();
@@ -1253,6 +1265,10 @@ function applyChrome(){
   vt.innerHTML = ['','journal','conference'].map((v,i) => `<option value="${v}">${t('vTypeOpts')[i]}</option>`).join('');
   vt.value = vtVal;
   document.getElementById('v-q').placeholder = t('searchVenue');
+  // the filter controls have no visible label, so they are named for screen readers
+  [['f-kind','fKindLbl'],['f-country','fCountryLbl'],['f-field','fFieldLbl'],['f-q','searchInst'],['v-field','vFieldLbl'],['v-type','vTypeLbl'],['v-q','searchVenue']]
+    .forEach(([id, key]) => document.getElementById(id).setAttribute('aria-label', t(key)));
+  syncViewHeading();
   document.getElementById('drawer-close').textContent = t('drawerClose');
   refreshOriginSel();
   if(S.data){
