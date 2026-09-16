@@ -709,8 +709,9 @@ function emptyState(titleKey, reasonKey, onClear){
   // a span, not a div: it also sits inside the <p id="inst-empty">
   const box = document.createElement('span'); box.className = 'empty-state'; box.append(b, ' ' + t(reasonKey) + ' ', btn); return box;
 }
-function clearInstFilters(){ S.fKind = S.fCountry = S.fField = S.q = ''; ['f-kind','f-country','f-field','f-q'].forEach(id => { document.getElementById(id).value = ''; }); renderInsts(); syncHash(); }
-function clearVenueFilters(){ S.vField = S.vType = S.vQ = ''; ['v-field','v-type','v-q'].forEach(id => { document.getElementById(id).value = ''; }); renderVenues(); syncHash(); }
+// the Clear filters button lives in the empty state and disappears once rows are back; focus goes to the search box, not <body>
+function clearInstFilters(){ S.fKind = S.fCountry = S.fField = S.q = ''; ['f-kind','f-country','f-field','f-q'].forEach(id => { document.getElementById(id).value = ''; }); renderInsts(); syncHash(); document.getElementById('f-q').focus(); }
+function clearVenueFilters(){ S.vField = S.vType = S.vQ = ''; ['v-field','v-type','v-q'].forEach(id => { document.getElementById(id).value = ''; }); renderVenues(); syncHash(); document.getElementById('v-q').focus(); }
 let drawerOpener = null;
 function closeDrawer(){ const d = document.getElementById('drawer'); if(!d.classList.contains('open')) return; d.classList.remove('open'); if(drawerOpener && document.contains(drawerOpener)) drawerOpener.focus(); drawerOpener = null; }
 function syncHash(){
