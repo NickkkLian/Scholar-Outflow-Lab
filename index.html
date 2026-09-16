@@ -38,6 +38,8 @@ a{color:var(--accent-text);text-underline-offset:.18em;text-decoration-thickness
 .skip{position:absolute;left:var(--space-2);top:-48px;background:var(--surface);padding:var(--space-2) var(--space-3);border:1px solid var(--border-input);border-radius:var(--radius-sm);z-index:var(--z-toast)}
 .skip:focus{top:var(--space-2)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;white-space:nowrap;clip-path:inset(50%)}
+.th-sort{all:unset;cursor:pointer}
+.th-sort:focus-visible,tr[data-id]:focus-visible,.m-card[data-id]:focus-visible{outline:var(--border-focus-width) solid var(--focus);outline-offset:2px}
 
 /* ===== topbar ===== */
 .topbar{position:sticky;top:0;z-index:var(--z-sticky);background:var(--band);border-bottom:1px solid var(--band-line);color:var(--on-band)}
@@ -500,7 +502,8 @@ en: {
   fKindLbl:'Institution type', fCountryLbl:'Country or region', fFieldLbl:'Field', vFieldLbl:'Field', vTypeLbl:'Venue type',
   searchInst:'Search institutions…', searchVenue:'Search venues / publishers…',
   instCount:n=>`${n} institutions`, venueCount:n=>`${n} venues`,
-  instEmpty:'No institutions match. Loosen the filters, or try another stay-length stratum.',
+  instEmptyT:'No institutions match.', instEmpty:'Loosen the filters, or try another stay-length stratum.', clearFilters:'Clear filters',
+  venueEmptyT:'No venues match.', venueEmpty:'Loosen the field, type or search filter.',
   th:{name:'Institution',country:'Country/Region',stay:'Stay rate',ci:'95% CI',dual:'Dual',ret:'Returned',n:'n'},
   smallN:' · small n',
   noCountries:'No destination country has enough sample in this stratum.',
@@ -578,7 +581,8 @@ zh: {
   fKindLbl:'机构类型', fCountryLbl:'国家/地区', fFieldLbl:'学科', vFieldLbl:'学科', vTypeLbl:'期刊或会议',
   searchInst:'搜校名…', searchVenue:'搜刊名/出版方…',
   instCount:n=>`${n} 所`, venueCount:n=>`${n} 本`,
-  instEmpty:'没有符合条件的机构。放宽筛选，或换一个停留时长分层试试。',
+  instEmptyT:'没有符合条件的机构。', instEmpty:'放宽筛选，或换一个停留时长分层试试。', clearFilters:'清空筛选',
+  venueEmptyT:'没有符合条件的期刊会议。', venueEmpty:'放宽学科、类型或搜索条件。',
   th:{name:'机构',country:'国家/地区',stay:'留下率',ci:'95% 区间',dual:'双挂',ret:'回流',n:'样本'},
   smallN:' · 样本少',
   noCountries:'该分层下没有样本量足够的目的国。',
@@ -625,8 +629,10 @@ const t = k => T[LANG][k];
 
 // Deep links: #compare, #inst, … open that view directly (and the tab bar keeps the hash in sync).
 const VIEWS = ['match','country','inst','compare','venue','doc'];
-const hashView = location.hash.slice(1);
-const S = {data:null, venues:null, origin:'cn', originList:null, allData:{}, cmpDest:null,
+const [hashView, hashQuery] = location.hash.slice(1).split('?');
+// the rest of a deep link (#inst?kind=edu&q=toronto, #venue?type=journal …) is applied once, after the first data load
+const HASH_STATE = new URLSearchParams(hashQuery || '');
+const S = {data:null, venues:null, origin:(/^[a-z]{2}$/.test(HASH_STATE.get('origin') || '') ? HASH_STATE.get('origin') : 'cn'), originList:null, allData:{}, cmpDest:null,
            view: VIEWS.includes(hashView) ? hashView : 'match', stratum:'long', sortKey:'stay', sortDir:-1,
            fCountry:'', fField:'', fKind:'', q:'',
            mField:'', mCountry:'', mKind:'', mStratum:'long',
@@ -641,7 +647,7 @@ function stratumSeg(el, onPick){
   el.innerHTML = ['short','long','long6','all'].map(k =>
     `<button data-k="${k}" class="${k===S.stratum?'on':''}">${t('strata')[k]}</button>`).join('');
   el.onclick = e => { const b = e.target.closest('button'); if(!b) return;
-    S.stratum = b.dataset.k; render(); onPick && onPick(); };
+    S.stratum = b.dataset.k; render(); syncHash(); onPick && onPick(); };
 }
 
 function stackBar(s){
@@ -696,7 +702,36 @@ function coverageNote(){
   return `<div class="warn">${t('covNote')(md, n, rate)}</div>`;
 }
 
+function setTh(id, text){ const el = document.getElementById(id); (el.querySelector('.th-sort') || el).textContent = text; }
+function emptyState(titleKey, reasonKey, onClear){
+  const b = document.createElement('b'); b.textContent = t(titleKey);
+  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn btn-sm'; btn.textContent = t('clearFilters'); btn.onclick = onClear;
+  // a span, not a div: it also sits inside the <p id="inst-empty">
+  const box = document.createElement('span'); box.className = 'empty-state'; box.append(b, ' ' + t(reasonKey) + ' ', btn); return box;
+}
+function clearInstFilters(){ S.fKind = S.fCountry = S.fField = S.q = ''; ['f-kind','f-country','f-field','f-q'].forEach(id => { document.getElementById(id).value = ''; }); renderInsts(); syncHash(); }
+function clearVenueFilters(){ S.vField = S.vType = S.vQ = ''; ['v-field','v-type','v-q'].forEach(id => { document.getElementById(id).value = ''; }); renderVenues(); syncHash(); }
+let drawerOpener = null;
+function closeDrawer(){ const d = document.getElementById('drawer'); if(!d.classList.contains('open')) return; d.classList.remove('open'); if(drawerOpener && document.contains(drawerOpener)) drawerOpener.focus(); drawerOpener = null; }
+function syncHash(){
+  const q = new URLSearchParams();
+  if(S.origin !== 'cn') q.set('origin', S.origin);
+  if(S.stratum !== 'long' && ['country','inst','compare'].includes(S.view)) q.set('stratum', S.stratum);
+  if(S.view === 'inst'){ if(S.fKind) q.set('kind', S.fKind); if(S.fCountry) q.set('country', S.fCountry); if(S.fField) q.set('field', S.fField); if(S.q) q.set('q', S.q); }
+  if(S.view === 'venue'){ if(S.vField) q.set('field', S.vField); if(S.vType) q.set('type', S.vType); if(S.vQ) q.set('q', S.vQ); }
+  const qs = q.toString();
+  history.replaceState(null, '', S.view === 'match' && !qs ? location.pathname + location.search : '#' + S.view + (qs ? '?' + qs : ''));
+}
+function applyHashState(){
+  const g = k => HASH_STATE.get(k) || '';
+  if(['short','long','long6','all'].includes(g('stratum'))) S.stratum = g('stratum');
+  const set = (id, v) => { const el = document.getElementById(id); if(el){ el.value = v; return el.value; } return v; };
+  if(S.view === 'inst'){ S.fKind = set('f-kind', g('kind')); S.fCountry = set('f-country', g('country')); S.fField = set('f-field', g('field')); S.q = set('f-q', g('q')); }
+  if(S.view === 'venue'){ S.vType = set('v-type', g('type')); S.vQ = set('v-q', g('q')); S.vField = g('field'); if(S.venues) S.vField = set('v-field', S.vField); }
+  ['seg-stratum','seg-stratum2','seg-stratum3'].forEach(id => stratumSeg(document.getElementById(id)));
+}
 function renderInsts(){
+  document.querySelectorAll('th[data-sort]').forEach(h => { if(h.dataset.sort === S.sortKey) h.setAttribute('aria-sort', S.sortDir === 1 ? 'ascending' : 'descending'); else h.removeAttribute('aria-sort'); });
   const rows = instRows();
   document.getElementById('inst-count').textContent = t('instCount')(rows.length);
   const holder = document.getElementById('inst-coverage');
@@ -704,7 +739,7 @@ function renderInsts(){
   document.getElementById('inst-empty').hidden = rows.length > 0;
   document.getElementById('inst-body').innerHTML = rows.map(({it,s}) => {
     const ci = s.stay_ci || [0,0];
-    return `<tr data-id="${it.id}">
+    return `<tr data-id="${it.id}" tabindex="0">
       <td><span class="tier ${it.tier}">${it.tier}</span></td>
       <td>${esc(it.name)}${it.kind === 'inst' ? ` <span class="kindtag">${t('instituteTag')}</span>` : ''}
         <div class="muted small only-s">${esc(country(it.cc, it.country))}</div></td>
@@ -749,7 +784,9 @@ function openInst(id){
     <div class="sec-t">${t('sources')}</div>
     <p class="small muted">ROR <a href="https://ror.org/${esc(it.ror)}" target="_blank" rel="noopener">${esc(it.ror)}</a>
        · <a href="https://openalex.org/${esc(it.id)}" target="_blank" rel="noopener">OpenAlex ${esc(it.id)}</a></p>`;
+  drawerOpener = document.activeElement;
   document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-close').focus();
 }
 
 /* ---- Path finder ---- */
@@ -790,7 +827,7 @@ function renderMatch(){
 
   list.innerHTML = rows.slice(0, 40).map((r, i) => {
     const ci = r.s.stay_ci || [0,0];
-    return `<div class="m-card" data-id="${r.it.id}" style="cursor:pointer">
+    return `<div class="m-card" data-id="${r.it.id}" tabindex="0" style="cursor:pointer">
       <span class="m-rank">${i+1}</span>
       <div class="m-main">
         <h3>${esc(r.it.name)}</h3>
@@ -823,6 +860,7 @@ function renderVenues(){
     (!S.vQ || (v.name + ' ' + v.publisher).toLowerCase().includes(S.vQ.toLowerCase()))
   ).slice(0, 300);
   document.getElementById('venue-count').textContent = t('venueCount')(rows.length);
+  if(!rows.length){ wrap.replaceChildren(emptyState('venueEmptyT', 'venueEmpty', clearVenueFilters)); return; }
   const th = t('venueTh');
   wrap.innerHTML = `<div style="overflow-x:auto"><table>
     <thead><tr><th>${th.tier}</th><th>${th.name}</th><th class="hide-s">${th.pub}</th>
@@ -1252,15 +1290,15 @@ function applyChrome(){
   document.getElementById('legend').innerHTML = OUT_KEYS.map(([k,c]) =>
     `<span><i style="background:${c}"></i>${t('legend')[k]}</span>`).join('');
   const th = t('th');
-  document.getElementById('th-name').textContent = th.name;
-  document.getElementById('th-country').textContent = th.country;
-  document.getElementById('th-stay').textContent = th.stay;
-  document.getElementById('th-ci').textContent = th.ci;
-  document.getElementById('th-dual').textContent = th.dual;
-  document.getElementById('th-ret').textContent = th.ret;
-  document.getElementById('th-n').textContent = th.n;
+  setTh('th-name', th.name);
+  setTh('th-country', th.country);
+  setTh('th-stay', th.stay);
+  setTh('th-ci', th.ci);
+  setTh('th-dual', th.dual);
+  setTh('th-ret', th.ret);
+  setTh('th-n', th.n);
   document.getElementById('f-q').placeholder = t('searchInst');
-  document.getElementById('inst-empty').textContent = t('instEmpty');
+  document.getElementById('inst-empty').replaceChildren(emptyState('instEmptyT', 'instEmpty', clearInstFilters));
   const vt = document.getElementById('v-type'); const vtVal = S.vType;
   vt.innerHTML = ['','journal','conference'].map((v,i) => `<option value="${v}">${t('vTypeOpts')[i]}</option>`).join('');
   vt.value = vtVal;
@@ -1309,6 +1347,7 @@ fetch('data-venues.json').then(r => r.ok ? r.json() : null).then(v => {
     document.getElementById('v-field').innerHTML =
       `<option value="">${t('allFields')}</option>` +
       v.meta.fields.map(f => `<option value="${esc(f)}">${esc(field(f))}</option>`).join('');
+    document.getElementById('v-field').value = S.vField; S.vField = document.getElementById('v-field').value;
   }
   if(S.view === 'compare'){ renderCompare(); ensureAllOrigins(); }
   if(S.view === 'venue') renderVenues();
@@ -1336,6 +1375,7 @@ function loadOrigin(cc){
     stratumSeg(document.getElementById('seg-stratum3'));
     initFilters();
     document.getElementById('f-q').value = '';
+    if(!HASH_STATE.applied){ HASH_STATE.applied = true; applyHashState(); }
     document.getElementById('foot').innerHTML = t('foot')(d);
     render();
   }).catch(e => {
@@ -1353,7 +1393,7 @@ fetch('origins.json').then(r => r.ok ? r.json() : null).then(m => {
     refreshOriginSel();
     sel.value = list.some(o => o.cc === S.origin) ? S.origin : list[0].cc;
     document.getElementById('origin-wrap').hidden = false;
-    sel.onchange = e => loadOrigin(e.target.value);
+    sel.onchange = e => loadOrigin(e.target.value).then(syncHash);
     return loadOrigin(sel.value);
   }
   return loadOrigin(list[0] ? list[0].cc : 'cn');
@@ -1364,44 +1404,54 @@ renderFinding();
 Appearance.bindToggle(document.getElementById('theme'));   // ◐ switches light/dark only (appearance.js)
 Appearance.bindSettings(document.getElementById('nl-settings-button'), () => ({ strings: Appearance.STRINGS[LANG === 'en' ? 'en' : 'zh'] }));   // Settings, in the page language
 document.getElementById('finding-cta').onclick = () => {
-  S.view = 'compare'; render(); history.replaceState(null, '', '#compare');
+  S.view = 'compare'; render(); syncHash();
   document.getElementById('v-compare').scrollIntoView({block: 'start'});
 };
 
 document.querySelector('.tabs').onclick = e => {
   const b = e.target.closest('.tab'); if(!b) return;
   S.view = b.dataset.view; render();
-  history.replaceState(null, '', S.view === 'match' ? location.pathname : '#' + S.view);
+  syncHash();
 };
-document.getElementById('f-kind').onchange = e => { S.fKind = e.target.value; renderInsts(); };
-document.getElementById('f-country').onchange = e => { S.fCountry = e.target.value; renderInsts(); };
-document.getElementById('f-field').onchange = e => { S.fField = e.target.value; renderInsts(); };
-document.getElementById('f-q').oninput = e => { S.q = e.target.value.trim(); renderInsts(); };
+document.getElementById('f-kind').onchange = e => { S.fKind = e.target.value; renderInsts(); syncHash(); };
+document.getElementById('f-country').onchange = e => { S.fCountry = e.target.value; renderInsts(); syncHash(); };
+document.getElementById('f-field').onchange = e => { S.fField = e.target.value; renderInsts(); syncHash(); };
+document.getElementById('f-q').oninput = e => { S.q = e.target.value.trim(); renderInsts(); syncHash(); };
 document.getElementById('m-field').onchange = e => { S.mField = e.target.value; renderMatch(); };
 document.getElementById('m-country').onchange = e => { S.mCountry = e.target.value; renderMatch(); };
 document.getElementById('m-kind').onchange = e => { S.mKind = e.target.value; renderMatch(); };
 document.getElementById('m-stratum').onchange = e => { S.mStratum = e.target.value; renderMatch(); };
-document.getElementById('v-field').onchange = e => { S.vField = e.target.value; renderVenues(); };
-document.getElementById('v-type').onchange = e => { S.vType = e.target.value; renderVenues(); };
-document.getElementById('v-q').oninput = e => { S.vQ = e.target.value.trim(); renderVenues(); };
+document.getElementById('v-field').onchange = e => { S.vField = e.target.value; renderVenues(); syncHash(); };
+document.getElementById('v-type').onchange = e => { S.vType = e.target.value; renderVenues(); syncHash(); };
+document.getElementById('v-q').oninput = e => { S.vQ = e.target.value.trim(); renderVenues(); syncHash(); };
 document.getElementById('match-list').onclick = e => {
   const c = e.target.closest('.m-card[data-id]'); if(c) openInst(c.dataset.id);
 };
-document.querySelectorAll('th[data-sort]').forEach(th => th.onclick = () => {
+// sortable headers are buttons, so they work from the keyboard and announce their state (aria-sort on the sorted column)
+document.querySelectorAll('th[data-sort]').forEach(th => {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'th-sort';
+  while(th.firstChild) b.appendChild(th.firstChild);
+  th.appendChild(b);
+  b.onclick = () => {
   const k = th.dataset.sort;
   if(S.sortKey === k) S.sortDir *= -1;
   else { S.sortKey = k; S.sortDir = (k === 'name' || k === 'country' || k === 'rank') ? 1 : -1; }
   renderInsts();
+};
 });
 document.getElementById('inst-body').onclick = e => {
   const tr = e.target.closest('tr[data-id]'); if(tr) openInst(tr.dataset.id);
 };
 document.getElementById('drawer').onclick = e => {
-  if(e.target.dataset.close !== undefined) document.getElementById('drawer').classList.remove('open');
+  if(e.target.dataset.close !== undefined) closeDrawer();
 };
 document.addEventListener('keydown', e => {
-  if(e.key === 'Escape') document.getElementById('drawer').classList.remove('open');
+  if(e.key === 'Escape') closeDrawer();
 });
+// rows and cards open the institution from the keyboard too
+const openOnKey = e => { if(e.key !== 'Enter' && e.key !== ' ') return; const el = e.target.closest('[data-id]'); if(!el || el !== e.target) return; e.preventDefault(); openInst(el.dataset.id); };
+document.getElementById('inst-body').addEventListener('keydown', openOnKey);
+document.getElementById('match-list').addEventListener('keydown', openOnKey);
 </script>
 </body>
 </html>
