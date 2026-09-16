@@ -23,7 +23,7 @@ import urllib.request
 
 API = "https://api.openalex.org/sources"
 MAILTO = os.environ.get("OPENALEX_MAILTO", "")
-UA = f"mobility-lab (mailto:{MAILTO})" if MAILTO else "mobility-lab"
+UA = f"Scholar-Outflow-Lab (mailto:{MAILTO})" if MAILTO else "Scholar-Outflow-Lab"
 MIN_WORKS = 2000          # ranking venues with tiny output is meaningless
 MIN_H = 5                 # a very low h-index usually means it isn't an academic venue
 # Measured: without this floor, large numbers of **uncited commercial / trade magazines** get in —

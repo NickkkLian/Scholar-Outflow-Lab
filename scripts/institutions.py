@@ -70,7 +70,7 @@ def fetch_group(types, min_works, out, label):
             params["mailto"] = MAILTO
         url = API + "?" + urllib.parse.urlencode(params)
         req = urllib.request.Request(
-            url, headers={"User-Agent": f"mobility-lab (mailto:{MAILTO})" if MAILTO else "mobility-lab"})
+            url, headers={"User-Agent": f"Scholar-Outflow-Lab (mailto:{MAILTO})" if MAILTO else "Scholar-Outflow-Lab"})
         with urllib.request.urlopen(req, timeout=90) as r:
             d = json.loads(r.read().decode())
         for i in d.get("results") or []:

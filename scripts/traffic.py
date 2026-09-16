@@ -12,7 +12,7 @@ Needs a **read-only** fine-grained PAT.
    `x-accepted-github-permissions: administration=read`. Still read-only, just one notch above
    Metadata; do not grant Read and write.
     export GH_TRAFFIC_PAT=github_pat_xxx
-or put it in mobility-lab/.env (gitignored, never committed):
+or put it in .env at the repository root (gitignored, never committed):
     GH_TRAFFIC_PAT=github_pat_xxx
 
 Usage:
@@ -102,7 +102,7 @@ def main():
     if not token:
         print("⛔ GH_TRAFFIC_PAT is not set. Create a **read-only** fine-grained PAT "
               "(Repository permissions → Administration: Read-only) and put it in "
-              "mobility-lab/.env or export it. See the notes at the top of this file.")
+              ".env at the repository root, or export it. See the notes at the top of this file.")
         sys.exit(1)
 
     try:

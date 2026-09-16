@@ -39,7 +39,7 @@ DATA = os.path.join(ROOT, "data")
 SELECT = "id,display_name,affiliations,last_known_institutions,works_count,topics"
 
 
-UA = f"mobility-lab (mailto:{MAILTO})" if MAILTO else "mobility-lab"
+UA = f"Scholar-Outflow-Lab (mailto:{MAILTO})" if MAILTO else "Scholar-Outflow-Lab"
 
 
 class BudgetExhausted(Exception):

@@ -1,0 +1,51 @@
+{
+ "I9000001": {
+  "cc": "us",
+  "name": "Synthetic University North",
+  "ror": "synthetic-01",
+  "type": "education",
+  "works": 90000
+ },
+ "I9000002": {
+  "cc": "us",
+  "name": "Synthetic University South",
+  "ror": "synthetic-02",
+  "type": "education",
+  "works": 70000
+ },
+ "I9000003": {
+  "cc": "us",
+  "name": "Synthetic Institute of Research",
+  "ror": "synthetic-03",
+  "type": "facility",
+  "works": 50000
+ },
+ "I9000004": {
+  "cc": "ca",
+  "name": "Synthetic University Lakeside",
+  "ror": "synthetic-04",
+  "type": "education",
+  "works": 40000
+ },
+ "I9000005": {
+  "cc": "xa",
+  "name": "Synthetic Home University",
+  "ror": "synthetic-05",
+  "type": "education",
+  "works": 30000
+ },
+ "I9000006": {
+  "cc": "xa",
+  "name": "Synthetic Home Institute",
+  "ror": "synthetic-06",
+  "type": "facility",
+  "works": 20000
+ },
+ "I9000007": {
+  "cc": "gb",
+  "name": "Synthetic Onward University",
+  "ror": "synthetic-07",
+  "type": "education",
+  "works": 35000
+ }
+}
