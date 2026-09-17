@@ -175,6 +175,9 @@ tbody tr{cursor:pointer}
 .view-h{font-size:var(--text-xl);font-weight:var(--weight-semibold);margin:0 0 var(--space-3)}
 .notice > p,.warn > p{margin:0;max-width:var(--measure)}   /* the box keeps the column width; the sentences keep a readable measure */
 #venue-wrap > p{max-width:var(--measure)}
+/* a focusable table row draws its ring inside itself: outside, the table's scroll box clipped it and the sticky header covered
+   its top, so a focused row showed no ring at all (found 2026-09-16 with the ring check after closing the drawer) */
+tbody tr[tabindex]:focus-visible{outline-offset:-2px}
 .warn{border-left:3px solid var(--warning);background:var(--surface);border-radius:var(--radius-sm);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--text-2);margin-bottom:var(--space-3)}
 .doc{max-width:var(--measure)}
 .doc h2{font-size:var(--text-lg);margin:var(--space-5) 0 var(--space-2)}
