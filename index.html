@@ -477,7 +477,7 @@ en: {
   fEyebrow:'The finding', fTitle:'Same destination, different starting points',
   fLede:'Researchers who started publishing in each country and later spent four or more years in the United States — the share whose last known affiliation is still there. Same sampling, same computation; compare relative levels, not the absolute percentages.',
   fStay:'stayed in the US', fMeta:(n,ci)=>`n = ${n.toLocaleString()}<br>95% CI ${ci}`,
-  fCta:'Compare all origins', fLoading:'Loading the four origins…', fFail:'The headline figures could not be loaded.',
+  fCta:'Compare all origins', fLoading:'Loading the four origins…', fFail:m=>`The headline figures could not be loaded (${m}). The rest of the page does not depend on them.`, tryAgain:'Try again',
   cmpChartTitle:(dest,s)=>`Stay rate in ${dest} by starting country · ${s}`, cmpChartDest:'Destination', cmpChartAxis:'Bar: stay rate. Whisker: 95% confidence interval. Sorted by stay rate.',
   hAboutT:'About this data', hAbout:'Every number is computed by scripts/compute.py from OpenAlex authorship records (CC0) and served as static JSON; nothing is modelled or estimated by hand. The pipeline, its tests and the three corrections that made the numbers self-consistent are in the repository.',
   hNvT:'Not verified here', hNv:'Not visa or immigration statistics and not advice. The sample frame excludes anyone who left before publishing at home; "stayed" means the last known affiliation, not residency. Institutions are parsed from affiliation strings and some mismatches remain; field labels are coarse. Absolute values drift with sampling choices.',
@@ -491,6 +491,7 @@ en: {
     Absolute values are sensitive to sampling — <b>only compare institutions, countries and origins against each other</b>.
     Full definitions on the Methodology page.`,
   loading:'Loading data…', loadFail:(m)=>`Failed to load data: ${m} (serve over http locally, e.g. python3 -m http.server)`,
+  cmpFail:(names,m)=>`Could not load ${names} (${m}). The table compares every origin, so it waits for all of them.`,
   strata:{short:'2–3 yrs (mostly visiting)',long:'≥4 yrs (default)',long6:'≥6 yrs',all:'Any length'},
   out:{stay:'Stayed',dual:'Dual',ret:'Returned',onward:'Onward'},
   legend:{stay:'Stayed (final affiliation only in destination)',dual:'Dual (both sides)',ret:'Returned (only origin)',onward:'Onward (third country)'},
@@ -560,7 +561,7 @@ zh: {
   fEyebrow:'核心发现', fTitle:'同一个目的地，起点不同，去向差好几倍',
   fLede:'在各国起步发表、之后在美国待满 4 年及以上的研究者中，最后已知任职机构仍在美国的比例。抽样与算法一致；比相对高低，不比绝对百分比。',
   fStay:'留在美国', fMeta:(n,ci)=>`样本 ${n.toLocaleString()}<br>95% 区间 ${ci}`,
-  fCta:'对比全部起点', fLoading:'正在载入四个起点的数据…', fFail:'核心数字载入失败。',
+  fCta:'对比全部起点', fLoading:'正在载入四个起点的数据…', fFail:m=>`核心数字载入失败（${m}）。页面其余部分不受影响。`, tryAgain:'重试',
   cmpChartTitle:(dest,s)=>`${dest} 的留下率 · 按起点 · ${s}`, cmpChartDest:'目的国', cmpChartAxis:'实心条：留下率。须线：95% 置信区间。按留下率排序。',
   hAboutT:'关于这些数据', hAbout:'每个数字都由 scripts/compute.py 从 OpenAlex 署名记录（CC0）算出，以静态 JSON 提供；没有人工估算或建模。流水线、测试与让数字自洽的三处口径修正都在仓库里。',
   hNvT:'这里没有核实的', hNv:'不是签证或移民统计，也不构成建议。样本框不含本科即出国、在国内没发过论文的人；「留下」指最后已知任职机构，不等于居留身份。机构从署名字符串解析，仍有错配；学科标签很粗。绝对值随口径漂移。',
@@ -573,6 +574,7 @@ zh: {
     绝对值受抽样口径影响大，<b>只比机构之间、国家之间、来源之间的相对高低</b>，别拿绝对值当结论。
     完整口径见「口径」页。`,
   loading:'载入数据中…', loadFail:(m)=>`数据载入失败：${m}（本地需用 http 打开，例如 python3 -m http.server）`,
+  cmpFail:(names,m)=>`${names} 的数据没载入（${m}）。这张表要比较所有起点，所以会等它们都到齐。`,
   strata:{short:'2–3 年（多为访问）',long:'≥4 年（默认）',long6:'≥6 年',all:'不限'},
   out:{stay:'留下',dual:'双挂',ret:'回流',onward:'转道'},
   legend:{stay:'留下（末位只在目的国）',dual:'双挂（两边都挂）',ret:'回流（末位只在来源国）',onward:'转道（去了第三国）'},
@@ -926,6 +928,15 @@ function renderCompare(){
     return;
   }
   const missing = list.filter(o => !S.allData[o.cc]);
+  const failed = missing.filter(o => S.originErr && S.originErr[o.cc]);
+  if(failed.length){
+    // a file that did not load used to leave "Loading per-origin data…" on screen for good (round-1 audit)
+    document.getElementById('cmp-chart').innerHTML = '';
+    wrap.innerHTML = `<div class="warn" role="alert">${esc(t('cmpFail')(failed.map(o => country(o.cc, o.name)).join(', '), failed.map(o => S.originErr[o.cc]).join('; ')))}
+      <button type="button" class="btn btn-sm" id="cmp-retry">${t('tryAgain')}</button></div>`;
+    document.getElementById('cmp-retry').onclick = () => { S.originErr = {}; renderCompare(); ensureAllOrigins().then(() => { const b = document.getElementById('cmp-retry') || document.querySelector('#cmp-wrap .th-sort'); if(b) b.focus(); }); };
+    return;
+  }
   if(missing.length){
     wrap.innerHTML = `<p class="muted">${t('cmpLoading')}</p>`;
     return;
@@ -994,7 +1005,10 @@ function renderFinding(){
   const ready = FINDING_ORIGINS.every(cc => S.allData[cc]);
   if(!ready){
     grid.innerHTML = `<p class="muted small">${t('fLoading')}</p>`;
-    Promise.all(FINDING_ORIGINS.map(loadData)).then(renderFinding).catch(() => { grid.innerHTML = `<p class="muted small">${t('fFail')}</p>`; });
+    Promise.all(FINDING_ORIGINS.map(loadData)).then(renderFinding).catch(e => {
+      grid.innerHTML = `<div class="warn" role="alert">${esc(t('fFail')(e.message))} <button type="button" class="btn btn-sm" id="finding-retry">${t('tryAgain')}</button></div>`;
+      document.getElementById('finding-retry').onclick = () => { renderFinding(); };
+    });
     return;
   }
   const rows = FINDING_ORIGINS.map(cc => {
@@ -1038,9 +1052,11 @@ function ensureAllOrigins(){
   const list = S.originList || [];
   const todo = list.filter(o => !S.allData[o.cc]);
   if(!todo.length) return Promise.resolve();
+  S.originErr = S.originErr || {};
   return Promise.all(todo.map(o =>
-    fetch(`data-${o.cc}.json`).then(r => r.ok ? r.json() : null)
-      .then(d => { if(d) S.allData[o.cc] = d; }).catch(() => {})
+    fetch(`data-${o.cc}.json`).then(r => { if(!r.ok) throw new Error(`data-${o.cc}.json ${r.status}`); return r.json(); })
+      .then(d => { S.allData[o.cc] = d; delete S.originErr[o.cc]; })
+      .catch(e => { S.originErr[o.cc] = e.message; })
   )).then(() => { if(S.view === 'compare') renderCompare(); });
 }
 
@@ -1425,8 +1441,10 @@ function loadOrigin(cc){
     document.getElementById('foot').innerHTML = t('foot')(d);
     render();
   }).catch(e => {
-    ld.hidden = false; ld.dataset.err = '1';
-    ld.textContent = t('loadFail')(e.message);
+    ld.hidden = false; ld.dataset.err = '1'; ld.setAttribute('role', 'alert');
+    const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'btn btn-sm'; retry.textContent = t('tryAgain');
+    retry.onclick = () => { ld.removeAttribute('role'); loadOrigin(cc); };
+    ld.replaceChildren(t('loadFail')(e.message) + ' ', retry);
   });
 }
 
