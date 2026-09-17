@@ -78,9 +78,15 @@ a{color:var(--accent-text);text-underline-offset:.18em;text-decoration-thickness
 .btn:active{transform:scale(var(--press-scale))}
 .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 @media (hover:hover) and (pointer:fine){.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}}
+/* the button inside an empty state, beside a sentence rather than in a row of its own; height only, so the
+   coarse-pointer rule above still raises it to the touch target on a phone */
+.btn-sm{height:26px;padding:0 var(--space-3);font-size:var(--text-xs)}
 
 .notice{border:1px solid var(--border);border-left:3px solid var(--warning);background:var(--surface);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--text-2);margin-bottom:var(--space-4);max-width:none}
 .notice b{color:var(--text)}
+/* "nothing matched, here is why, here is the way back": a column, because the three children are a heading, a
+   sentence and the button that undoes the filter. The text node between them becomes a flex item of its own. */
+.empty-state{display:flex;flex-direction:column;align-items:center;gap:var(--space-2);padding:var(--space-4) var(--space-2);text-align:center}
 
 .ctrl{display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center;margin-bottom:var(--space-4)}
 .seg{display:flex;gap:2px;background:var(--surface-2);padding:3px;border-radius:var(--radius-md);max-width:100%;overflow-x:auto;border:1px solid var(--border)}
