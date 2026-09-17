@@ -501,7 +501,7 @@ en: {
   allCountries:'All countries/regions', allFields:'All fields',
   fKindLbl:'Institution type', fCountryLbl:'Country or region', fFieldLbl:'Field', vFieldLbl:'Field', vTypeLbl:'Venue type',
   searchInst:'Search institutions…', searchVenue:'Search venues / publishers…',
-  instCount:n=>`${n} institutions`, venueCount:n=>`${n} venues`,
+  instCount:n=>`${n} institutions`, venueCount:(n,total)=>n < total ? `${n} of ${total.toLocaleString('en')} venues` : `${n} venues`,
   instEmptyT:'No institutions match.', instEmpty:'Loosen the filters, or try another stay-length stratum.', clearFilters:'Clear filters',
   venueEmptyT:'No venues match.', venueEmpty:'Loosen the field, type or search filter.',
   th:{name:'Institution',country:'Country/Region',stay:'Stay rate',ci:'95% CI',dual:'Dual',ret:'Returned',n:'n'},
@@ -580,7 +580,7 @@ zh: {
   allCountries:'全部国家/地区', allFields:'全部学科',
   fKindLbl:'机构类型', fCountryLbl:'国家/地区', fFieldLbl:'学科', vFieldLbl:'学科', vTypeLbl:'期刊或会议',
   searchInst:'搜校名…', searchVenue:'搜刊名/出版方…',
-  instCount:n=>`${n} 所`, venueCount:n=>`${n} 本`,
+  instCount:n=>`${n} 所`, venueCount:(n,total)=>n < total ? `${total} 本中的前 ${n} 本` : `${n} 本`,
   instEmptyT:'没有符合条件的机构。', instEmpty:'放宽筛选，或换一个停留时长分层试试。', clearFilters:'清空筛选',
   venueEmptyT:'没有符合条件的期刊会议。', venueEmpty:'放宽学科、类型或搜索条件。',
   th:{name:'机构',country:'国家/地区',stay:'留下率',ci:'95% 区间',dual:'双挂',ret:'回流',n:'样本'},
@@ -636,7 +636,7 @@ const S = {data:null, venues:null, origin:(/^[a-z]{2}$/.test(HASH_STATE.get('ori
            view: VIEWS.includes(hashView) ? hashView : 'match', stratum:'long', sortKey:'stay', sortDir:-1,
            fCountry:'', fField:'', fKind:'', q:'',
            mField:'', mCountry:'', mKind:'', mStratum:'long',
-           vField:'', vType:'', vQ:''};
+           vField:'', vType:'', vQ:'', vSortKey:'h', vSortDir:-1, cSortKey:null, cSortDir:0};
 const OUT_KEYS = [['stay','var(--o-stay)'],['dual','var(--o-dual)'],['ret','var(--o-ret)'],['onward','var(--o-onward)']];
 const pc = v => v==null ? '—' : (v*100).toFixed(1)+'%';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -720,6 +720,11 @@ function syncHash(){
   if(S.stratum !== 'long' && ['country','inst','compare'].includes(S.view)) q.set('stratum', S.stratum);
   if(S.view === 'inst'){ if(S.fKind) q.set('kind', S.fKind); if(S.fCountry) q.set('country', S.fCountry); if(S.fField) q.set('field', S.fField); if(S.q) q.set('q', S.q); }
   if(S.view === 'venue'){ if(S.vField) q.set('field', S.vField); if(S.vType) q.set('type', S.vType); if(S.vQ) q.set('q', S.vQ); }
+  // sort state in the address too, so a shared link opens with the same row order; the default order is not written
+  const dirName = d => d === 1 ? 'asc' : 'desc';
+  if(S.view === 'inst' && !(S.sortKey === 'stay' && S.sortDir === -1)) q.set('sort', S.sortKey + ':' + dirName(S.sortDir));
+  if(S.view === 'venue' && !(S.vSortKey === 'h' && S.vSortDir === -1)) q.set('sort', S.vSortKey + ':' + dirName(S.vSortDir));
+  if(S.view === 'compare' && S.cSortKey) q.set('sort', S.cSortKey + ':' + dirName(S.cSortDir));
   const qs = q.toString();
   history.replaceState(null, '', S.view === 'match' && !qs ? location.pathname + location.search : '#' + S.view + (qs ? '?' + qs : ''));
 }
@@ -729,6 +734,10 @@ function applyHashState(){
   const set = (id, v) => { const el = document.getElementById(id); if(el){ el.value = v; return el.value; } return v; };
   if(S.view === 'inst'){ S.fKind = set('f-kind', g('kind')); S.fCountry = set('f-country', g('country')); S.fField = set('f-field', g('field')); S.q = set('f-q', g('q')); }
   if(S.view === 'venue'){ S.vType = set('v-type', g('type')); S.vQ = set('v-q', g('q')); S.vField = g('field'); if(S.venues) S.vField = set('v-field', S.vField); }
+  const sm = /^([a-z]+):(asc|desc)$/.exec(g('sort')), sdir = sm && (sm[2] === 'asc' ? 1 : -1);
+  if(sm && S.view === 'inst' && document.querySelector(`th[data-sort="${sm[1]}"]`)){ S.sortKey = sm[1]; S.sortDir = sdir; }
+  if(sm && S.view === 'venue' && VSORT[sm[1]]){ S.vSortKey = sm[1]; S.vSortDir = sdir; }
+  if(sm && S.view === 'compare' && (sm[1] === 'dest' || sm[1] === 'gap' || /^[a-z]{2}$/.test(sm[1]))){ S.cSortKey = sm[1]; S.cSortDir = sdir; }
   ['seg-stratum','seg-stratum2','seg-stratum3'].forEach(id => stratumSeg(document.getElementById(id)));
 }
 function renderInsts(){
@@ -847,6 +856,15 @@ function renderMatch(){
 }
 
 /* ---- Venue board ---- */
+// venue columns: value to sort by and the direction of a first click (names and ranks up, measures down)
+const VSORT = {
+  tier: [v => v.tier, 1], name: [v => v.name, 1], pub: [v => v.publisher || '', 1],
+  h: [v => v.h, -1], imp: [v => v.impact, -1], works: [v => v.works, -1], rank: [v => v.field_total ? v.field_rank / v.field_total : 1, 1],
+};
+// a sortable header is a button; the table is rebuilt on every sort, so focus is put back on the same header afterwards
+function sortHeader(attr, key, label, cls, dir){
+  return `<th data-${attr}="${key}"${cls ? ` class="${cls}"` : ''}${dir ? ` aria-sort="${dir === 1 ? 'ascending' : 'descending'}"` : ''}><button type="button" class="th-sort">${label}</button></th>`;
+}
 function renderVenues(){
   const wrap = document.getElementById('venue-wrap');
   if(!S.venues){
@@ -855,18 +873,22 @@ function renderVenues(){
     wrap.innerHTML = t('venueBuilding');
     return;
   }
-  const rows = S.venues.venues.filter(v =>
+  const [val] = VSORT[S.vSortKey] || VSORT.h;
+  const matching = S.venues.venues.filter(v =>
     (!S.vField || v.field === S.vField) &&
     (!S.vType || v.type_raw === S.vType) &&
     (!S.vQ || (v.name + ' ' + v.publisher).toLowerCase().includes(S.vQ.toLowerCase()))
-  ).slice(0, 300);
-  document.getElementById('venue-count').textContent = t('venueCount')(rows.length);
+  ).sort((a, b) => { const x = val(a), y = val(b);
+    const c = typeof x === 'string' ? x.localeCompare(y, LANG === 'zh' ? 'zh' : 'en') : (x ?? -Infinity) - (y ?? -Infinity);
+    return S.vSortDir * c || b.h - a.h; });
+  // sorted before the cut: "by Works" means the venues with the most works, not the most works among the top 300 by h-index
+  const rows = matching.slice(0, 300);
+  document.getElementById('venue-count').textContent = t('venueCount')(rows.length, matching.length);
   if(!rows.length){ wrap.replaceChildren(emptyState('venueEmptyT', 'venueEmpty', clearVenueFilters)); return; }
   const th = t('venueTh');
   wrap.innerHTML = `<div style="overflow-x:auto"><table>
-    <thead><tr><th>${th.tier}</th><th>${th.name}</th><th class="hide-s">${th.pub}</th>
-      <th class="num">${th.h}</th><th class="num hide-s">${th.imp}</th>
-      <th class="num hide-s">${th.works}</th><th class="hide-s">${th.rank}</th></tr></thead>
+    <thead><tr>${[['tier', th.tier, ''], ['name', th.name, ''], ['pub', th.pub, 'hide-s'], ['h', th.h, 'num'], ['imp', th.imp, 'num hide-s'], ['works', th.works, 'num hide-s'], ['rank', th.rank, 'hide-s']]
+      .map(([k, label, cls]) => sortHeader('vsort', k, label, cls, S.vSortKey === k ? S.vSortDir : 0)).join('')}</tr></thead>
     <tbody>${rows.map(v => `<tr style="cursor:default">
       <td><span class="tier ${v.tier.replace('V','R')}">${esc(v.tier)}</span></td>
       <td>${esc(v.name)}<div class="muted small only-s">${esc(field(v.field))} · ${esc(vtype(v.type))}</div></td>
@@ -916,12 +938,21 @@ function renderCompare(){
 
   document.getElementById('cmp-note').textContent = t('cmpNote')(rows.length, list.length);
   renderCompareChart(rows, list);
+  // the table can be sorted by destination, by one origin's stay rate or by the largest gap; a third click returns to the
+  // default order by combined sample size, which is not a column (designer ruling 2026-09-16 17:05 Q3)
+  const oi = list.findIndex(o => o.cc === S.cSortKey);
+  const cval = r => S.cSortKey === 'dest' ? country(r.dc, r.name) : S.cSortKey === 'gap' ? r.gap : oi >= 0 && r.cells[oi] ? r.cells[oi].stay : null;
+  const shown = !S.cSortKey || (S.cSortKey !== 'dest' && S.cSortKey !== 'gap' && oi < 0) ? rows : rows.slice().sort((a, b) => {
+    const x = cval(a), y = cval(b);
+    if(x === null || y === null) return (x === null) - (y === null);   // origins without enough people stay at the bottom either way
+    return S.cSortDir * (typeof x === 'string' ? x.localeCompare(y, LANG === 'zh' ? 'zh' : 'en') : x - y) || b.total - a.total;
+  });
 
   wrap.innerHTML = `<div class="warn">${t('cmpWarn')}</div>
     <div style="overflow-x:auto"><table>
-    <thead><tr><th>${t('cmpThDest')}</th>${list.map(o =>
-      `<th class="num">${esc(country(o.cc, o.name))}</th>`).join('')}<th class="num hide-s">${t('cmpThGap')}</th></tr></thead>
-    <tbody>${rows.map(r => `<tr style="cursor:default">
+    <thead><tr>${sortHeader('csort', 'dest', t('cmpThDest'), '', S.cSortKey === 'dest' ? S.cSortDir : 0)}${list.map(o =>
+      sortHeader('csort', o.cc, esc(country(o.cc, o.name)), 'num', S.cSortKey === o.cc ? S.cSortDir : 0)).join('')}${sortHeader('csort', 'gap', t('cmpThGap'), 'num hide-s', S.cSortKey === 'gap' ? S.cSortDir : 0)}</tr></thead>
+    <tbody>${shown.map(r => `<tr style="cursor:default">
       <td>${esc(country(r.dc, r.name))}</td>
       ${r.cells.map(c => c ? `<td class="num"><span class="cmp-hi">${pc(c.stay)}</span>
         <div class="cmp-n">n=${c.n}</div></td>` : '<td class="num muted">—</td>').join('')}
@@ -1437,8 +1468,24 @@ document.querySelectorAll('th[data-sort]').forEach(th => {
   const k = th.dataset.sort;
   if(S.sortKey === k) S.sortDir *= -1;
   else { S.sortKey = k; S.sortDir = (k === 'name' || k === 'country' || k === 'rank') ? 1 : -1; }
-  renderInsts();
+  renderInsts(); syncHash();
 };
+});
+document.getElementById('venue-wrap').addEventListener('click', e => {
+  const th = e.target.closest('th[data-vsort]'); if(!th || !e.target.closest('.th-sort')) return;
+  const k = th.dataset.vsort;
+  if(S.vSortKey === k) S.vSortDir *= -1; else { S.vSortKey = k; S.vSortDir = VSORT[k][1]; }
+  renderVenues(); syncHash();
+  const again = document.querySelector(`#venue-wrap th[data-vsort="${k}"] .th-sort`); if(again) again.focus();
+});
+document.getElementById('cmp-wrap').addEventListener('click', e => {
+  const th = e.target.closest('th[data-csort]'); if(!th || !e.target.closest('.th-sort')) return;
+  const k = th.dataset.csort, first = k === 'dest' ? 1 : -1;
+  if(S.cSortKey !== k){ S.cSortKey = k; S.cSortDir = first; }
+  else if(S.cSortDir === first) S.cSortDir = -first;
+  else { S.cSortKey = null; S.cSortDir = 0; }
+  renderCompare(); syncHash();
+  const again = document.querySelector(`#cmp-wrap th[data-csort="${k}"] .th-sort`); if(again) again.focus();
 });
 document.getElementById('inst-body').onclick = e => {
   const tr = e.target.closest('tr[data-id]'); if(tr) openInst(tr.dataset.id);
