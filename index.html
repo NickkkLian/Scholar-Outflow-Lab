@@ -334,7 +334,7 @@ table.data th.num button{justify-content:flex-end;width:100%}
   <section id="v-country" hidden>
     <div class="ctrl">
       <span class="lbl" id="l-stratum1"></span>
-      <div class="seg" id="seg-stratum"></div>
+      <div class="seg" id="seg-stratum" role="group" aria-labelledby="l-stratum1"></div>
     </div>
     <div class="legend" id="legend"></div>
     <div class="grid" id="country-grid"></div>
@@ -344,7 +344,7 @@ table.data th.num button{justify-content:flex-end;width:100%}
   <section id="v-inst" hidden>
     <div class="ctrl">
       <span class="lbl" id="l-stratum2"></span>
-      <div class="seg" id="seg-stratum2"></div>
+      <div class="seg" id="seg-stratum2" role="group" aria-labelledby="l-stratum2"></div>
       <select id="f-kind"></select>
       <select id="f-country"></select>
       <select id="f-field"></select>
@@ -374,7 +374,7 @@ table.data th.num button{justify-content:flex-end;width:100%}
   <section id="v-compare" hidden>
     <div class="ctrl">
       <span class="lbl" id="l-stratum3"></span>
-      <div class="seg" id="seg-stratum3"></div>
+      <div class="seg" id="seg-stratum3" role="group" aria-labelledby="l-stratum3"></div>
       <span class="muted small" id="cmp-note"></span>
     </div>
     <div id="cmp-chart"></div>
@@ -653,11 +653,17 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 // meta.origin_name arrives in Chinese from the data files; display per language.
 const originName = m => country(m.origin, m.origin_name);
 
+// render() does not rebuild these buttons, so the highlight stayed on the old stratum until a reload (round-1 audit); every
+// pick rebuilds the three groups, marks the pick with aria-pressed, and keeps focus on the button that was pressed
 function stratumSeg(el, onPick){
   el.innerHTML = ['short','long','long6','all'].map(k =>
-    `<button data-k="${k}" class="${k===S.stratum?'on':''}">${t('strata')[k]}</button>`).join('');
+    `<button type="button" data-k="${k}" class="${k===S.stratum?'on':''}" aria-pressed="${k===S.stratum}">${t('strata')[k]}</button>`).join('');
   el.onclick = e => { const b = e.target.closest('button'); if(!b) return;
-    S.stratum = b.dataset.k; render(); syncHash(); onPick && onPick(); };
+    const hadFocus = el.contains(document.activeElement);
+    S.stratum = b.dataset.k;
+    ['seg-stratum','seg-stratum2','seg-stratum3'].forEach(id => stratumSeg(document.getElementById(id)));
+    render(); syncHash(); onPick && onPick();
+    if(hadFocus){ const again = el.querySelector(`button[data-k="${S.stratum}"]`); if(again) again.focus(); } };
 }
 
 function stackBar(s){
