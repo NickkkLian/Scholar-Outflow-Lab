@@ -521,7 +521,7 @@ en: {
   venueEmptyT:'No venues match.', venueEmpty:'Loosen the field, type or search filter.',
   th:{name:'Institution',country:'Country/Region',stay:'Stay rate',ci:'95% CI',dual:'Dual',ret:'Returned',n:'n'},
   smallN:' · small n',
-  noCountries:'No destination country has enough sample in this stratum.',
+  noCountriesT:'No destination to show.', noCountries:'No destination country has enough sample in this stratum.', showDefaultStratum:'Show ≥4 yrs (default)',
   instituteTag:'Institute',
   vTypeOpts:['Journals + conferences','Journals only','Conferences only'],
   venueTh:{tier:'Tier',name:'Venue',pub:'Publisher',h:'h-index',imp:'2-yr cites/paper',works:'Works',rank:'Rank in field'},
@@ -603,7 +603,7 @@ zh: {
   venueEmptyT:'没有符合条件的期刊会议。', venueEmpty:'放宽学科、类型或搜索条件。',
   th:{name:'机构',country:'国家/地区',stay:'留下率',ci:'95% 区间',dual:'双挂',ret:'回流',n:'样本'},
   smallN:' · 样本少',
-  noCountries:'该分层下没有样本量足够的目的国。',
+  noCountriesT:'没有可显示的目的国。', noCountries:'该分层下没有样本量足够的目的国。', showDefaultStratum:'看 ≥4 年（默认）',
   instituteTag:'研究所',
   vTypeOpts:['期刊 + 会议','只看期刊','只看会议'],
   venueTh:{tier:'级别',name:'刊名 / 会议',pub:'出版方',h:'h-index',imp:'2 年篇均被引',works:'收录量',rank:'学科内位次'},
@@ -695,7 +695,10 @@ function renderCountries(){
       <div class="c-head"><h2>${esc(country(c.cc, c.name))}</h2>
         <span class="n">n=${s.n}${s.n < 150 ? t('smallN') : ''}</span></div>
       ${stackBar(s)}
-    </div>`).join('') || `<p class="muted">${t('noCountries')}</p>`;
+    </div>`).join('');
+  if(!rows.length){ const p = document.createElement('p'); p.className = 'muted';
+    p.append(emptyState('noCountriesT', 'noCountries', () => { S.stratum = 'long'; ['seg-stratum','seg-stratum2','seg-stratum3'].forEach(id => stratumSeg(document.getElementById(id))); render(); syncHash(); document.querySelector('#seg-stratum button[data-k="long"]').focus(); }, 'showDefaultStratum'));
+    g.replaceChildren(p); }
 }
 
 function instRows(){
