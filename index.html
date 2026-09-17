@@ -407,7 +407,7 @@ table.data th.num button{justify-content:flex-end;width:100%}
 
 <div class="drawer" id="drawer">
   <div class="veil" data-close></div>
-  <div class="panel"><button class="close" data-close id="drawer-close"></button><div id="drawer-body"></div></div>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="drawer-title"><button class="close" data-close id="drawer-close"></button><div id="drawer-body"></div></div>
 </div>
 
 <script src="appearance.js"></script>
@@ -729,7 +729,25 @@ function emptyState(titleKey, reasonKey, onClear, labelKey){
 function clearInstFilters(){ S.fKind = S.fCountry = S.fField = S.q = ''; ['f-kind','f-country','f-field','f-q'].forEach(id => { document.getElementById(id).value = ''; }); renderInsts(); syncHash(); document.getElementById('f-q').focus(); }
 function clearVenueFilters(){ S.vField = S.vType = S.vQ = ''; ['v-field','v-type','v-q'].forEach(id => { document.getElementById(id).value = ''; }); renderVenues(); syncHash(); document.getElementById('v-q').focus(); }
 let drawerOpener = null;
-function closeDrawer(){ const d = document.getElementById('drawer'); if(!d.classList.contains('open')) return; d.classList.remove('open'); if(drawerOpener && document.contains(drawerOpener)) drawerOpener.focus(); drawerOpener = null; }
+// the drawer is a modal dialog: while it is open the rest of the page is inert (Tab cannot reach it, clicks do not land),
+// Tab and Shift+Tab wrap inside the panel, and the open institution is in the address. Before, Tab walked out of the open
+// drawer onto the top bar under the veil, and axe counted the drawer as content outside any landmark (round-1 audit).
+const pageParts = () => [...document.body.children].filter(el => el.id !== 'drawer' && el.tagName !== 'SCRIPT');
+function closeDrawer(){ const d = document.getElementById('drawer'); if(!d.classList.contains('open')) return; d.classList.remove('open');
+  pageParts().forEach(el => { el.inert = false; });
+  const id = S.openInst; S.openInst = null; syncHash();
+  // opened from a shared link there was no opener (focus was on <body>): go to the institution's row or card instead
+  const back = drawerOpener && drawerOpener !== document.body && document.contains(drawerOpener) ? drawerOpener : id && document.querySelector(`#v-${S.view} [data-id="${CSS.escape(id)}"]`);
+  if(back) back.focus(); else document.getElementById('main').focus();
+  drawerOpener = null; }
+function trapDrawer(e){
+  if(e.key !== 'Tab' || !document.getElementById('drawer').classList.contains('open')) return;
+  const f = [...document.querySelectorAll('#drawer .panel button, #drawer .panel a[href]')].filter(x => x.getClientRects().length);
+  if(!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if(e.shiftKey && (document.activeElement === first || !f.includes(document.activeElement))){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey && (document.activeElement === last || !f.includes(document.activeElement))){ e.preventDefault(); first.focus(); }
+}
 function syncHash(){
   const q = new URLSearchParams();
   if(S.origin !== 'cn') q.set('origin', S.origin);
@@ -739,6 +757,7 @@ function syncHash(){
   // Path Finder's four questions, the compare chart's destination and the open institution belong to the view too (v1 §9.14)
   if(S.view === 'match'){ if(S.mField) q.set('field', S.mField); if(S.mCountry) q.set('dest', S.mCountry); if(S.mKind) q.set('kind', S.mKind); if(S.mStratum !== 'long') q.set('stay', S.mStratum); }
   if(S.view === 'compare' && S.cmpDestPicked && S.cmpDest) q.set('dest', S.cmpDest);
+  if(S.openInst && (S.view === 'inst' || S.view === 'match')) q.set('open', S.openInst);
   // sort state in the address too, so a shared link opens with the same row order; the default order is not written
   const dirName = d => d === 1 ? 'asc' : 'desc';
   if(S.view === 'inst' && !(S.sortKey === 'stay' && S.sortDir === -1)) q.set('sort', S.sortKey + ':' + dirName(S.sortDir));
@@ -756,6 +775,7 @@ function applyHashState(){
   if(S.view === 'match'){ S.mField = set('m-field', g('field')); S.mCountry = set('m-country', g('dest')); S.mKind = set('m-kind', g('kind'));
     if(['short','long','long6','all'].includes(g('stay'))) S.mStratum = set('m-stratum', g('stay')); }
   if(S.view === 'compare' && /^[a-z]{2}$/.test(g('dest'))){ S.cmpDest = g('dest'); S.cmpDestPicked = true; }
+  if(g('open') && (S.view === 'inst' || S.view === 'match')) S.pendingOpen = g('open');
   const sm = /^([a-z]+):(asc|desc)$/.exec(g('sort')), sdir = sm && (sm[2] === 'asc' ? 1 : -1);
   if(sm && S.view === 'inst' && document.querySelector(`th[data-sort="${sm[1]}"]`)){ S.sortKey = sm[1]; S.sortDir = sdir; }
   if(sm && S.view === 'venue' && VSORT[sm[1]]){ S.vSortKey = sm[1]; S.vSortDir = sdir; }
@@ -806,7 +826,7 @@ function openInst(id){
     <div class="sec-t">${t('secFieldPlain')}</div>
     <p class="small muted">${t('fieldNoSample')}</p>`;
   document.getElementById('drawer-body').innerHTML = `
-    <h2>${esc(it.name)}</h2>
+    <h2 id="drawer-title">${esc(it.name)}</h2>
     <div class="kv"><span>${esc(country(it.cc, it.country))}</span><span>·</span>
       <span class="mono">${t('tierRank')(it.tier, it.rank)}</span><span>·</span>
       <span>${it.works.toLocaleString()} ${t('works')}</span></div>
@@ -816,8 +836,11 @@ function openInst(id){
     <div class="sec-t">${t('sources')}</div>
     <p class="small muted">ROR <a href="https://ror.org/${esc(it.ror)}" target="_blank" rel="noopener">${esc(it.ror)}</a>
        · <a href="https://openalex.org/${esc(it.id)}" target="_blank" rel="noopener">OpenAlex ${esc(it.id)}</a></p>`;
-  drawerOpener = document.activeElement;
+  if(!document.getElementById('drawer').classList.contains('open')) drawerOpener = document.activeElement;
+  S.openInst = id;
   document.getElementById('drawer').classList.add('open');
+  pageParts().forEach(el => { el.inert = true; });
+  syncHash();
   document.getElementById('drawer-close').focus();
 }
 
@@ -1453,6 +1476,7 @@ function loadOrigin(cc){
     if(!HASH_STATE.applied){ HASH_STATE.applied = true; applyHashState(); }
     document.getElementById('foot').innerHTML = t('foot')(d);
     render();
+    if(S.pendingOpen){ const id = S.pendingOpen; S.pendingOpen = null; openInst(id); }
   }).catch(e => {
     ld.hidden = false; ld.dataset.err = '1'; ld.setAttribute('role', 'alert');
     const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'btn btn-sm'; retry.textContent = t('tryAgain');
@@ -1540,6 +1564,7 @@ document.getElementById('drawer').onclick = e => {
 };
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape') closeDrawer();
+  trapDrawer(e);
 });
 // rows and cards open the institution from the keyboard too
 const openOnKey = e => { if(e.key !== 'Enter' && e.key !== ' ') return; const el = e.target.closest('[data-id]'); if(!el || el !== e.target) return; e.preventDefault(); openInst(el.dataset.id); };
