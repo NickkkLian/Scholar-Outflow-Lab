@@ -1,8 +1,10 @@
 # Scholar Outflow Lab
 
-**Where researchers who started their careers in one country end up** — by destination country
-and destination institution, stratified by how long they stayed. Thirteen origin countries,
-1.43 million sampled authors, built entirely on free public data with a zero-dependency stack.
+**Where researchers from 13 countries ended up — every rate shown with its sample size.**
+
+Researchers who started their careers in one country, followed by destination country and destination institution,
+stratified by how long they stayed. Thirteen origin countries, 1.43 million sampled authors, built entirely on free
+public data with a zero-dependency stack.
 
 **Live:** https://nickkklian.github.io/Scholar-Outflow-Lab/ — English by default, 中文 toggle in the header.
 
