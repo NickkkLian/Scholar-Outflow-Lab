@@ -65,7 +65,7 @@ a{color:var(--accent-text);text-underline-offset:.18em;text-decoration-thickness
 .finding{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-1);padding:var(--space-5);margin-bottom:var(--space-4)}
 .finding .eyebrow{font:var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--text-3);margin-bottom:var(--space-2)}
 .finding h1{font-size:var(--text-2xl);max-width:26ch}
-.finding .lede{color:var(--text-2);font-size:var(--text-sm);margin:var(--space-2) 0 var(--space-4);max-width:42.9em}
+.finding .lede{color:var(--text-2);font-size:var(--text-sm);margin:var(--space-2) 0 var(--space-4);max-width:var(--measure)}
 .f-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-3)}
 .f-cell{border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-3);background:var(--bg);min-width:0}
 .f-cell h2{font-size:var(--text-md);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -160,7 +160,7 @@ tbody tr{cursor:pointer}
 .ask-row{display:flex;gap:var(--space-3);flex-wrap:wrap}
 .ask-row label{display:flex;flex-direction:column;gap:var(--space-1);font:var(--weight-semibold) var(--text-2xs)/1.2 var(--font-sans);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--text-3);flex:1 1 190px;min-width:0}
 .ask-row select{width:100%;text-transform:none;letter-spacing:normal;font-weight:var(--weight-regular)}
-.ask-note{margin:var(--space-3) 0 0;font-size:var(--text-xs);color:var(--text-2);max-width:68ch}
+.ask-note{margin:var(--space-3) 0 0;font-size:var(--text-xs);color:var(--text-2);max-width:var(--measure)}
 .ask-note b{color:var(--text)}
 .m-card{border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-4);background:var(--paper);box-shadow:var(--shadow-1);margin-bottom:var(--space-2);display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap;cursor:pointer}
 @media (hover:hover) and (pointer:fine){.m-card:hover{background:var(--surface-hover)}}
@@ -170,8 +170,10 @@ tbody tr{cursor:pointer}
 .m-num{text-align:right;min-width:96px}
 .m-num .big{font:var(--weight-semibold) var(--text-xl)/1.1 var(--font-mono);color:var(--text)}
 .m-num .sub{font-size:var(--text-2xs);color:var(--text-3);font-family:var(--font-mono)}
+.notice > p,.warn > p{margin:0;max-width:var(--measure)}   /* the box keeps the column width; the sentences keep a readable measure */
+#venue-wrap > p{max-width:var(--measure)}
 .warn{border-left:3px solid var(--warning);background:var(--surface);border-radius:var(--radius-sm);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--text-2);margin-bottom:var(--space-3)}
-.doc{max-width:68ch}
+.doc{max-width:var(--measure)}
 .doc h2{font-size:var(--text-lg);margin:var(--space-5) 0 var(--space-2)}
 .doc p,.doc li{color:var(--text);font-size:var(--text-md)}
 .doc code{font-family:var(--font-mono);font-size:.92em;background:var(--surface-2);padding:1px 5px;border-radius:var(--radius-xs)}
@@ -186,9 +188,9 @@ tbody tr{cursor:pointer}
 
 /* ===== footer (honest block) ===== */
 .honest{border-top:1px solid var(--band-line);font-size:var(--text-xs);color:var(--on-band-2);background:var(--band);padding:var(--space-10) var(--gutter) var(--space-12)}
-.honest dl{margin:0}
+.honest dl{margin-block:0}
 .honest dt{font-weight:var(--weight-semibold);color:var(--on-band);font-family:var(--font-sans);font-size:var(--text-2xs);letter-spacing:var(--tracking-caps);text-transform:uppercase;margin-bottom:var(--space-2)}
-.honest dd{margin:0;max-width:68ch;line-height:var(--leading-relaxed)}
+.honest dd{margin:0;max-width:var(--measure);line-height:var(--leading-relaxed)}
 .foot{font:var(--weight-regular) var(--text-2xs)/1.5 var(--font-mono);color:var(--text-3);margin-bottom:var(--space-3)}
 
 @media (max-width:900px){
@@ -517,13 +519,13 @@ en: {
   instituteTag:'Institute',
   vTypeOpts:['Journals + conferences','Journals only','Conferences only'],
   venueTh:{tier:'Tier',name:'Venue',pub:'Publisher',h:'h-index',imp:'2-yr cites/paper',works:'Works',rank:'Rank in field'},
-  venueBuilding:`<div class="warn">This page is still being filled in.<br>
+  venueBuilding:`<div class="warn"><p>This page is still being filled in.<br>
     The venue board is regrouped by field and the data source has a daily free-tier quota, so it lands in batches —
     it will appear here as soon as it's complete.<br>
     <span class="small">Method and progress are public in the
     <a href="https://github.com/NickkkLian/Scholar-Outflow-Lab" target="_blank" rel="noopener">GitHub repo</a>.</span></div>`,
-  cmpOnlyOne:`<div class="warn">Only one origin country has data — nothing to compare yet.
-    More origins are harvested day by day (the data source has a daily free quota); this page appears by itself once they land.</div>`,
+  cmpOnlyOne:`<div class="warn"><p>Only one origin country has data — nothing to compare yet.
+    More origins are harvested day by day (the data source has a daily free quota); this page appears by itself once they land.</p></div>`,
   cmpLoading:'Loading per-origin data…',
   cmpNote:(r,o)=>`${r} destinations · ${o} origins`,
   cmpWarn:`Read it <b>across each row</b> — same destination, different origin, and the stay rate can differ several-fold.
@@ -599,12 +601,12 @@ zh: {
   instituteTag:'研究所',
   vTypeOpts:['期刊 + 会议','只看期刊','只看会议'],
   venueTh:{tier:'级别',name:'刊名 / 会议',pub:'出版方',h:'h-index',imp:'2 年篇均被引',works:'收录量',rank:'学科内位次'},
-  venueBuilding:`<div class="warn">这一页还在建。<br>
+  venueBuilding:`<div class="warn"><p>这一页还在建。<br>
     期刊与会议榜要按学科分组重排，数据源每天有免费额度上限，正在分批取——取齐了会直接出现在这里。<br>
     <span class="small">做法与进度公开在
-    <a href="https://github.com/NickkkLian/Scholar-Outflow-Lab" target="_blank" rel="noopener">GitHub 仓库</a>。</span></div>`,
-  cmpOnlyOne:`<div class="warn">只有一个来源国的数据，没得比。
-    多来源国还在按天抓（数据源每天有免费额度上限），抓齐了这一页会自己出现。</div>`,
+    <a href="https://github.com/NickkkLian/Scholar-Outflow-Lab" target="_blank" rel="noopener">GitHub 仓库</a>。</span></p></div>`,
+  cmpOnlyOne:`<div class="warn"><p>只有一个来源国的数据，没得比。
+    多来源国还在按天抓（数据源每天有免费额度上限），抓齐了这一页会自己出现。</p></div>`,
   cmpLoading:'载入各来源数据中…',
   cmpNote:(r,o)=>`${r} 个目的国 · ${o} 个起点`,
   cmpWarn:`读法：<b>同一行比着看</b>——同一个目的国，起点不同，留下率可以差好几倍。
@@ -717,7 +719,7 @@ function coverageNote(){
   if(n >= 40) return '';
   const rate = m.mover_rate != null ? pc(m.mover_rate) : '—';
   const md = Object.assign({}, m, {origin_name_disp: originName(m)});
-  return `<div class="warn">${t('covNote')(md, n, rate)}</div>`;
+  return `<div class="warn"><p>${t('covNote')(md, n, rate)}</p></div>`;
 }
 
 function setTh(id, text){ const el = document.getElementById(id); (el.querySelector('.th-sort') || el).textContent = text; }
@@ -874,18 +876,18 @@ function renderMatch(){
 
   if(!rows.length){
     // title, reason and a way out (it was one line with no button; round-1 audit)
-    const box = document.createElement('div'); box.className = 'warn';
-    box.append(emptyState('matchNoneT', 'matchNone', widenMatch, 'matchWiden'));
+    const box = document.createElement('div'); box.className = 'warn'; const para = document.createElement('p');
+    para.append(emptyState('matchNoneT', 'matchNone', widenMatch, 'matchWiden')); box.append(para);
     sum.replaceChildren(box);
     list.innerHTML = '';
     return;
   }
   const thin = rows.filter(r => r.s.n < 40).length;
-  sum.innerHTML = `<div class="warn">${t('matchSummary')(
+  sum.innerHTML = `<div class="warn"><p>${t('matchSummary')(
     S.mField ? field(S.mField) : (LANG==='en'?'All fields':'全学科'),
-    cName, t('strata')[S.mStratum], rows.length, thin)}</div>`;
+    cName, t('strata')[S.mStratum], rows.length, thin)}</p></div>`;
 
-  if(rows.length > 40) sum.firstElementChild.insertAdjacentHTML('beforeend', ' ' + esc(t('matchShown')(40, rows.length)));
+  if(rows.length > 40) sum.querySelector('.warn > p').insertAdjacentHTML('beforeend', ' ' + esc(t('matchShown')(40, rows.length)));
   list.innerHTML = rows.slice(0, 40).map((r, i) => {
     const ci = r.s.stay_ci || [0,0];
     return `<div class="m-card" data-id="${r.it.id}" tabindex="0" style="cursor:pointer">
@@ -969,8 +971,8 @@ function renderCompare(){
   if(failed.length){
     // a file that did not load used to leave "Loading per-origin data…" on screen for good (round-1 audit)
     document.getElementById('cmp-chart').innerHTML = '';
-    wrap.innerHTML = `<div class="warn" role="alert">${esc(t('cmpFail')(failed.map(o => country(o.cc, o.name)).join(', '), failed.map(o => S.originErr[o.cc]).join('; ')))}
-      <button type="button" class="btn btn-sm" id="cmp-retry">${t('tryAgain')}</button></div>`;
+    wrap.innerHTML = `<div class="warn" role="alert"><p>${esc(t('cmpFail')(failed.map(o => country(o.cc, o.name)).join(', '), failed.map(o => S.originErr[o.cc]).join('; ')))}
+      <button type="button" class="btn btn-sm" id="cmp-retry">${t('tryAgain')}</button></p></div>`;
     document.getElementById('cmp-retry').onclick = () => { S.originErr = {}; renderCompare(); ensureAllOrigins().then(() => { const b = document.getElementById('cmp-retry') || document.querySelector('#cmp-wrap .th-sort'); if(b) b.focus(); }); };
     return;
   }
@@ -1010,7 +1012,7 @@ function renderCompare(){
     return S.cSortDir * (typeof x === 'string' ? x.localeCompare(y, LANG === 'zh' ? 'zh' : 'en') : x - y) || b.total - a.total;
   });
 
-  wrap.innerHTML = `<div class="warn">${t('cmpWarn')}</div>
+  wrap.innerHTML = `<div class="warn"><p>${t('cmpWarn')}</p></div>
     <div style="overflow-x:auto"><table>
     <thead><tr>${sortHeader('csort', 'dest', t('cmpThDest'), '', S.cSortKey === 'dest' ? S.cSortDir : 0)}${list.map(o =>
       sortHeader('csort', o.cc, esc(country(o.cc, o.name)), 'num', S.cSortKey === o.cc ? S.cSortDir : 0)).join('')}${sortHeader('csort', 'gap', t('cmpThGap'), 'num hide-s', S.cSortKey === 'gap' ? S.cSortDir : 0)}</tr></thead>
@@ -1043,7 +1045,7 @@ function renderFinding(){
   if(!ready){
     grid.innerHTML = `<p class="muted small">${t('fLoading')}</p>`;
     Promise.all(FINDING_ORIGINS.map(loadData)).then(renderFinding).catch(e => {
-      grid.innerHTML = `<div class="warn" role="alert">${esc(t('fFail')(e.message))} <button type="button" class="btn btn-sm" id="finding-retry">${t('tryAgain')}</button></div>`;
+      grid.innerHTML = `<div class="warn" role="alert"><p>${esc(t('fFail')(e.message))} <button type="button" class="btn btn-sm" id="finding-retry">${t('tryAgain')}</button></p></div>`;
       document.getElementById('finding-retry').onclick = () => { renderFinding(); };
     });
     return;
@@ -1367,7 +1369,7 @@ function applyChrome(){
   [['theme', 'darkMode'], ['nl-settings-button', 'settingsBtn']].forEach(([id, key]) => {
     const b = document.getElementById(id); if(b){ b.setAttribute('aria-label', t(key)); b.title = t(key); } });
   document.querySelectorAll('.tab').forEach(b => b.textContent = t('tabs')[b.dataset.view]);
-  document.getElementById('notice').innerHTML = t('notice');
+  document.getElementById('notice').innerHTML = '<p>' + t('notice') + '</p>';
   document.getElementById('skip').textContent = t('skip');
   ['hAboutT','hNvT','hSrcT'].forEach(k => document.getElementById({hAboutT:'h-about-t',hNvT:'h-nv-t',hSrcT:'h-src-t'}[k]).textContent = t(k));
   document.getElementById('h-about').textContent = t('hAbout');
