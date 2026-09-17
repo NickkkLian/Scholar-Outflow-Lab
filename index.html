@@ -505,7 +505,7 @@ en: {
   allCountries:'All countries/regions', allFields:'All fields',
   fKindLbl:'Institution type', fCountryLbl:'Country or region', fFieldLbl:'Field', vFieldLbl:'Field', vTypeLbl:'Venue type',
   searchInst:'Search institutions…', searchVenue:'Search venues / publishers…',
-  instCount:n=>`${n} institutions`, venueCount:(n,total)=>n < total ? `${n} of ${total.toLocaleString('en')} venues` : `${n} venues`,
+  instCount:n=>n === 1 ? '1 institution' : `${n} institutions`, venueCount:(n,total)=>n < total ? `${n} of ${total.toLocaleString('en')} venues` : n === 1 ? '1 venue' : `${n} venues`,
   instEmptyT:'No institutions match.', instEmpty:'Loosen the filters, or try another stay-length stratum.', clearFilters:'Clear filters',
   venueEmptyT:'No venues match.', venueEmpty:'Loosen the field, type or search filter.',
   th:{name:'Institution',country:'Country/Region',stay:'Stay rate',ci:'95% CI',dual:'Dual',ret:'Returned',n:'n'},
@@ -535,10 +535,12 @@ en: {
     few movers means few institutions reach the per-institution floor of ${m.min_n_inst}.
     Institution counts track mover counts almost perfectly: <b>it doesn't mean "nobody leaves", it means the sample can't support per-institution statistics</b>.
     Country-level distributions remain valid.`,
-  matchNone:`<div class="warn">No institution clears the sample-size floor for this combination.
-    Showing nothing is deliberate — inventing a number would be the dishonest option. Widen the field or destination and retry.</div>`,
+  matchNoneT:'No institution clears the sample-size floor for this combination.',
+  matchNone:'Showing nothing is deliberate — inventing a number would be the dishonest option. Widen the field or destination and retry.',
+  matchWiden:'Any field, any destination',
+  matchShown:(shown,n)=>`Showing the first ${shown} of ${n}, ranked by the lower end of the stay-rate interval.`,
   matchSummary:(f,c,s,n,thin)=>`<b>${esc(f)} · ${esc(c)} · ${esc(s)}</b>
-    ${n} qualifying institutions${thin ? ` — ${thin} of them under 40 people, so their intervals are wide` : ''}.
+    ${n === 1 ? '1 qualifying institution' : n + ' qualifying institutions'}${thin ? ` — ${thin} of them under 40 people, so their intervals are wide` : ''}.
     These are <b>historical outcome distributions for people like this</b> — not your personal odds, and not immigration advice.`,
   fieldScoped:' · field-scoped', stayed:'Stayed',
   drawerClose:'Close',
@@ -612,8 +614,10 @@ zh: {
     出海的人少，能凑够单校 ${m.min_n_inst} 人门槛的机构自然就少。
     机构数几乎完全由出海人数决定，<b>不代表这个来源国「没人出去」，只代表样本撑不起分校统计</b>。
     看国家层面的分布仍然有效。`,
-  matchNone:`<div class="warn">这个组合下没有样本量达标的机构。
-    样本不够就不出分，是刻意的——硬凑一个数出来才是骗人。放宽学科或目的地再试。</div>`,
+  matchNoneT:'这个组合下没有样本量达标的机构。',
+  matchNone:'样本不够就不出分，是刻意的——硬凑一个数出来才是骗人。放宽学科或目的地再试。',
+  matchWiden:'任意学科、任意目的地',
+  matchShown:(shown,n)=>`只列出前 ${shown} 所（共 ${n} 所），按留下率区间的下限排序。`,
   matchSummary:(f,c,s,n,thin)=>`<b>${esc(f)} · ${esc(c)} · ${esc(s)}</b>
     共 ${n} 所达标机构${thin ? `，其中 ${thin} 所样本不足 40 人，区间会很宽` : ''}。
     这里给的是<b>历史上同类人群的去向分布</b>，不是你个人的成功概率，更不是移民建议。`,
@@ -707,9 +711,9 @@ function coverageNote(){
 }
 
 function setTh(id, text){ const el = document.getElementById(id); (el.querySelector('.th-sort') || el).textContent = text; }
-function emptyState(titleKey, reasonKey, onClear){
+function emptyState(titleKey, reasonKey, onClear, labelKey){
   const b = document.createElement('b'); b.textContent = t(titleKey);
-  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn btn-sm'; btn.textContent = t('clearFilters'); btn.onclick = onClear;
+  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn btn-sm'; btn.textContent = t(labelKey || 'clearFilters'); btn.onclick = onClear;
   // a span, not a div: it also sits inside the <p id="inst-empty">
   const box = document.createElement('span'); box.className = 'empty-state'; box.append(b, ' ' + t(reasonKey) + ' ', btn); return box;
 }
@@ -830,7 +834,10 @@ function renderMatch(){
   const cName = cRec ? country(cRec.cc, cRec.country) : t('anyDest');
 
   if(!rows.length){
-    sum.innerHTML = t('matchNone');
+    // title, reason and a way out (it was one line with no button; round-1 audit)
+    const box = document.createElement('div'); box.className = 'warn';
+    box.append(emptyState('matchNoneT', 'matchNone', widenMatch, 'matchWiden'));
+    sum.replaceChildren(box);
     list.innerHTML = '';
     return;
   }
@@ -839,6 +846,7 @@ function renderMatch(){
     S.mField ? field(S.mField) : (LANG==='en'?'All fields':'全学科'),
     cName, t('strata')[S.mStratum], rows.length, thin)}</div>`;
 
+  if(rows.length > 40) sum.firstElementChild.insertAdjacentHTML('beforeend', ' ' + esc(t('matchShown')(40, rows.length)));
   list.innerHTML = rows.slice(0, 40).map((r, i) => {
     const ci = r.s.stay_ci || [0,0];
     return `<div class="m-card" data-id="${r.it.id}" tabindex="0" style="cursor:pointer">
@@ -858,6 +866,8 @@ function renderMatch(){
     </div>`;
   }).join('');
 }
+
+function widenMatch(){ S.mField = S.mCountry = ''; ['m-field','m-country'].forEach(id => { document.getElementById(id).value = ''; }); renderMatch(); syncHash(); document.getElementById('m-field').focus(); }
 
 /* ---- Venue board ---- */
 // venue columns: value to sort by and the direction of a first click (names and ranks up, measures down)
