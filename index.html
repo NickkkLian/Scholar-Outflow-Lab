@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <script>/* appearance boot — runs before any stylesheet so the stored palette and light/dark apply on the first paint */(function(){try{var d=document.documentElement,L=window.localStorage,t=L.getItem('nl-theme'),s=L.getItem('nl-scheme');if(s===null){var o=L.getItem('theme')||L.getItem('qm-theme');if(o==='dark'||o==='light')s=o;}if(t==='paper'||t==='ink')d.setAttribute('data-theme',t);if(s==='dark'||s==='light')d.setAttribute('data-scheme',s);}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="description" content="Scholar Outflow Lab: where researchers who started their careers in 13 countries ended up — stay rates by destination and institution, stratified by length of stay, from OpenAlex authorship records.">
+<meta name="description" content="Where researchers from 13 countries ended up — every rate shown with its sample size. Scholar Outflow Lab: stay rates by destination and institution, stratified by length of stay, from OpenAlex authorship records.">
 <meta name="theme-color" content="#faece9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#12110c" media="(prefers-color-scheme: dark)">
 <title>Scholar Outflow Lab · Where home-grown researchers end up</title>
@@ -474,7 +474,7 @@ const vtype = t => LANG === 'en' ? ({'期刊':'Journal','会议':'Conference'}[t
 const T = {
 en: {
   title:'Scholar Outflow Lab · Where home-grown researchers end up',
-  brandLogo:'Scholar Outflow <b>Lab</b>', brandSub:'Where researchers who started in 13 countries ended up',
+  brandLogo:'Scholar Outflow <b>Lab</b>', brandSub:'Where researchers from 13 countries ended up — every rate shown with its sample size.',
   skip:'Skip to content',
   fEyebrow:'The finding', fTitle:'Same destination, different starting points',
   fLede:'Researchers who started publishing in each country and later spent four or more years in the United States — the share whose last known affiliation is still there. Same sampling, same computation; compare relative levels, not the absolute percentages.',
@@ -558,7 +558,7 @@ en: {
 },
 zh: {
   title:'去向实验室 · 本土起步科研人员的流向',
-  brandLogo:'去向<b>实验室</b>', brandSub:'13 个国家起步的研究者最后去了哪里',
+  brandLogo:'去向<b>实验室</b>', brandSub:'13 个国家起步的研究者最后去了哪里——每个比率都标着样本量',
   skip:'跳到正文',
   fEyebrow:'核心发现', fTitle:'同一个目的地，起点不同，去向差好几倍',
   fLede:'在各国起步发表、之后在美国待满 4 年及以上的研究者中，最后已知任职机构仍在美国的比例。抽样与算法一致；比相对高低，不比绝对百分比。',
