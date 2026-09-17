@@ -37,6 +37,7 @@ a{color:var(--accent-text);text-underline-offset:.18em;text-decoration-thickness
 [hidden]{display:none!important}
 .skip{position:absolute;left:var(--space-2);top:-48px;background:var(--surface);padding:var(--space-2) var(--space-3);border:1px solid var(--border-input);border-radius:var(--radius-sm);z-index:var(--z-toast)}
 .skip:focus{top:var(--space-2)}
+.skip:focus-visible{outline-color:var(--on-band)}   /* the link shows on top of the dark top bar, so its ring is drawn on the band */
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;white-space:nowrap;clip-path:inset(50%)}
 .th-sort{all:unset;cursor:pointer}
 .th-sort:focus-visible,tr[data-id]:focus-visible,.m-card[data-id]:focus-visible{outline:var(--border-focus-width) solid var(--focus);outline-offset:2px}
@@ -262,6 +263,7 @@ table.data th.num button{justify-content:flex-end;width:100%}
 #nl-settings-button{flex:none}
 /* touch: the bar's own controls reach 44px too (the family rule only knows .btn / .nav a) */
 @media (pointer:coarse){.tab,.icon-btn,.lang-btn,.gh{min-height:var(--touch-min)}.icon-btn{min-width:var(--touch-min)}}
+@media (pointer:coarse){.origin-pick select{height:var(--touch-min)}}   /* the origin picker was 30px tall beside 44px neighbours */
 /* ===== end of family layer v3.1 ===== */
 </style>
 </head>
@@ -1566,6 +1568,11 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape') closeDrawer();
   trapDrawer(e);
 });
+// "#main" would replace the view's address (#inst?…), so the skip link moves focus without touching it
+document.getElementById('skip').addEventListener('click', e => { e.preventDefault(); document.getElementById('main').focus(); });
+// the top bar wraps on narrow screens; focus scrolls clear of its real height (family rule html{scroll-padding-top})
+{ const bar = document.querySelector('.topbar'), sticky = () => document.documentElement.style.setProperty('--sticky-top', bar.offsetHeight + 'px');
+  sticky(); new ResizeObserver(sticky).observe(bar); }
 // rows and cards open the institution from the keyboard too
 const openOnKey = e => { if(e.key !== 'Enter' && e.key !== ' ') return; const el = e.target.closest('[data-id]'); if(!el || el !== e.target) return; e.preventDefault(); openInst(el.dataset.id); };
 document.getElementById('inst-body').addEventListener('keydown', openOnKey);
