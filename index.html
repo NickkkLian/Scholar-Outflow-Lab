@@ -170,6 +170,9 @@ tbody tr{cursor:pointer}
 .m-num{text-align:right;min-width:96px}
 .m-num .big{font:var(--weight-semibold) var(--text-xl)/1.1 var(--font-mono);color:var(--text)}
 .m-num .sub{font-size:var(--text-2xs);color:var(--text-3);font-family:var(--font-mono)}
+/* the view's title, as on Bill's and Callback Desk's pages; Path Finder keeps its finding card's title instead (ruling
+   2026-09-16 20:38: the skip link and the focus fallback need a visible heading that names the view) */
+.view-h{font-size:var(--text-xl);font-weight:var(--weight-semibold);margin:0 0 var(--space-3)}
 .notice > p,.warn > p{margin:0;max-width:var(--measure)}   /* the box keeps the column width; the sentences keep a readable measure */
 #venue-wrap > p{max-width:var(--measure)}
 .warn{border-left:3px solid var(--warning);background:var(--surface);border-radius:var(--radius-sm);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--text-2);margin-bottom:var(--space-3)}
@@ -298,7 +301,7 @@ table.data th.num button{justify-content:flex-end;width:100%}
 </div></header>
 
 <main class="wrap" id="main" tabindex="-1">
-  <h1 class="sr-only" id="view-h" hidden></h1>
+  <h1 class="view-h" id="view-h" hidden></h1>
   <section class="finding" id="finding" hidden aria-labelledby="finding-h">
     <div class="eyebrow" id="finding-eyebrow"></div>
     <h1 id="finding-h"></h1>
@@ -1313,7 +1316,7 @@ function renderDoc(){
     <p>${esc(m.source)}，CC0 公共领域授权，免 API key。生成于 <code>${esc(m.generated_at)}</code>。</p>`;
 }
 
-/* one h1 per view: Path Finder has the finding's visible h1, the other views get the tab name for screen readers */
+/* one h1 per view: Path Finder has the finding's h1, the other views show their tab name as a visible title */
 function syncViewHeading(){
   const vh = document.getElementById('view-h');
   vh.textContent = t('tabs')[S.view] || '';
@@ -1574,7 +1577,14 @@ document.addEventListener('keydown', e => {
   trapDrawer(e);
 });
 // "#main" would replace the view's address (#inst?…), so the skip link moves focus without touching it
-document.getElementById('skip').addEventListener('click', e => { e.preventDefault(); document.getElementById('main').focus(); });
+// the first visible h1 in main, else the first visible h2, else main (ruling 2026-09-16 20:11 Q16); the address is left alone
+function firstHeading(){
+  const seen = x => { const r = x.getBoundingClientRect(), cs = getComputedStyle(x); return r.width > 2 && r.height > 2 && cs.visibility !== 'hidden' && !/inset\(50%\)|rect\(0/.test(cs.clipPath + cs.clip); };
+  const x = [...document.querySelectorAll('main h1')].find(seen) || [...document.querySelectorAll('main h2')].find(seen) || document.getElementById('main');
+  if(x && !x.hasAttribute('tabindex')) x.setAttribute('tabindex', '-1');
+  return x;
+}
+document.getElementById('skip').addEventListener('click', e => { e.preventDefault(); firstHeading().focus(); });
 // the top bar wraps on narrow screens; focus scrolls clear of its real height (family rule html{scroll-padding-top})
 { const bar = document.querySelector('.topbar'), sticky = () => document.documentElement.style.setProperty('--sticky-top', bar.offsetHeight + 'px');
   sticky(); new ResizeObserver(sticky).observe(bar); }
