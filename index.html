@@ -736,6 +736,9 @@ function syncHash(){
   if(S.stratum !== 'long' && ['country','inst','compare'].includes(S.view)) q.set('stratum', S.stratum);
   if(S.view === 'inst'){ if(S.fKind) q.set('kind', S.fKind); if(S.fCountry) q.set('country', S.fCountry); if(S.fField) q.set('field', S.fField); if(S.q) q.set('q', S.q); }
   if(S.view === 'venue'){ if(S.vField) q.set('field', S.vField); if(S.vType) q.set('type', S.vType); if(S.vQ) q.set('q', S.vQ); }
+  // Path Finder's four questions, the compare chart's destination and the open institution belong to the view too (v1 §9.14)
+  if(S.view === 'match'){ if(S.mField) q.set('field', S.mField); if(S.mCountry) q.set('dest', S.mCountry); if(S.mKind) q.set('kind', S.mKind); if(S.mStratum !== 'long') q.set('stay', S.mStratum); }
+  if(S.view === 'compare' && S.cmpDestPicked && S.cmpDest) q.set('dest', S.cmpDest);
   // sort state in the address too, so a shared link opens with the same row order; the default order is not written
   const dirName = d => d === 1 ? 'asc' : 'desc';
   if(S.view === 'inst' && !(S.sortKey === 'stay' && S.sortDir === -1)) q.set('sort', S.sortKey + ':' + dirName(S.sortDir));
@@ -750,6 +753,9 @@ function applyHashState(){
   const set = (id, v) => { const el = document.getElementById(id); if(el){ el.value = v; return el.value; } return v; };
   if(S.view === 'inst'){ S.fKind = set('f-kind', g('kind')); S.fCountry = set('f-country', g('country')); S.fField = set('f-field', g('field')); S.q = set('f-q', g('q')); }
   if(S.view === 'venue'){ S.vType = set('v-type', g('type')); S.vQ = set('v-q', g('q')); S.vField = g('field'); if(S.venues) S.vField = set('v-field', S.vField); }
+  if(S.view === 'match'){ S.mField = set('m-field', g('field')); S.mCountry = set('m-country', g('dest')); S.mKind = set('m-kind', g('kind'));
+    if(['short','long','long6','all'].includes(g('stay'))) S.mStratum = set('m-stratum', g('stay')); }
+  if(S.view === 'compare' && /^[a-z]{2}$/.test(g('dest'))){ S.cmpDest = g('dest'); S.cmpDestPicked = true; }
   const sm = /^([a-z]+):(asc|desc)$/.exec(g('sort')), sdir = sm && (sm[2] === 'asc' ? 1 : -1);
   if(sm && S.view === 'inst' && document.querySelector(`th[data-sort="${sm[1]}"]`)){ S.sortKey = sm[1]; S.sortDir = sdir; }
   if(sm && S.view === 'venue' && VSORT[sm[1]]){ S.vSortKey = sm[1]; S.vSortDir = sdir; }
@@ -1051,7 +1057,8 @@ function renderCompareChart(rows, list){
     <div class="ci-axis" aria-hidden="true"><span></span><span class="ticks">${[0,25,50,75,100].map(v => `<b style="left:${v}%">${v}%</b>`).join('')}</span><span></span></div>
     <p class="ci-cap">${t('cmpChartAxis')}</p>
   </div>`;
-  el.querySelector('#cmp-dest').onchange = e => { S.cmpDest = e.target.value; renderCompare(); };
+  // the chart is rebuilt on every pick, select included: focus goes back to the new select (it fell to <body>)
+  el.querySelector('#cmp-dest').onchange = e => { S.cmpDest = e.target.value; S.cmpDestPicked = true; renderCompare(); syncHash(); document.getElementById('cmp-dest').focus(); };
 }
 
 function ensureAllOrigins(){
@@ -1487,10 +1494,10 @@ document.getElementById('f-kind').onchange = e => { S.fKind = e.target.value; re
 document.getElementById('f-country').onchange = e => { S.fCountry = e.target.value; renderInsts(); syncHash(); };
 document.getElementById('f-field').onchange = e => { S.fField = e.target.value; renderInsts(); syncHash(); };
 document.getElementById('f-q').oninput = e => { S.q = e.target.value.trim(); renderInsts(); syncHash(); };
-document.getElementById('m-field').onchange = e => { S.mField = e.target.value; renderMatch(); };
-document.getElementById('m-country').onchange = e => { S.mCountry = e.target.value; renderMatch(); };
-document.getElementById('m-kind').onchange = e => { S.mKind = e.target.value; renderMatch(); };
-document.getElementById('m-stratum').onchange = e => { S.mStratum = e.target.value; renderMatch(); };
+document.getElementById('m-field').onchange = e => { S.mField = e.target.value; renderMatch(); syncHash(); };
+document.getElementById('m-country').onchange = e => { S.mCountry = e.target.value; renderMatch(); syncHash(); };
+document.getElementById('m-kind').onchange = e => { S.mKind = e.target.value; renderMatch(); syncHash(); };
+document.getElementById('m-stratum').onchange = e => { S.mStratum = e.target.value; renderMatch(); syncHash(); };
 document.getElementById('v-field').onchange = e => { S.vField = e.target.value; renderVenues(); syncHash(); };
 document.getElementById('v-type').onchange = e => { S.vType = e.target.value; renderVenues(); syncHash(); };
 document.getElementById('v-q').oninput = e => { S.vQ = e.target.value.trim(); renderVenues(); syncHash(); };
