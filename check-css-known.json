@@ -1,0 +1,24 @@
+{
+  "_what": "check-css.mjs 报了但已经看过并裁定过的条目：键是它报的名字，值是理由。理由必须是读者能自己复核的话；条目不再被报出来时这支检查会报 STALE 并变红，逼人清掉。",
+  "dead": {
+    "R1": "applied as class=\"tier ${it.tier}\" (index.html:817) and class=\"tier ${v.tier.replace('V','R')}\" (index.html:966) — the name is built at run time, so no static check can see it applied",
+    "R2": "applied as class=\"tier ${it.tier}\" (index.html:817) and class=\"tier ${v.tier.replace('V','R')}\" (index.html:966) — the name is built at run time, so no static check can see it applied",
+    "R3": "applied as class=\"tier ${it.tier}\" (index.html:817) and class=\"tier ${v.tier.replace('V','R')}\" (index.html:966) — the name is built at run time, so no static check can see it applied",
+    "R4": "applied as class=\"tier ${it.tier}\" (index.html:817) and class=\"tier ${v.tier.replace('V','R')}\" (index.html:966) — the name is built at run time, so no static check can see it applied",
+    "btn-ghost": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision.",
+    "btn-icon": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision.",
+    "data": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision.",
+    "nav": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision.",
+    "on": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision.",
+    "pill": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision.",
+    "plate": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision.",
+    "sr-only": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision."
+  },
+  "built": {
+    "${k===S.stratum?": "a class name finished at run time; the names it can produce all have rules in this file",
+    "${it.tier}": "a class name finished at run time; the names it can produce all have rules in this file",
+    "${cls}": "a class name finished at run time; the names it can produce all have rules in this file",
+    "${v.tier.replace(": "a class name finished at run time; the names it can produce all have rules in this file"
+  },
+  "unstyled": {}
+}

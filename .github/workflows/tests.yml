@@ -54,3 +54,15 @@ jobs:
         run: |
           python tests/make_fixture.py
           git diff --exit-code -- tests/fixtures
+
+  stylesheet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # every class this page puts on an element has a rule, and every rule is for a class it puts there
+      - run: node check-css.mjs
+      # and the check goes red when a rule is deleted
+      - run: node check-css.mjs --break
