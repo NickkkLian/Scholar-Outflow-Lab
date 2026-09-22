@@ -72,20 +72,34 @@ function classesInSources() {
       map.get(token).add(rel);
     };
     for (const m of text.matchAll(/class=["']([^"'\n]*)/g)) {
-      m[1].trim().split(/\s+/).forEach((p) => {
+      const parts = m[1].trim().split(/\s+/).filter(Boolean);
+      /* `'<span class="' + cls + '">'` — the attribute ends where the JS string does, so there is nothing to
+         capture and the name never appears in a class position at all. Without this it is invisible in both
+         directions: not counted as rendered, and its rule reported as dead. Eight of Query Mirror's SQL
+         highlighting colours were excused that way (found by an auditor, 2026-09-22). */
+      if (!parts.length) { into(partial, m[1] + '…(assembled)'); continue; }
+      parts.forEach((p) => {
         if (IN_CLASS_POSITION.test(p)) into(found, p);
         else if (p.includes('${')) into(partial, p);          // class="tag ${kind}" — the name is decided at run time
       });
     }
     /* Pages that build their DOM in code pass the class as a property rather than writing an attribute:
        h('div', { class: 'tablewrap' }, …). Without this the checker sees almost none of such a page's classes and
-       reports nearly every rule as dead — which is how it read the first time it was pointed at Query Mirror. */
-    for (const m of text.matchAll(/\bclass\s*:\s*(['"])([^'"\n]*)\1/g)) {
-      m[2].trim().split(/\s+/).forEach((p) => { if (IN_CLASS_POSITION.test(p)) into(found, p); });
+       reports nearly every rule as dead — which is how it read the first time it was pointed at Query Mirror.
+       The value is read as an expression, not as one string: `class: on ? 'on' : ''` and
+       `class: 'data' + (opts.compact ? ' compact' : '')` are both how a real page decides a class. */
+    for (const m of text.matchAll(/\bclass\s*:\s*([^,}\n]*)/g)) {
+      for (const lit of m[1].matchAll(/(['"`])((?:[^\\\n]|\\.)*?)\1/g)) {
+        lit[2].trim().split(/\s+/).forEach((p) => { if (IN_CLASS_POSITION.test(p)) into(found, p); });
+      }
     }
-    /* Set on an element directly rather than rendered into markup. */
-    for (const m of text.matchAll(/\.className\s*=\s*(['"])([^'"\n]*)\1/g)) {
-      m[2].trim().split(/\s+/).forEach((p) => { if (IN_CLASS_POSITION.test(p)) into(found, p); });
+    /* Set on an element directly rather than rendered into markup; the value is an expression here too. */
+    /* `=` and not `==`: `typeof el.className === 'string'` is a comparison, and reading it as an assignment made
+       the checker report a class called .string (found by an auditor, 2026-09-22). */
+    for (const m of text.matchAll(/\.className\s*=(?!=)\s*([^;\n]*)/g)) {
+      for (const lit of m[1].matchAll(/(['"`])((?:[^\\\n]|\\.)*?)\1/g)) {
+        lit[2].trim().split(/\s+/).forEach((p) => { if (IN_CLASS_POSITION.test(p)) into(found, p); });
+      }
     }
     for (const m of text.matchAll(/classList\.(?:add|remove|toggle|contains)\(([^)]*)\)/g)) {
       for (const lit of m[1].matchAll(/(['"])([^'"\n]*)\1/g)) {

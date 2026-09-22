@@ -1,24 +1,26 @@
 {
-  "_what": "check-css.mjs 报了但已经看过并裁定过的条目：键是它报的名字，值是理由。理由必须是读者能自己复核的话；条目不再被报出来时这支检查会报 STALE 并变红，逼人清掉。",
+  "_what": "check-css.mjs 报了但已经看过并裁定过的条目：键是它报的名字，值是理由。",
+  "_how": "理由必须只说**已经查证到的那一步**，不能说得比查法能支持的更死。条目不再被报出来时这支检查会报 STALE 并变红。",
+  "_history": "2026-09-22 审核员查出 `on` 的理由是假的——它由 `index.html:679` 的 `class=\"${k===S.stratum?'on':''}\"` 挂上去，而同一个文件的 built 那条恰好指的就是它，自相矛盾。",
   "dead": {
-    "R1": "applied as class=\"tier ${it.tier}\" (index.html:817) and class=\"tier ${v.tier.replace('V','R')}\" (index.html:966) — the name is built at run time, so no static check can see it applied",
-    "R2": "applied as class=\"tier ${it.tier}\" (index.html:817) and class=\"tier ${v.tier.replace('V','R')}\" (index.html:966) — the name is built at run time, so no static check can see it applied",
-    "R3": "applied as class=\"tier ${it.tier}\" (index.html:817) and class=\"tier ${v.tier.replace('V','R')}\" (index.html:966) — the name is built at run time, so no static check can see it applied",
-    "R4": "applied as class=\"tier ${it.tier}\" (index.html:817) and class=\"tier ${v.tier.replace('V','R')}\" (index.html:966) — the name is built at run time, so no static check can see it applied",
-    "btn-ghost": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision.",
-    "btn-icon": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision.",
-    "data": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision.",
-    "nav": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision.",
-    "on": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision.",
-    "pill": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision.",
-    "plate": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision.",
-    "sr-only": "verified 2026-09-22: no class attribute, class: property, classList call or className assignment in this repository ever puts this name on an element. It is a rule that came with the shared kit stylesheet and this product does not use it. Kept rather than deleted — removing kit rules is its own decision."
+    "R1": "由 `index.html:817` 的 `class=\"tier ${it.tier}\"` 与 `index.html:966` 的 `class=\"tier ${v.tier.replace('V','R')}\"` 挂上去，`it.tier` 取值 R1–R4（`.tier.R1{--tier-fill:100%}` 等四条在 121 行）。名字是运行时拼的，静态检查看不见它被挂上去。",
+    "R2": "由 `index.html:817` 的 `class=\"tier ${it.tier}\"` 与 `index.html:966` 的 `class=\"tier ${v.tier.replace('V','R')}\"` 挂上去，`it.tier` 取值 R1–R4（`.tier.R1{--tier-fill:100%}` 等四条在 121 行）。名字是运行时拼的，静态检查看不见它被挂上去。",
+    "R3": "由 `index.html:817` 的 `class=\"tier ${it.tier}\"` 与 `index.html:966` 的 `class=\"tier ${v.tier.replace('V','R')}\"` 挂上去，`it.tier` 取值 R1–R4（`.tier.R1{--tier-fill:100%}` 等四条在 121 行）。名字是运行时拼的，静态检查看不见它被挂上去。",
+    "R4": "由 `index.html:817` 的 `class=\"tier ${it.tier}\"` 与 `index.html:966` 的 `class=\"tier ${v.tier.replace('V','R')}\"` 挂上去，`it.tier` 取值 R1–R4（`.tier.R1{--tier-fill:100%}` 等四条在 121 行）。名字是运行时拼的，静态检查看不见它被挂上去。",
+    "on": "由 `index.html:679` 的 `class=\"${k===S.stratum?'on':''}\"` 挂上去（分层分段控件的选中态），CSS 在 `.seg button.on{background:var(--paper);…}`。名字在模板里是三元表达式拼出来的，静态检查只看得见 `${k===S.stratum?` 这一段——本文件 built 第一条就是它。",
+    "btn-ghost": "2026-09-22 实测：全仓 class 属性 / class: 属性 / classList / className 赋值四处都没有这个名字的**字面**出现。这支持「没有哪里把它写上去」，**不等于证明没有任何地方挂它**——运行时拼出来的名字这样是看不见的，本文件 built 那四条就是本仓的拼法所在。留着不删：删共享样式包带来的规则是另一个决定。",
+    "btn-icon": "2026-09-22 实测：全仓 class 属性 / class: 属性 / classList / className 赋值四处都没有这个名字的**字面**出现。这支持「没有哪里把它写上去」，**不等于证明没有任何地方挂它**——运行时拼出来的名字这样是看不见的，本文件 built 那四条就是本仓的拼法所在。留着不删：删共享样式包带来的规则是另一个决定。",
+    "data": "2026-09-22 实测：全仓 class 属性 / class: 属性 / classList / className 赋值四处都没有这个名字的**字面**出现。这支持「没有哪里把它写上去」，**不等于证明没有任何地方挂它**——运行时拼出来的名字这样是看不见的，本文件 built 那四条就是本仓的拼法所在。留着不删：删共享样式包带来的规则是另一个决定。",
+    "nav": "2026-09-22 实测：全仓 class 属性 / class: 属性 / classList / className 赋值四处都没有这个名字的**字面**出现。这支持「没有哪里把它写上去」，**不等于证明没有任何地方挂它**——运行时拼出来的名字这样是看不见的，本文件 built 那四条就是本仓的拼法所在。留着不删：删共享样式包带来的规则是另一个决定。",
+    "pill": "2026-09-22 实测：全仓 class 属性 / class: 属性 / classList / className 赋值四处都没有这个名字的**字面**出现。这支持「没有哪里把它写上去」，**不等于证明没有任何地方挂它**——运行时拼出来的名字这样是看不见的，本文件 built 那四条就是本仓的拼法所在。留着不删：删共享样式包带来的规则是另一个决定。",
+    "plate": "2026-09-22 实测：全仓 class 属性 / class: 属性 / classList / className 赋值四处都没有这个名字的**字面**出现。这支持「没有哪里把它写上去」，**不等于证明没有任何地方挂它**——运行时拼出来的名字这样是看不见的，本文件 built 那四条就是本仓的拼法所在。留着不删：删共享样式包带来的规则是另一个决定。",
+    "sr-only": "2026-09-22 实测：全仓 class 属性 / class: 属性 / classList / className 赋值四处都没有这个名字的**字面**出现。这支持「没有哪里把它写上去」，**不等于证明没有任何地方挂它**——运行时拼出来的名字这样是看不见的，本文件 built 那四条就是本仓的拼法所在。留着不删：删共享样式包带来的规则是另一个决定。"
   },
   "built": {
-    "${k===S.stratum?": "a class name finished at run time; the names it can produce all have rules in this file",
-    "${it.tier}": "a class name finished at run time; the names it can produce all have rules in this file",
-    "${cls}": "a class name finished at run time; the names it can produce all have rules in this file",
-    "${v.tier.replace(": "a class name finished at run time; the names it can produce all have rules in this file"
+    "${k===S.stratum?": "分层分段控件的选中态，产生 `on` 一个名字（见 dead.on）。",
+    "${it.tier}": "机构表的层级徽章，产生 R1–R4（见 dead.R1–R4）。",
+    "${v.tier.replace(": "期刊表的层级徽章，把 V1–V4 换成 R1–R4，产生的名字与上一条同一组。",
+    "${cls}": "`index.html:939` 的排序表头，`cls` 由四个调用处传入（1035/1036 与 964 行）：实测取到的字面是 `''`、`'num'`、`'num hide-s'`，以及 964 行从期刊表头表里取的那一列——这些名字在本文件别处都有字面出现，所以没有对应的 dead 条目。964 行那张表我逐项看过，取值同样落在 `num` / `hide-s` / 空 三种里。"
   },
   "unstyled": {}
 }
