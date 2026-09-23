@@ -545,7 +545,7 @@ en: {
   cmpNote:(r,o)=>`${r} destinations · ${o} origins`,
   cmpWarn:`Read it <b>across each row</b> — same destination, different origin, and the stay rate can differ several-fold.
     That is the one genuinely interesting thing this site has to show.<br>
-    ⚠️ Every origin uses the same sampling and computation, but the <b>sample frames differ</b>
+    <b>Caveat:</b> every origin uses the same sampling and computation, but the <b>sample frames differ</b>
     (each is "people who once published under that country's affiliation"), so compare
     <b>relative levels and direction</b>, not absolute values.`,
   cmpThDest:'Destination', cmpThGap:'Max gap',
@@ -626,7 +626,7 @@ zh: {
   cmpNote:(r,o)=>`${r} 个目的国 · ${o} 个起点`,
   cmpWarn:`读法：<b>同一行比着看</b>——同一个目的国，起点不同，留下率可以差好几倍。
     这是本站唯一真正有意思的地方。<br>
-    ⚠️ 各来源国的抽样口径一致，但**样本框本身不同**（都是「曾在本国机构署名发表」的人），
+    <b>注意：</b>各来源国的抽样口径一致，但<b>样本框本身不同</b>（都是「曾在本国机构署名发表」的人），
     所以跨来源比的是<b>相对高低与方向</b>，不是绝对值。`,
   cmpThDest:'目的国', cmpThGap:'最大差',
   covNote:(m,n,rate)=>`<b>${esc(m.origin_name_disp)}只有 ${n} 所机构达标，这不是故障。</b>
