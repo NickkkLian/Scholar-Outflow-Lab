@@ -176,8 +176,8 @@ tbody tr{cursor:pointer}
 .m-num{text-align:right;min-width:96px}
 .m-num .big{font:var(--weight-semibold) var(--text-xl)/1.1 var(--font-mono);color:var(--text)}
 .m-num .sub{font-size:var(--text-2xs);color:var(--text-3);font-family:var(--font-mono)}
-/* the view's title, as on Bill's and Callback Desk's pages; Path Finder keeps its finding card's title instead (ruling
-   2026-09-16 20:38: the skip link and the focus fallback need a visible heading that names the view) */
+/* the view's title, as on Bill's and Callback Desk's pages; Path Finder keeps its finding card's title instead
+   (the skip link and the focus fallback need a visible heading that names the view) */
 .view-h{font-size:var(--text-xl);font-weight:var(--weight-semibold);margin:0 0 var(--space-3)}
 .notice > p,.warn > p{margin:0;max-width:var(--measure)}   /* the box keeps the column width; the sentences keep a readable measure */
 #venue-wrap > p{max-width:var(--measure)}
@@ -242,10 +242,10 @@ tbody tr[tabindex]:focus-visible{outline-offset:-2px}
 }
 .topbar :focus-visible,.plate :focus-visible,.honest :focus-visible{outline-color:var(--on-band)}
 /* Focus scrolls clear of the sticky top bar: a control reached by Tab, or <main> after the skip link, never lands under
-   the bar (round-1 audits, 2026-09-16: the ring of <main> and most of a button sat behind it). A product whose sticky
+   the bar (2026-09-16: the ring of <main> and most of a button sat behind it). A product whose sticky
    chrome is taller than the bar, or wraps, sets --sticky-top to its measured height. */
 html{scroll-padding-top:calc(var(--sticky-top,var(--topbar-h)) + var(--space-3))}
-/* Native checkboxes and radios take the palette's accent instead of the browser's blue (ruling 2026-09-16 20:11 Q4:
+/* Native checkboxes and radios take the palette's accent instead of the browser's blue (contrast:
    checked fill against its surface 4.55–16.17:1, tick against the fill 4.71–16.34:1 across the three palettes, light and dark). */
 :root{accent-color:var(--accent)}
 .topbar ::selection,.plate ::selection,.honest ::selection{background:var(--on-band-2);color:var(--band)}
@@ -672,7 +672,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 // meta.origin_name arrives in Chinese from the data files; display per language.
 const originName = m => country(m.origin, m.origin_name);
 
-// render() does not rebuild these buttons, so the highlight stayed on the old stratum until a reload (round-1 audit); every
+// render() does not rebuild these buttons, so the highlight stayed on the old stratum until a reload; every
 // pick rebuilds the three groups, marks the pick with aria-pressed, and keeps focus on the button that was pressed
 function stratumSeg(el, onPick){
   el.innerHTML = ['short','long','long6','all'].map(k =>
@@ -753,7 +753,7 @@ function clearVenueFilters(){ S.vField = S.vType = S.vQ = ''; ['v-field','v-type
 let drawerOpener = null;
 // the drawer is a modal dialog: while it is open the rest of the page is inert (Tab cannot reach it, clicks do not land),
 // Tab and Shift+Tab wrap inside the panel, and the open institution is in the address. Before, Tab walked out of the open
-// drawer onto the top bar under the veil, and axe counted the drawer as content outside any landmark (round-1 audit).
+// drawer onto the top bar under the veil, and axe counted the drawer as content outside any landmark.
 const pageParts = () => [...document.body.children].filter(el => el.id !== 'drawer' && el.tagName !== 'SCRIPT');
 function closeDrawer(){ const d = document.getElementById('drawer'); if(!d.classList.contains('open')) return; d.classList.remove('open');
   pageParts().forEach(el => { el.inert = false; });
@@ -776,7 +776,7 @@ function syncHash(){
   if(S.stratum !== 'long' && ['country','inst','compare'].includes(S.view)) q.set('stratum', S.stratum);
   if(S.view === 'inst'){ if(S.fKind) q.set('kind', S.fKind); if(S.fCountry) q.set('country', S.fCountry); if(S.fField) q.set('field', S.fField); if(S.q) q.set('q', S.q); }
   if(S.view === 'venue'){ if(S.vField) q.set('field', S.vField); if(S.vType) q.set('type', S.vType); if(S.vQ) q.set('q', S.vQ); }
-  // Path Finder's four questions, the compare chart's destination and the open institution belong to the view too (v1 §9.14)
+  // Path Finder's four questions, the compare chart's destination and the open institution belong to the view too
   if(S.view === 'match'){ if(S.mField) q.set('field', S.mField); if(S.mCountry) q.set('dest', S.mCountry); if(S.mKind) q.set('kind', S.mKind); if(S.mStratum !== 'long') q.set('stay', S.mStratum); }
   if(S.view === 'compare' && S.cmpDestPicked && S.cmpDest) q.set('dest', S.cmpDest);
   if(S.openInst && (S.view === 'inst' || S.view === 'match')) q.set('open', S.openInst);
@@ -893,7 +893,7 @@ function renderMatch(){
   const cName = cRec ? country(cRec.cc, cRec.country) : t('anyDest');
 
   if(!rows.length){
-    // title, reason and a way out (it was one line with no button; round-1 audit)
+    // title, reason and a way out (it was one line with no button)
     const box = document.createElement('div'); box.className = 'warn'; const para = document.createElement('p');
     para.append(emptyState('matchNoneT', 'matchNone', widenMatch, 'matchWiden')); box.append(para);
     sum.replaceChildren(box);
@@ -987,7 +987,7 @@ function renderCompare(){
   const missing = list.filter(o => !S.allData[o.cc]);
   const failed = missing.filter(o => S.originErr && S.originErr[o.cc]);
   if(failed.length){
-    // a file that did not load used to leave "Loading per-origin data…" on screen for good (round-1 audit)
+    // a file that did not load used to leave "Loading per-origin data…" on screen for good
     document.getElementById('cmp-chart').innerHTML = '';
     wrap.innerHTML = `<div class="warn" role="alert"><p>${esc(t('cmpFail')(failed.map(o => country(o.cc, o.name)).join(', '), failed.map(o => S.originErr[o.cc]).join('; ')))}
       <button type="button" class="btn btn-sm" id="cmp-retry">${t('tryAgain')}</button></p></div>`;
@@ -1021,7 +1021,7 @@ function renderCompare(){
   document.getElementById('cmp-note').textContent = t('cmpNote')(rows.length, list.length);
   renderCompareChart(rows, list);
   // the table can be sorted by destination, by one origin's stay rate or by the largest gap; a third click returns to the
-  // default order by combined sample size, which is not a column (designer ruling 2026-09-16 17:05 Q3)
+  // default order by combined sample size, which is not a column
   const oi = list.findIndex(o => o.cc === S.cSortKey);
   const cval = r => S.cSortKey === 'dest' ? country(r.dc, r.name) : S.cSortKey === 'gap' ? r.gap : oi >= 0 && r.cells[oi] ? r.cells[oi].stay : null;
   const shown = !S.cSortKey || (S.cSortKey !== 'dest' && S.cSortKey !== 'gap' && oi < 0) ? rows : rows.slice().sort((a, b) => {
@@ -1589,7 +1589,7 @@ document.addEventListener('keydown', e => {
   trapDrawer(e);
 });
 // "#main" would replace the view's address (#inst?…), so the skip link moves focus without touching it
-// the first visible h1 in main, else the first visible h2, else main (ruling 2026-09-16 20:11 Q16); the address is left alone
+// the first visible h1 in main, else the first visible h2, else main; the address is left alone
 function firstHeading(){
   const seen = x => { const r = x.getBoundingClientRect(), cs = getComputedStyle(x); return r.width > 2 && r.height > 2 && cs.visibility !== 'hidden' && !/inset\(50%\)|rect\(0/.test(cs.clipPath + cs.clip); };
   const x = [...document.querySelectorAll('main h1')].find(seen) || [...document.querySelectorAll('main h2')].find(seen) || document.getElementById('main');

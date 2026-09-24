@@ -79,7 +79,7 @@ function classesInSources() {
       /* `'<span class="' + cls + '">'` — the attribute ends where the JS string does, so there is nothing to
          capture and the name never appears in a class position at all. Without this it is invisible in both
          directions: not counted as rendered, and its rule reported as dead. Eight of Query Mirror's SQL
-         highlighting colours were excused that way (found by an auditor, 2026-09-22). */
+         highlighting colours were excused that way (found 2026-09-22). */
       if (!parts.length) { into(partial, m[1] + '…(assembled)'); continue; }
       parts.forEach((p) => {
         if (IN_CLASS_POSITION.test(p)) into(found, p);
@@ -98,7 +98,7 @@ function classesInSources() {
     }
     /* Set on an element directly rather than rendered into markup; the value is an expression here too. */
     /* `=` and not `==`: `typeof el.className === 'string'` is a comparison, and reading it as an assignment made
-       the checker report a class called .string (found by an auditor, 2026-09-22). */
+       the checker report a class called .string (found 2026-09-22). */
     for (const m of text.matchAll(/\.className\s*=(?!=)\s*([^;\n]*)/g)) {
       for (const lit of m[1].matchAll(/(['"`])((?:[^\\\n]|\\.)*?)\1/g)) {
         lit[2].trim().split(/\s+/).forEach((p) => { if (IN_CLASS_POSITION.test(p)) into(found, p); });
