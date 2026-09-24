@@ -177,7 +177,7 @@ def pick_source(origin):
 
     Upgrading to v2 means re-harvesting the whole file across several days of quota. Mid-way,
     `careers_cn.jsonl` holds only part of the population; computing from it directly would turn
-    the live site from 180k authors / 175 institutions into 19k / 3 — **this actually happened**
+    mainland China on the live site from 180k authors / 175 institutions into 19k / 3 — **this actually happened**
     (the 2026-07-28 scheduled run pushed exactly that). The rule is dumb but reliable: more rows
     wins. Once the new harvest overtakes the backup it switches automatically, with no extra
     state flag to get out of sync.

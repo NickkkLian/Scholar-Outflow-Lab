@@ -1158,7 +1158,7 @@ function renderDoc(){
       <li><b>OpenAlex</b><span>authors, institutions and sources APIs · CC0, no key</span></li>
       <li><code>institutions.py</code><span>whitelist: ROR ID, output floor, generic-name blacklist</span></li>
       <li><code>harvest.py</code><span>sampled author careers per origin, resumable</span></li>
-      <li><code>compute.py</code><span>arrivals, four outcomes, strata, Wilson bounds, tiers; refuses partial data</span></li>
+      <li><code>compute.py</code><span>arrivals, four outcomes, strata, Wilson bounds, tiers; never publishes a half-finished re-harvest</span></li>
       <li><b>This page</b><span>reads the JSON files below; nothing runs on a server</span></li>
     </ol>
     <p class="pipe-note"><code>venues.py</code> builds the venue board from the same API, and <code>daily.sh</code> runs the
@@ -1250,7 +1250,7 @@ function renderDoc(){
           其中 <code>${m.movers.toLocaleString()}</code> 人（${pc(m.mover_rate)}）有过这样的经历。</li>
       <li><b>观察期</b>：只统计到达年 ≤ <code>${m.arrival_year_cutoff}</code> 的人，留足 ${m.followup_years} 年，
           否则「还没来得及走」会被误算成留下。</li>
-      <li><b>机构白名单</b>：只认有 ROR 编号、且产出量达标的高校（共 ${m.whitelist_size.toLocaleString()} 所），
+      <li><b>机构白名单</b>：只认有 ROR 编号、且产出量达标的机构（共 ${m.whitelist_size.toLocaleString()} 所），
           用来滤掉 OpenAlex 从署名字符串里解析出来的幽灵机构。</li>
     </ul>
 
@@ -1259,7 +1259,7 @@ function renderDoc(){
       <li><b>OpenAlex</b><span>学者、机构、期刊接口 · CC0，免 key</span></li>
       <li><code>institutions.py</code><span>白名单：ROR 编号、产出下限、通用名黑名单</span></li>
       <li><code>harvest.py</code><span>按来源国抽样学者履历，可断点续跑</span></li>
-      <li><code>compute.py</code><span>到达、四分类、分层、Wilson 下界、Tier；数据不全拒绝发布</span></li>
+      <li><code>compute.py</code><span>到达、四分类、分层、Wilson 下界、Tier；重抓未完成时不发布半截数据</span></li>
       <li><b>本页</b><span>只读下面这些 JSON，没有服务器在算</span></li>
     </ol>
     <p class="pipe-note"><code>venues.py</code> 用同一个接口生成期刊会议榜；<code>daily.sh</code> 在每天 1,000 次免费额度内排着跑。</p>

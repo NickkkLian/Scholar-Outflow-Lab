@@ -74,8 +74,8 @@ flowchart LR
   VJ --> PAGE
 ```
 
-`compute.py` refuses to publish when the careers file holds only part of a harvest, and
-`scripts/daily.sh` runs the rounds on a schedule within the free quota.
+`compute.py` never publishes a half-finished re-harvest (it keeps using the previous file until the new
+one has more rows), and `scripts/daily.sh` runs the rounds on a schedule within the free quota.
 
 ### Download the data
 
@@ -148,7 +148,7 @@ data/data-venues.json   journal / conference board (13,086 venues, 26 fields)
 data/origins.json       manifest of generated origins — drives the origin switcher
 scripts/harvest.py      sample author careers from OpenAlex → data/careers_<cc>.jsonl (resumable)
 scripts/institutions.py institution whitelist (ROR + output floor + generic-name blacklist)
-scripts/compute.py      aggregate → data/data-<cc>.json; idempotent, refuses to publish partial data
+scripts/compute.py      aggregate → data/data-<cc>.json; idempotent, never publishes a half-finished re-harvest
 scripts/venues.py       venue board, ranked within field by h-index
 scripts/traffic.py      weekly snapshot of GitHub traffic (the API only keeps 14 days)
 scripts/daily.sh        the scheduled round, ordered by cost and unlock value

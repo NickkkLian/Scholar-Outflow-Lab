@@ -1,7 +1,6 @@
 {
   "_what": "Items check-css.mjs reports that have been looked at and ruled on: the key is the name it reports, the value is the reason.",
   "_how": "A reason must state only the step that was actually verified, never more than the check behind it can support. When an entry is no longer reported, this check reports it as STALE and fails.",
-  "_history": "2026-09-22: the reason given for `on` was found to be wrong. `on` is set by `class=\"${k===S.stratum?'on':''}\"` at `index.html:679`, and the `built` entry of this same file points at exactly that expression, so the two contradicted each other.",
   "dead": {
     "R1": "Set by `class=\"tier ${it.tier}\"` at `index.html:817` and `class=\"tier ${v.tier.replace('V','R')}\"` at `index.html:966`; `it.tier` takes the values R1–R4 (the four rules `.tier.R1{--tier-fill:100%}` and the rest are on line 121). The name is built at run time, so a static check cannot see it being set.",
     "R2": "Set by `class=\"tier ${it.tier}\"` at `index.html:817` and `class=\"tier ${v.tier.replace('V','R')}\"` at `index.html:966`; `it.tier` takes the values R1–R4 (the four rules `.tier.R1{--tier-fill:100%}` and the rest are on line 121). The name is built at run time, so a static check cannot see it being set.",
