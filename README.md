@@ -215,9 +215,9 @@ at the next one.
 Three guards exist because each corresponding failure actually happened:
 
 - **Never publish partial data.** During a multi-day re-harvest, `compute.py` uses whichever of
-  the new file and its backup has more rows. The rule is dumb on purpose. The day before it
-  existed, a harvest hit the quota at 19k of 180k authors, the recompute ran anyway, and the
-  live site shrank from 175 institutions to 3.
+  the new file and its backup has more rows. The rule is dumb on purpose. It went in the same
+  evening that a harvest hit the quota at 19k of 180k authors and the recompute ran anyway: on
+  the live site, mainland China, the largest origin, shrank from 175 institutions to 3.
 - **Only commit when the substance changed.** The generated timestamp is excluded from the
   comparison. The daily job's first trial run committed and pushed a data file whose only change
   was that timestamp; left alone, every scheduled run would have done the same. The job also
