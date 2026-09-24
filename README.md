@@ -68,8 +68,8 @@ flowchart LR
   OA --> HARV["scripts/harvest.py<br/>sampled careers per origin"]
   INST --> COMP["scripts/compute.py<br/>outcomes · strata · Wilson bounds · tiers"]
   HARV --> COMP
-  COMP --> DATA["data-{cc}.json + origins.json"]
-  OA --> VEN["scripts/venues.py"] --> VJ["data-venues.json"]
+  COMP --> DATA["data/data-{cc}.json<br/>data/origins.json"]
+  OA --> VEN["scripts/venues.py"] --> VJ["data/data-venues.json"]
   DATA --> PAGE["index.html"]
   VJ --> PAGE
 ```
@@ -79,12 +79,12 @@ flowchart LR
 
 ### Download the data
 
-The published JSON is the dataset, derived from OpenAlex's CC0 records. Every file sits next to the page:
+The published JSON is the dataset, derived from OpenAlex's CC0 records. Every file sits in `data/`:
 `data-{cc}.json` (one per origin, e.g.
-[data-cn.json](https://nickkklian.github.io/Scholar-Outflow-Lab/data-cn.json)),
-[origins.json](https://nickkklian.github.io/Scholar-Outflow-Lab/origins.json) (the origins and their
+[data-cn.json](https://nickkklian.github.io/Scholar-Outflow-Lab/data/data-cn.json)),
+[origins.json](https://nickkklian.github.io/Scholar-Outflow-Lab/data/origins.json) (the origins and their
 sample sizes) and
-[data-venues.json](https://nickkklian.github.io/Scholar-Outflow-Lab/data-venues.json) (the venue
+[data-venues.json](https://nickkklian.github.io/Scholar-Outflow-Lab/data/data-venues.json) (the venue
 board). The Methodology page on the site links all of them.
 
 ## Three corrections that rescued the result
@@ -138,24 +138,25 @@ Zero cost, zero accounts, zero third-party packages.
 | Data | OpenAlex REST API, CC0 | Free, no key; 1,000 requests/day on the free tier |
 | Processing | Python 3 standard library only | Nothing to install; the pipeline is the documentation |
 | Front end | One static `index.html`, vanilla JS | Mobile-first, dark-mode aware, bilingual, deploys straight to GitHub Pages |
-| Hosting | GitHub Pages from `main` | The computed JSON lives next to the page; no server |
-| Automation | launchd + a shell script | Runs once a day within the quota; see below |
+| Hosting | GitHub Pages from `main` | The computed JSON sits in `data/` beside the page; no server |
+| Automation | launchd + a shell script | Runs once a week within the quota; see below |
 
 ```
 index.html              single-file front end (EN/中文 toggle; data labels localised client-side)
-data-<cc>.json          computed metrics per origin country — what the page reads
-data-venues.json        journal / conference board (13,086 venues, 26 fields)
-origins.json            manifest of generated origins — drives the origin switcher
+data/data-<cc>.json     computed metrics per origin country — what the page reads
+data/data-venues.json   journal / conference board (13,086 venues, 26 fields)
+data/origins.json       manifest of generated origins — drives the origin switcher
 scripts/harvest.py      sample author careers from OpenAlex → data/careers_<cc>.jsonl (resumable)
 scripts/institutions.py institution whitelist (ROR + output floor + generic-name blacklist)
-scripts/compute.py      aggregate → data-<cc>.json; idempotent, refuses to publish partial data
+scripts/compute.py      aggregate → data/data-<cc>.json; idempotent, refuses to publish partial data
 scripts/venues.py       venue board, ranked within field by h-index
-scripts/traffic.py      daily snapshot of GitHub traffic (the API only keeps 14 days)
+scripts/traffic.py      weekly snapshot of GitHub traffic (the API only keeps 14 days)
 scripts/daily.sh        the scheduled round, ordered by cost and unlock value
+tools/check-css.mjs     finds classes the page renders with no rule, and rules nothing renders (run in CI)
 ```
 
-`data/` (hundreds of MB of intermediate JSONL) is gitignored; the site files sit in the repo root
-because GitHub Pages serves `main`'s root.
+The page sits in the repo root because GitHub Pages serves `main`'s root. `data/` holds the published
+JSON, which is committed, and the intermediate JSONL (hundreds of MB), which is gitignored.
 
 ## Reproduce
 
@@ -206,9 +207,10 @@ test that has stopped guarding anything is noticed.
 
 ## Automation, and what it learned the hard way
 
-`scripts/daily.sh` runs once a day (launchd, 18:00 local — after the 00:00 UTC quota reset in
-both daylight-saving regimes). Tasks are ordered "cheapest and most unlocking first", every step
-is resumable, and a day that runs out of quota simply continues the next day.
+`scripts/daily.sh` runs once a week (launchd, Mondays 18:00 local — after the 00:00 UTC quota reset
+in both daylight-saving regimes); until early September it ran every day. Tasks are ordered "cheapest
+and most unlocking first", every step is resumable, and a run that runs out of quota simply continues
+at the next one.
 
 Three guards exist because each corresponding failure actually happened:
 
@@ -217,14 +219,14 @@ Three guards exist because each corresponding failure actually happened:
   existed, a harvest hit the quota at 19k of 180k authors, the recompute ran anyway, and the
   live site shrank from 175 institutions to 3.
 - **Only commit when the substance changed.** The generated timestamp is excluded from the
-  comparison; otherwise the daily job would produce a timestamp-only commit every day and turn
-  the history into noise. The job also stages data files only — never source — so a data commit
+  comparison; otherwise every scheduled run would produce a timestamp-only commit and turn the
+  history into noise. The job also stages data files only — never source — so a data commit
   can't silently carry hand-made front-end changes under a misleading message.
 - **Derive the country list from the files on disk.** Two origins were once harvested in full and
   then never computed or published, because a hard-coded list in the recompute loop wasn't
   updated. The loop now scans for `careers_*.jsonl`.
 
-The job is now in maintenance mode: all queued work is complete, so a daily run does exactly two
+The job is now in maintenance mode: all queued work is complete, so a weekly run does exactly two
 things — snapshot traffic and run an idempotent recompute — with zero OpenAlex quota and zero
 attention required.
 

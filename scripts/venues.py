@@ -9,7 +9,7 @@ Zero cost: the same CC0 public data.
    unlimited. This script needs roughly 80–120 requests; make sure enough of the day's quota is
    left before running it (the harvester is the hungry one).
 
-Output: data-venues.json
+Output: data/data-venues.json
 Usage:  OPENALEX_MAILTO=you@example.com python3 scripts/venues.py
 """
 
@@ -32,7 +32,7 @@ MIN_H = 5                 # a very low h-index usually means it isn't an academi
 # percentile lines. Sitting at the bottom isn't harmless: percentiles are cut by entry count,
 # so junk pushes real venues upward.
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-WEB = ROOT   # The site lives in the repo root: GitHub Pages serves main's root directory
+WEB = os.path.join(ROOT, "data")   # the published JSON: Pages serves main's root and the page reads data/
 
 # Stored field labels (Chinese); the web UI maps them to English client-side by exact key, and
 # the English original is kept in `field_en`. Keep in step with the front-end dictionary.

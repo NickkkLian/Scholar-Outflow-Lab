@@ -63,6 +63,6 @@ jobs:
         with:
           node-version: "22"
       # every class this page puts on an element has a rule, and every rule is for a class it puts there
-      - run: node check-css.mjs
+      - run: node tools/check-css.mjs
       # and the check goes red when a rule is deleted
-      - run: node check-css.mjs --break
+      - run: node tools/check-css.mjs --break

@@ -49,7 +49,7 @@ say "===== start ====="
 say "[1/5] traffic snapshot (the traffic API keeps 14 days; unsaved means lost)"
 python3 scripts/traffic.py >>"$LOG" 2>&1 || say "      fetch failed (usually the token lacks Administration:Read); continuing"
 
-if [ ! -f data-venues.json ]; then
+if [ ! -f data/data-venues.json ]; then
   say "[2/5] venue board"
   python3 scripts/venues.py >>"$LOG" 2>&1 && say "      generated" || say "      not enough quota; retrying tomorrow"
 else
@@ -136,9 +136,9 @@ done
 # A previous version swept index.html in as well, so hand-made front-end changes got labelled
 # "automated data refresh": a commit message at odds with its content, which misleads anyone
 # reading the history later.
-if [ -n "$(git status --porcelain -- 'data-*.json' origins.json)" ]; then
+if [ -n "$(git status --porcelain -- 'data/data-*.json' data/origins.json)" ]; then
   say "-- data changed; committing and pushing"
-  git add -A -- 'data-*.json' origins.json
+  git add -A -- 'data/data-*.json' data/origins.json
   git -c user.name="Claude" -c user.email="noreply@anthropic.com" \
       commit -q -m "Automated data refresh $(date '+%F')" >>"$LOG" 2>&1
   if git push -q origin main >>"$LOG" 2>&1; then

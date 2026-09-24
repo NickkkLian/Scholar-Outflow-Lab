@@ -25,7 +25,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));
+/* The site is the folder this file sits in, or the one above it when the file is kept in tools/ (so a repository root
+   can hold only the site). check-css-known.json stays beside this file either way. */
+const FILE_DIR = path.dirname(fileURLToPath(import.meta.url));
+const HERE = path.basename(FILE_DIR) === 'tools' ? path.dirname(FILE_DIR) : FILE_DIR;
 const IGNORE = new Set(['node_modules', '.git', 'vendor', '__pycache__', 'dist', 'build']);
 
 /* The files are found rather than listed, so this file is the same in every repository that uses it: some keep their
@@ -48,7 +51,7 @@ const STYLE_BLOCK = /<style[^>]*>([\s\S]*?)<\/style>/g;
    is printed with its reason and does not fail the run; an item in the file that is no longer reported fails, so a
    list cannot quietly outlive what it excused. Every entry needs a reason a reader can check — "known" is not one. */
 function known() {
-  try { return JSON.parse(fs.readFileSync(path.join(HERE, 'check-css-known.json'), 'utf8')); }
+  try { return JSON.parse(fs.readFileSync(path.join(FILE_DIR, 'check-css-known.json'), 'utf8')); }
   catch { return {}; }
 }
 

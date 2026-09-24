@@ -1,4 +1,4 @@
-"""Invariants on the data the live site actually serves: every data-<cc>.json in the repo root and origins.json.
+"""Invariants on the data the live site actually serves: every data-<cc>.json in data/ and data/origins.json.
 
 These run on the real 13-origin output, not a fixture, so a bad recompute is caught before it is published.
 """
@@ -8,7 +8,8 @@ import os
 import re
 import unittest
 
-ROOT = os.environ.get("SOL_DATA_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # mutations.py points this at broken copies
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.environ.get("SOL_DATA_ROOT") or os.path.join(REPO, "data")  # mutations.py points this at broken copies
 OUTCOMES = ("stay", "dual", "ret", "onward")
 ROUNDING = 4 * 0.00005 + 1e-9        # four fractions each rounded to 4 decimals
 
@@ -134,7 +135,7 @@ class TestHeadlineFinding(unittest.TestCase):
                 self.assertEqual((us["stay"], us["n"]), (stay, n))
 
     def test_readme_quotes_the_same_numbers(self):
-        with open(os.path.join(ROOT, "README.md"), encoding="utf-8") as f:
+        with open(os.path.join(REPO, "README.md"), encoding="utf-8") as f:
             readme = f.read()
         for cc, stay, n in self.HEADLINE:
             with self.subTest(cc=cc):

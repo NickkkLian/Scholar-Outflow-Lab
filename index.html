@@ -1046,7 +1046,7 @@ function renderCompare(){
 const FINDING_ORIGINS = ['ir','in','br','cn'];
 function loadData(cc){
   if(S.allData[cc]) return Promise.resolve(S.allData[cc]);
-  return fetch(`data-${cc}.json`).then(r => { if(!r.ok) throw new Error(`data-${cc}.json ${r.status}`); return r.json(); })
+  return fetch(`data/data-${cc}.json`).then(r => { if(!r.ok) throw new Error(`data-${cc}.json ${r.status}`); return r.json(); })
     .then(d => (S.allData[cc] = d));
 }
 function renderFinding(){
@@ -1112,7 +1112,7 @@ function ensureAllOrigins(){
   if(!todo.length) return Promise.resolve();
   S.originErr = S.originErr || {};
   return Promise.all(todo.map(o =>
-    fetch(`data-${o.cc}.json`).then(r => { if(!r.ok) throw new Error(`data-${o.cc}.json ${r.status}`); return r.json(); })
+    fetch(`data/data-${o.cc}.json`).then(r => { if(!r.ok) throw new Error(`data-${o.cc}.json ${r.status}`); return r.json(); })
       .then(d => { S.allData[o.cc] = d; delete S.originErr[o.cc]; })
       .catch(e => { S.originErr[o.cc] = e.message; })
   )).then(() => { if(S.view === 'compare') renderCompare(); });
@@ -1124,7 +1124,7 @@ function dataLinks(){
   if(list.length < 2) return '';
   const label = LANG === 'en' ? 'Every origin:' : '全部来源国：';
   return `<p class="dl-all">${label} ` + list.map(o =>
-    `<a href="data-${esc(o.cc)}.json" download>${esc(country(o.cc, o.name))}</a>`).join(' · ') + '</p>';
+    `<a href="data/data-${esc(o.cc)}.json" download>${esc(country(o.cc, o.name))}</a>`).join(' · ') + '</p>';
 }
 
 function renderDoc(){
@@ -1166,9 +1166,9 @@ function renderDoc(){
 
     <h2>Download the data</h2>
     <ul>
-      <li><a href="data-${esc(m.origin)}.json" download>data-${esc(m.origin)}.json</a> — every number on this page for ${on}</li>
-      <li><a href="origins.json" download>origins.json</a> — the ${(S.originList || []).length || 'available'} origins with their sample sizes</li>
-      <li><a href="data-venues.json" download>data-venues.json</a> — the journal and conference board</li>
+      <li><a href="data/data-${esc(m.origin)}.json" download>data-${esc(m.origin)}.json</a> — every number on this page for ${on}</li>
+      <li><a href="data/origins.json" download>origins.json</a> — the ${(S.originList || []).length || 'available'} origins with their sample sizes</li>
+      <li><a href="data/data-venues.json" download>data-venues.json</a> — the journal and conference board</li>
     </ul>
     ${dataLinks()}
 
@@ -1266,9 +1266,9 @@ function renderDoc(){
 
     <h2>下载数据</h2>
     <ul>
-      <li><a href="data-${esc(m.origin)}.json" download>data-${esc(m.origin)}.json</a> —— ${on}这一页上的全部数字</li>
-      <li><a href="origins.json" download>origins.json</a> —— ${(S.originList || []).length || '全部'}个来源国及样本量</li>
-      <li><a href="data-venues.json" download>data-venues.json</a> —— 期刊会议榜</li>
+      <li><a href="data/data-${esc(m.origin)}.json" download>data-${esc(m.origin)}.json</a> —— ${on}这一页上的全部数字</li>
+      <li><a href="data/origins.json" download>origins.json</a> —— ${(S.originList || []).length || '全部'}个来源国及样本量</li>
+      <li><a href="data/data-venues.json" download>data-venues.json</a> —— 期刊会议榜</li>
     </ul>
     ${dataLinks()}
 
@@ -1461,7 +1461,7 @@ document.getElementById('lang-btn').onclick = () => {
 
 // The venue data is optional: if it hasn't been generated, that page explains
 // itself instead of taking the whole site down.
-fetch('data-venues.json').then(r => r.ok ? r.json() : null).then(v => {
+fetch('data/data-venues.json').then(r => r.ok ? r.json() : null).then(v => {
   S.venues = v;
   if(v){
     document.getElementById('v-field').innerHTML =
@@ -1477,7 +1477,7 @@ function loadOrigin(cc){
   const ld = document.getElementById('loading');
   ld.hidden = false; delete ld.dataset.err;
   ld.textContent = t('loading');
-  return fetch(`data-${cc}.json`).then(r => {
+  return fetch(`data/data-${cc}.json`).then(r => {
     if(!r.ok) throw new Error(`data-${cc}.json ${r.status}`);
     return r.json();
   }).then(d => {
@@ -1508,7 +1508,7 @@ function loadOrigin(cc){
 }
 
 // Origin list: the switcher only shows with more than one origin.
-fetch('origins.json').then(r => r.ok ? r.json() : null).then(m => {
+fetch('data/origins.json').then(r => r.ok ? r.json() : null).then(m => {
   const list = (m && m.origins) || [];
   S.originList = list;
   if(list.length > 1){

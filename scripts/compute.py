@@ -40,7 +40,7 @@ import sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 DATA = os.path.join(ROOT, "data")
-WEB = ROOT   # The site lives in the repo root: GitHub Pages serves main's root directory
+WEB = os.path.join(ROOT, "data")   # the published JSON: Pages serves main's root and the page reads data/
 
 THIS_YEAR = datetime.date.today().year
 FOLLOWUP = 5

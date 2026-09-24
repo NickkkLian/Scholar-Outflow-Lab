@@ -88,9 +88,9 @@ def main():
         for label, cc, fn, test in DATA:
             root = os.path.join(td, f"data-{cc}-{fn.__name__}")
             os.makedirs(root)
-            for f in os.listdir(ROOT):
-                if f.startswith("data-") and f.endswith(".json") or f in ("origins.json", "README.md"):
-                    shutil.copy(os.path.join(ROOT, f), root)
+            for f in os.listdir(os.path.join(ROOT, "data")):
+                if f.startswith("data-") and f.endswith(".json") or f == "origins.json":
+                    shutil.copy(os.path.join(ROOT, "data", f), root)
             p = os.path.join(root, f"data-{cc}.json")
             d = json.load(open(p)); fn(d); json.dump(d, open(p, "w"))
             caught = run(test, {"SOL_DATA_ROOT": root}) != 0
