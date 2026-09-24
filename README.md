@@ -219,9 +219,10 @@ Three guards exist because each corresponding failure actually happened:
   existed, a harvest hit the quota at 19k of 180k authors, the recompute ran anyway, and the
   live site shrank from 175 institutions to 3.
 - **Only commit when the substance changed.** The generated timestamp is excluded from the
-  comparison; otherwise every scheduled run would produce a timestamp-only commit and turn the
-  history into noise. The job also stages data files only — never source — so a data commit
-  can't silently carry hand-made front-end changes under a misleading message.
+  comparison. The daily job's first trial run committed and pushed a data file whose only change
+  was that timestamp; left alone, every scheduled run would have done the same. The job also
+  stages data files only — never source: an early version staged the page as well, and a
+  hand-made front-end change went out under a "data update" message.
 - **Derive the country list from the files on disk.** Two origins were once harvested in full and
   then never computed or published, because a hard-coded list in the recompute loop wasn't
   updated. The loop now scans for `careers_*.jsonl`.
