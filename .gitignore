@@ -11,3 +11,6 @@ scripts/__pycache__/
 # as an uncommitted deletion for ever after)
 data/.daily.lock/
 __pycache__/
+
+# machine-local helpers the scheduled job calls if they exist (scripts/prepush-check.local); never published
+scripts/*.local

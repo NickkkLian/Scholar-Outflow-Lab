@@ -19,4 +19,4 @@ done
 
 echo
 echo "Done. Preview locally:  python3 -m http.server 8791   →  http://localhost:8791"
-echo "Publish:                git add -A && git commit -m 'Refresh data' && git push"
+echo "Publish:                the next scheduled run (scripts/daily.sh) commits and pushes the changed data files"

@@ -1,9 +1,10 @@
 #!/bin/bash
-# One automated round per day (triggered by launchd: com.scholaroutflow.daily).
+# One automated round, triggered by launchd (com.scholaroutflow.daily): once a week, Mondays at
+# 18:00 local; until early September it ran every day.
 #
-# Why daily: the OpenAlex free tier is 1,000 requests per day, resetting at 00:00 UTC.
-# Scheduled for 18:00 local (PDT = 01:00 UTC / PST = 02:00 UTC), safely after the reset in
-# both daylight-saving regimes.
+# Why that time: the OpenAlex free tier is 1,000 requests per day, resetting at 00:00 UTC, and
+# 18:00 local (PDT = 01:00 UTC / PST = 02:00 UTC) is safely after the reset in both
+# daylight-saving regimes.
 #
 # Tasks are ordered "cheapest and most unlocking first" — one day's quota usually gets partway
 # through the list, and the next day continues automatically. Every step is resumable.
@@ -106,7 +107,7 @@ done_ccs=""
 # ⚠️ During a re-harvest compute.py automatically uses the .v1.bak (whichever has more rows), so
 # a half-finished dataset never goes live.
 # 2026-07-28, for real: the cn v2 harvest hit the quota at 19k of 180k, the recompute published
-# anyway, and the live site went from 180k authors / 175 institutions to 19k / 3.
+# anyway, and mainland China on the live site went from 180k authors / 175 institutions to 19k / 3.
 # ⚠️ Derive the country list **from the files on disk, never hard-code it**.
 # 2026-08-01, for real: eight new origins were added to the harvest command above but the
 # hard-coded list here wasn't updated — South Korea (108,768 authors) and Vietnam (57,440) were
@@ -136,19 +137,67 @@ done
 # A previous version swept index.html in as well, so hand-made front-end changes got labelled
 # "automated data refresh": a commit message at odds with its content, which misleads anyone
 # reading the history later.
-if [ -n "$(git status --porcelain -- 'data/data-*.json' data/origins.json)" ]; then
-  say "-- data changed; committing and pushing"
-  git add -A -- 'data/data-*.json' data/origins.json
-  git -c user.name="Claude" -c user.email="noreply@anthropic.com" \
-      commit -q -m "Automated data refresh $(date '+%F')" >>"$LOG" 2>&1
-  if git push -q origin main >>"$LOG" 2>&1; then
-    say "   pushed; GitHub Pages will rebuild"
+# The commit is authored by this job, not by a person, and its author name says so; the address is the
+# account's GitHub no-reply one, because the pre-push check below accepts only those.
+# Before pushing, a machine-local check runs if one exists: scripts/prepush-check.local (ignored by git;
+# on the maintainer's machine it runs the publish check over the commits about to go out). The push
+# happens only if it passes. A commit that a run could not push is pushed by the next run, even when that
+# run has no new data. The job never pulls: if the remote has commits this clone lacks, every run reports
+# the push as rejected until someone brings the clone up to date. Each run writes its outcome to
+# data/push-status.state.json, so a push that did not happen stays visible without reading this log.
+# --- publish: begin (tests/publish_test.sh runs the lines from here to "publish: end" against a local repository) ---
+STATUS="data/push-status.state.json"
+BASE=$(git rev-parse -q --verify origin/main 2>/dev/null)
+status() {  # status <result> [check exit] [push exit]
+  printf '{"time": "%s", "script": "daily.sh", "head": "%s", "base": "%s", "result": "%s", "check_exit": %s, "push_exit": %s, "log": "%s"}\n' \
+    "$(date '+%FT%T%z')" "$(git rev-parse HEAD)" "$BASE" "$1" "${2:-null}" "${3:-null}" "$LOG" > "$STATUS"
+}
+publish() {
+  local check="" out rc
+  if [ -x scripts/prepush-check.local ]; then
+    if [ -z "$BASE" ]; then
+      say "   not pushed: origin/main is unknown, so the pre-push check has no range to cover"
+      status not-pushed-no-base; return
+    fi
+    scripts/prepush-check.local "$BASE" >>"$LOG" 2>&1; check=$?
+    if [ "$check" -ne 0 ]; then
+      say "   not pushed: blocked by the pre-push check (exit $check; its output is above in this log)"
+      status blocked-by-check "$check"; return
+    fi
+  fi
+  out=$(git push -q origin main 2>&1); rc=$?
+  [ -n "$out" ] && printf '%s\n' "$out" >>"$LOG"
+  if [ "$rc" -eq 0 ]; then
+    say "   pushed; GitHub Pages will rebuild"; status pushed "$check" 0
+  elif printf '%s' "$out" | grep -qE '\[(remote )?rejected\]'; then
+    say "   push rejected by the remote: it has commits this clone lacks (exit $rc; see above); update the clone"; status rejected-by-remote "$check" "$rc"
+  elif printf '%s' "$out" | grep -qiE 'could not read from remote|could not resolve|connection'; then
+    say "   push failed: could not reach the remote (exit $rc); the next run tries again"; status push-failed-network "$check" "$rc"
   else
-    say "   push failed (remote may have new commits); retrying next run"
+    say "   push refused on this machine before it was sent: a local pre-push hook declined (exit $rc; see above)"
+    status refused-by-local-hook "$check" "$rc"
+  fi
+}
+committed=ok
+if [ -n "$(git status --porcelain -- 'data/data-*.json' data/origins.json)" ]; then
+  say "-- data changed; committing"
+  git add -A -- 'data/data-*.json' data/origins.json
+  if ! git -c user.name="Scholar Outflow Lab weekly job" -c user.email="270510432+NickkkLian@users.noreply.github.com" \
+      commit -q -m "Automated data refresh $(date '+%F')" >>"$LOG" 2>&1; then
+    say "   commit failed (see above); nothing pushed"; status commit-failed; committed=failed
   fi
 else
-  say "-- outputs unchanged; nothing to commit"
+  say "-- outputs unchanged; nothing new to commit"
 fi
+if [ "$committed" = ok ]; then
+  if [ -z "$BASE" ] || [ "$(git rev-list --count "$BASE..HEAD")" -gt 0 ]; then
+    say "-- pushing the commits the remote does not have yet"
+    publish
+  else
+    status no-change
+  fi
+fi
+# --- publish: end ---
 
 say "===== end ====="
 echo >>"$LOG"
