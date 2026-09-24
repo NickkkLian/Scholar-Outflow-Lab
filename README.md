@@ -1,5 +1,7 @@
 # Scholar Outflow Lab
 
+![Scholar Outflow Lab](.github/header.png)
+
 **Where researchers from 13 countries ended up — every rate shown with its sample size.**
 
 Researchers who started their careers in one country, followed by destination country and destination institution,
