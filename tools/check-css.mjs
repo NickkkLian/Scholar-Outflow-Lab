@@ -3,11 +3,11 @@
      node check-css.mjs           reports classes with no rule, and rules for classes nothing renders
      node check-css.mjs --break   deletes one rule at a time in a copy and requires the report to name that class
 
-   This exists because of a real regression in this repository. Restyling the app onto the design tokens rewrote
-   styles.css, the markup kept every class name it had, and twenty-one rules were quietly not carried over: error
-   messages rendered in the neutral info style, the image gallery lost its grid and stacked full-width, the sync pill
-   lost its three states. Nothing threw and nothing looked obviously broken in the states a screenshot happened to
-   catch — which is exactly the shape of defect a person does not find by looking.
+   This exists because of a real regression in a sibling project, Clipbind (NickkkLian/content-organizer). Restyling
+   that app onto the design tokens rewrote styles.css, the markup kept every class name it had, and twenty-one rules
+   were quietly not carried over: error messages rendered in the neutral info style, the image gallery lost its grid
+   and stacked full-width, the sync pill lost its three states. Nothing threw and nothing looked obviously broken in
+   the states a screenshot happened to catch — which is exactly the shape of defect a person does not find by looking.
 
    How the classes are found, since there is no build step to ask:
      · anything inside a class="…" / class='…' — HTML attributes, and the ones assembled inside JS string literals
