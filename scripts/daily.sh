@@ -42,6 +42,29 @@ fi
 echo $$ > "$LOCK/pid"
 trap 'rm -rf "$LOCK"' EXIT INT TERM
 
+# --- update: begin (tests/update_test.sh runs the lines from here to "update: end" against local repositories) ---
+# Bring this clone up to date before anything else. A round used to compute and push from whatever this clone held,
+# so a change to the repository reached the scheduled job only when someone pulled by hand. A pull that cannot
+# fast-forward (commits both here and on the remote, a rewritten history, no network) stops the round: nothing is
+# computed or pushed, and data/push-status.state.json says so. When the pull brings new commits, the round starts
+# again on the new code, once (SOL_UPDATED is set for that start), so no round mixes old and new code.
+if [ -z "${SOL_UPDATED:-}" ]; then
+  before=$(git rev-parse HEAD)
+  if ! out=$(git pull --ff-only -q origin main 2>&1); then
+    say "⛔ git pull --ff-only failed; nothing computed or pushed this round:"
+    printf '%s\n' "$out" | sed 's/^/      /' | tee -a "$LOG"
+    printf '{"time": "%s", "script": "daily.sh", "head": "%s", "base": "", "result": "not-run-pull-failed", "check_exit": null, "push_exit": null, "log": "%s"}\n' \
+      "$(date '+%FT%T%z')" "$before" "$LOG" > data/push-status.state.json
+    exit 1
+  fi
+  if [ "$(git rev-parse HEAD)" != "$before" ]; then
+    say "updated this clone ${before:0:7} → $(git rev-parse --short HEAD); starting this round again on the new code"
+    rm -rf "$LOCK"; trap - EXIT INT TERM
+    SOL_UPDATED=1 exec bash scripts/daily.sh
+  fi
+fi
+# --- update: end ---
+
 # .env holds OPENALEX_MAILTO and GH_TRAFFIC_PAT (gitignored, never committed)
 [ -f .env ] && set -a && . ./.env && set +a
 
