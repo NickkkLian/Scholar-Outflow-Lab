@@ -36,6 +36,9 @@ fresh; b=$(remote_tip); data; printf '#!/bin/sh\nexit 1\n' > .git/hooks/pre-push
 fresh; b0=$(remote_tip); ( git clone -q "$T/remote.git" "$T/other" && cd "$T/other" && echo x > other.txt && git add other.txt \
   && git -c user.name=t -c user.email=t@example.test commit -qm other && git push -q origin main ); rm -rf "$T/other"; b=$(remote_tip)
   data; run; expect "the remote has commits this clone lacks" rejected-by-remote no "$b"
+fresh; b=$(remote_tip); printf '#!/bin/sh\necho "declined by a branch rule" >&2\nexit 1\n' > "$T/remote.git/hooks/pre-receive"
+  chmod +x "$T/remote.git/hooks/pre-receive"; data; run; rm -f "$T/remote.git/hooks/pre-receive"
+  expect "GitHub (here: the remote's pre-receive hook) refuses the push" refused-by-remote no "$b"
 fresh; b=$(remote_tip); git remote set-url origin git@unreachable-host.invalid:x/y.git; data; run
   expect "the remote cannot be reached" push-failed-network no "$b"
 fresh; b=$(remote_tip); git update-ref -d refs/remotes/origin/main; check 'exit 0'; data; run

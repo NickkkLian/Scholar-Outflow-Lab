@@ -141,10 +141,14 @@ done
 # account's GitHub no-reply one, because the pre-push check below accepts only those.
 # Before pushing, a machine-local check runs if one exists: scripts/prepush-check.local (ignored by git;
 # on the maintainer's machine it runs the publish check over the commits about to go out). The push
-# happens only if it passes. A commit that a run could not push is pushed by the next run, even when that
-# run has no new data. The job never pulls: if the remote has commits this clone lacks, every run reports
-# the push as rejected until someone brings the clone up to date. Each run writes its outcome to
-# data/push-status.state.json, so a push that did not happen stays visible without reading this log.
+# happens only if it passes. A commit that a run could not push is tried again by every later run, even one
+# with no new data, so a network failure or a check that has since been fixed clears on its own. Four
+# outcomes repeat until a person acts, because the job never fetches or pulls: rejected-by-remote (the
+# remote has commits this clone lacks: bring the clone up to date), refused-by-remote (a GitHub branch rule
+# or server-side hook declined the push: its reason is in the log), not-pushed-no-base (this clone has no
+# origin/main, so the check has no range to cover: run git fetch once) and blocked-by-check (fix what the
+# check reports). Each run writes its outcome to data/push-status.state.json, so a push that did not happen
+# stays visible without reading this log.
 # --- publish: begin (tests/publish_test.sh runs the lines from here to "publish: end" against a local repository) ---
 STATUS="data/push-status.state.json"
 BASE=$(git rev-parse -q --verify origin/main 2>/dev/null)
@@ -156,7 +160,7 @@ publish() {
   local check="" out rc
   if [ -x scripts/prepush-check.local ]; then
     if [ -z "$BASE" ]; then
-      say "   not pushed: origin/main is unknown, so the pre-push check has no range to cover"
+      say "   not pushed: origin/main is unknown, so the pre-push check has no range to cover; run git fetch in this clone once"
       status not-pushed-no-base; return
     fi
     scripts/prepush-check.local "$BASE" >>"$LOG" 2>&1; check=$?
@@ -169,7 +173,10 @@ publish() {
   [ -n "$out" ] && printf '%s\n' "$out" >>"$LOG"
   if [ "$rc" -eq 0 ]; then
     say "   pushed; GitHub Pages will rebuild"; status pushed "$check" 0
-  elif printf '%s' "$out" | grep -qE '\[(remote )?rejected\]'; then
+  elif printf '%s' "$out" | grep -qE '\[remote rejected\]'; then
+    say "   push refused by GitHub: a branch rule or server-side hook declined it (exit $rc; the reason is above); updating the clone will not help"
+    status refused-by-remote "$check" "$rc"
+  elif printf '%s' "$out" | grep -qE '\[rejected\]'; then
     say "   push rejected by the remote: it has commits this clone lacks (exit $rc; see above); update the clone"; status rejected-by-remote "$check" "$rc"
   elif printf '%s' "$out" | grep -qiE 'could not read from remote|could not resolve|connection'; then
     say "   push failed: could not reach the remote (exit $rc); the next run tries again"; status push-failed-network "$check" "$rc"
