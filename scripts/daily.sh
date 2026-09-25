@@ -142,13 +142,14 @@ done
 # Before pushing, a machine-local check runs if one exists: scripts/prepush-check.local (ignored by git;
 # on the maintainer's machine it runs the publish check over the commits about to go out). The push
 # happens only if it passes. A commit that a run could not push is tried again by every later run, even one
-# with no new data, so a network failure or a check that has since been fixed clears on its own. Four
-# outcomes repeat until a person acts, because the job never fetches or pulls: rejected-by-remote (the
-# remote has commits this clone lacks: bring the clone up to date), refused-by-remote (a GitHub branch rule
-# or server-side hook declined the push: its reason is in the log), not-pushed-no-base (this clone has no
-# origin/main, so the check has no range to cover: run git fetch once) and blocked-by-check (fix what the
-# check reports). Each run writes its outcome to data/push-status.state.json, so a push that did not happen
-# stays visible without reading this log.
+# with no new data. Only a network failure clears by itself; every other failed outcome repeats on each run
+# until a person acts: rejected-by-remote (the remote has commits this clone lacks, and the job never fetches
+# or pulls: bring the clone up to date), refused-by-remote (a GitHub branch rule or server-side hook declined
+# the push: its reason is in the log), not-pushed-no-base (this clone has no origin/main, so the check has no
+# range to cover: run git fetch once), blocked-by-check (fix what the check reports), refused-by-local-hook
+# (a pre-push hook on this machine declined) and commit-failed (the commit itself failed: see the log). Each
+# run writes its outcome to data/push-status.state.json, so a push that did not happen stays visible without
+# reading this log.
 # --- publish: begin (tests/publish_test.sh runs the lines from here to "publish: end" against a local repository) ---
 STATUS="data/push-status.state.json"
 BASE=$(git rev-parse -q --verify origin/main 2>/dev/null)
