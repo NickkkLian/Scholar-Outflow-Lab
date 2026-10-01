@@ -34,24 +34,42 @@ MIN_H = 5                 # a very low h-index usually means it isn't an academi
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 WEB = os.path.join(ROOT, "data")   # the published JSON: Pages serves main's root and the page reads data/
 
-# Stored field labels (Chinese); the web UI maps them to English client-side by exact key, and
-# the English original is kept in `field_en`. Keep in step with the front-end dictionary.
-FIELD_ZH = {
-    "Medicine": "医学", "Engineering": "工程", "Computer Science": "计算机",
-    "Materials Science": "材料", "Chemistry": "化学", "Physics and Astronomy": "物理天文",
-    "Biochemistry, Genetics and Molecular Biology": "生化遗传",
-    "Agricultural and Biological Sciences": "农业生物",
-    "Environmental Science": "环境科学", "Earth and Planetary Sciences": "地球科学",
-    "Social Sciences": "社会科学", "Mathematics": "数学",
-    "Economics, Econometrics and Finance": "经济金融",
-    "Business, Management and Accounting": "商管", "Psychology": "心理学",
-    "Energy": "能源", "Chemical Engineering": "化工",
-    "Immunology and Microbiology": "免疫微生物", "Neuroscience": "神经科学",
-    "Pharmacology, Toxicology and Pharmaceutics": "药学",
-    "Arts and Humanities": "人文艺术", "Nursing": "护理",
-    "Health Professions": "卫生职业", "Veterinary": "兽医",
-    "Dentistry": "口腔", "Decision Sciences": "决策科学",
+# Stored field labels (shorter English); the OpenAlex original is kept in `field_en`. The page shows these
+# as they are in English and maps them back to Chinese for its 中文 mode by exact key, so keep them in step
+# with index.html (and with FIELD_LABEL in compute.py). Until 2026-09-30 the stored labels were Chinese.
+FIELD_LABEL = {
+    "Medicine": "Medicine", "Engineering": "Engineering", "Computer Science": "Computer Science",
+    "Materials Science": "Materials Science", "Chemistry": "Chemistry",
+    "Physics and Astronomy": "Physics & Astronomy",
+    "Biochemistry, Genetics and Molecular Biology": "Biochemistry & Genetics",
+    "Agricultural and Biological Sciences": "Agricultural & Biological Sciences",
+    "Environmental Science": "Environmental Science",
+    "Earth and Planetary Sciences": "Earth & Planetary Sciences", "Social Sciences": "Social Sciences",
+    "Mathematics": "Mathematics", "Economics, Econometrics and Finance": "Economics & Finance",
+    "Business, Management and Accounting": "Business & Management", "Psychology": "Psychology",
+    "Energy": "Energy", "Chemical Engineering": "Chemical Engineering",
+    "Immunology and Microbiology": "Immunology & Microbiology", "Neuroscience": "Neuroscience",
+    "Pharmacology, Toxicology and Pharmaceutics": "Pharmacology & Toxicology",
+    "Arts and Humanities": "Arts & Humanities", "Nursing": "Nursing",
+    "Health Professions": "Health Professions", "Veterinary": "Veterinary", "Dentistry": "Dentistry",
+    "Decision Sciences": "Decision Sciences",
 }
+# meta.fields drives the order of the field picker on the page. It used to be sorted() over the Chinese labels;
+# that order is kept so the picker reads the same as before the switch. A field not listed here goes last.
+FIELD_ORDER = [
+    "Arts & Humanities", "Immunology & Microbiology", "Veterinary", "Agricultural & Biological Sciences",
+    "Decision Sciences", "Chemistry", "Chemical Engineering", "Medicine", "Health Professions", "Dentistry",
+    "Business & Management", "Earth & Planetary Sciences", "Engineering", "Psychology", "Nursing",
+    "Mathematics", "Materials Science", "Physics & Astronomy", "Environmental Science",
+    "Biochemistry & Genetics", "Social Sciences", "Neuroscience", "Economics & Finance", "Energy",
+    "Pharmacology & Toxicology", "Computer Science",
+]
+
+
+def field_order(fields):
+    return sorted(fields, key=lambda f: (FIELD_ORDER.index(f) if f in FIELD_ORDER else len(FIELD_ORDER), f))
+
+
 TYPE_ZH = {"journal": "期刊", "conference": "会议", "book series": "丛书", "repository": "仓储"}
 
 
@@ -76,7 +94,7 @@ def retier(venues):
     across fields is meaningless, so the comparison is strictly within-field."""
     by_field = {}
     for v in venues:
-        by_field.setdefault(v["field"] or "其他", []).append(v)
+        by_field.setdefault(v["field"] or "Other", []).append(v)
     for vs in by_field.values():
         vs.sort(key=lambda x: -x["h"])
         n = len(vs)
@@ -100,7 +118,7 @@ def refilter_existing():
     d["venues"] = kept
     d["meta"]["count"] = len(kept)
     d["meta"]["min_h"] = MIN_H
-    d["meta"]["fields"] = sorted(by_field.keys())
+    d["meta"]["fields"] = field_order(by_field.keys())
     d["meta"]["notes"] = [n for n in d["meta"]["notes"] if "h-index" not in n or "分级" in n]
     d["meta"]["notes"].insert(1, f"只收录 h-index ≥{MIN_H} 的——否则会混进大量无被引记录的行业杂志，"
                                  f"把学科条目数撑大、分位线稀释")
@@ -145,7 +163,7 @@ def main():
                 "impact": round(st.get("2yr_mean_citedness") or 0, 3),
                 "oa": bool(s.get("is_oa")),
                 "doaj": bool(s.get("is_in_doaj")),
-                "field": FIELD_ZH.get(field, field),
+                "field": FIELD_LABEL.get(field, field),
                 "field_en": field,
             })
         cursor = d["meta"].get("next_cursor")
@@ -163,7 +181,7 @@ def main():
             "generated_at": __import__("datetime").datetime.now().isoformat(timespec="seconds"),
             "count": len(out),
             "min_works": MIN_WORKS,
-            "fields": sorted(by_field.keys()),
+            "fields": field_order(by_field.keys()),
             # Stored verbatim (Chinese); translated client-side by prefix match.
             "notes": [
                 "只收录产出 ≥%d 篇的期刊与会议" % MIN_WORKS,

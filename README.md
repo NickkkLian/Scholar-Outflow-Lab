@@ -142,7 +142,7 @@ Zero cost, zero accounts, zero third-party packages.
 | Automation | launchd + a shell script | Runs once a week within the quota; see below |
 
 ```
-index.html              single-file front end (EN/中文 toggle; data labels localised client-side)
+index.html              single-file front end (EN/中文 toggle; names are stored in English, 中文 maps them back)
 data/data-<cc>.json     computed metrics per origin country — what the page reads
 data/data-venues.json   journal / conference board (13,086 venues, 26 fields)
 data/origins.json       manifest of generated origins — drives the origin switcher
@@ -193,8 +193,8 @@ Standard library only, like the pipeline. Two layers:
 - **Invariants on the data the site serves.** For all thirteen `data-<cc>.json` files: the four outcomes sum to
   100% (within rounding) for every country, institution and field block; each stay rate sits inside its
   interval; ranks follow the lower bound and tiers are the quartiles; strata nest; nothing below the
-  publication floor is published; `origins.json` matches the files; and the headline table above is what the
-  data says.
+  publication floor is published; `origins.json` matches the files; country and field names are English (no CJK
+  characters; the page maps them to Chinese for its 中文 mode); and the headline table above is what the data says.
 
 ```bash
 SOL_BREAK=1 python3 -m unittest discover -s tests

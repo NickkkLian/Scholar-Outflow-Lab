@@ -436,25 +436,29 @@ table.data th.num button{justify-content:flex-end;width:100%}
 <script>
 /* ── i18n ─────────────────────────────────────────────────────────────
    Default is English; the toggle persists in localStorage.
-   Data files keep their original (Chinese) labels — the pipeline is
-   untouched. English labels are derived client-side:
-   countries via Intl.DisplayNames from the ISO code that every record
-   already carries, fields/caveats/notes via the finite dictionaries
-   below (unknown strings fall back to the original text, visibly,
-   rather than being hidden). */
+   Country and field names arrive in English in the data files (since
+   2026-09-30; they used to be Chinese and were translated here). English
+   shows them as they are; 中文 maps them back with the finite tables
+   below: countries by the ISO code every record carries, fields by the
+   exact English label. Caveats and notes are still stored in Chinese and
+   translated to English by prefix. Unknown strings fall back to the
+   original text, visibly, rather than being hidden. */
 const LANG_KEY = 'sol-lang';
 let LANG = localStorage.getItem(LANG_KEY) || 'en';
 
-const FIELD_EN = {
-  '人文艺术':'Arts & Humanities','免疫微生物':'Immunology & Microbiology','兽医':'Veterinary',
-  '农业生物':'Agricultural & Biological Sciences','决策科学':'Decision Sciences','化学':'Chemistry',
-  '化工':'Chemical Engineering','医学':'Medicine','卫生职业':'Health Professions','口腔':'Dentistry',
-  '商管':'Business & Management','地球科学':'Earth & Planetary Sciences','工程':'Engineering',
-  '心理学':'Psychology','护理':'Nursing','数学':'Mathematics','材料':'Materials Science',
-  '物理天文':'Physics & Astronomy','环境科学':'Environmental Science',
-  '生化遗传':'Biochemistry & Genetics','社会科学':'Social Sciences','神经科学':'Neuroscience',
-  '经济金融':'Economics & Finance','能源':'Energy','药学':'Pharmacology & Toxicology','计算机':'Computer Science'
+// English field label (as stored by compute.py / venues.py) -> the Chinese label the 中文 mode shows.
+const FIELD_ZH = {
+  'Arts & Humanities':'人文艺术','Immunology & Microbiology':'免疫微生物','Veterinary':'兽医',
+  'Agricultural & Biological Sciences':'农业生物','Decision Sciences':'决策科学','Chemistry':'化学',
+  'Chemical Engineering':'化工','Medicine':'医学','Health Professions':'卫生职业','Dentistry':'口腔',
+  'Business & Management':'商管','Earth & Planetary Sciences':'地球科学','Engineering':'工程','Psychology':'心理学',
+  'Nursing':'护理','Mathematics':'数学','Materials Science':'材料','Physics & Astronomy':'物理天文',
+  'Environmental Science':'环境科学','Biochemistry & Genetics':'生化遗传','Social Sciences':'社会科学',
+  'Neuroscience':'神经科学','Economics & Finance':'经济金融','Energy':'能源','Pharmacology & Toxicology':'药学',
+  'Computer Science':'计算机','Other':'其他'
 };
+// Old deep links carry the Chinese label (#inst?field=医学); read them as the English one.
+const FIELD_FROM_ZH = Object.fromEntries(Object.entries(FIELD_ZH).map(([en, zh]) => [zh, en]));
 // Keyed by a stable prefix of the Chinese sentence emitted by compute.py, so a
 // wording tweak upstream degrades to showing the original text instead of lying.
 const CAVEAT_EN = [
@@ -477,16 +481,25 @@ const NOTE_EN = [
   ['分级 V1–V4','V1–V4 are within-field h-index percentiles; comparing h-index across fields is meaningless, so there is no site-wide banding'],
   ['OA / DOAJ 标记','OA / DOAJ flags are informational only and say nothing about APC costs'],
 ];
-const ORIGIN_EN = {cn:'Mainland China'};
+// ISO code -> the Chinese name the 中文 mode shows. A code not listed here shows as the upper-case code, as it
+// did when the data files stored Chinese (compute.py had no Chinese name for it either).
+const COUNTRY_ZH = {
+  us:'美国',gb:'英国',ca:'加拿大',au:'澳大利亚',de:'德国',fr:'法国',jp:'日本',sg:'新加坡',hk:'中国香港',tw:'中国台湾',mo:'中国澳门',kr:'韩国',
+  nl:'荷兰',ch:'瑞士',se:'瑞典',it:'意大利',es:'西班牙',be:'比利时',dk:'丹麦',no:'挪威',fi:'芬兰',at:'奥地利',ie:'爱尔兰',nz:'新西兰',
+  il:'以色列',ru:'俄罗斯',in:'印度',br:'巴西',za:'南非',pt:'葡萄牙',pl:'波兰',cz:'捷克',sa:'沙特',ae:'阿联酋',my:'马来西亚',th:'泰国',
+  cn:'中国大陆',ir:'伊朗',tr:'土耳其',mx:'墨西哥',gr:'希腊',hu:'匈牙利',cl:'智利',ar:'阿根廷',vn:'越南',id:'印尼',ph:'菲律宾',pk:'巴基斯坦',
+  eg:'埃及',ng:'尼日利亚'
+};
 let dnEN = null; try { dnEN = new Intl.DisplayNames(['en'], {type:'region'}); } catch(e){}
 
-const enCountry = (cc, fallback) => {
-  if(ORIGIN_EN[cc]) return ORIGIN_EN[cc];
-  try { const n = dnEN && dnEN.of(String(cc).toUpperCase()); if(n && n !== String(cc).toUpperCase()) return n; } catch(e){}
-  return fallback;
+// A record whose code compute.py has no label for carries the bare upper-case code; English asks Intl for a name.
+const enCountry = (cc, name) => {
+  const code = String(cc).toUpperCase();
+  if(name === code){ try { const n = dnEN && dnEN.of(code); if(n && n !== code) return n; } catch(e){} }
+  return name;
 };
-const country = (cc, zhName) => LANG === 'en' ? enCountry(cc, zhName) : zhName;
-const field = f => LANG === 'en' ? (FIELD_EN[f] || f) : f;
+const country = (cc, name) => LANG === 'en' ? enCountry(cc, name) : (COUNTRY_ZH[cc] || String(cc).toUpperCase());
+const field = f => LANG === 'en' ? f : (FIELD_ZH[f] || f);
 const caveat = c => LANG === 'en' ? ((CAVEAT_EN.find(([p]) => c.startsWith(p)) || [,c])[1]) : c;
 const vnote = n => LANG === 'en' ? ((NOTE_EN.find(([p]) => n.startsWith(p)) || [,n])[1]) : n;
 const vtype = t => LANG === 'en' ? ({'期刊':'Journal','会议':'Conference'}[t] || t) : t;
@@ -672,7 +685,7 @@ const S = {data:null, venues:null, origin:(/^[a-z]{2}$/.test(HASH_STATE.get('ori
 const OUT_KEYS = [['stay','var(--o-stay)'],['dual','var(--o-dual)'],['ret','var(--o-ret)'],['onward','var(--o-onward)']];
 const pc = v => v==null ? '—' : (v*100).toFixed(1)+'%';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-// meta.origin_name arrives in Chinese from the data files; display per language.
+// meta.origin_name arrives in English from the data files; display per language.
 const originName = m => country(m.origin, m.origin_name);
 
 // render() does not rebuild these buttons, so the highlight stayed on the old stratum until a reload; every
@@ -795,9 +808,9 @@ function applyHashState(){
   const g = k => HASH_STATE.get(k) || '';
   if(['short','long','long6','all'].includes(g('stratum'))) S.stratum = g('stratum');
   const set = (id, v) => { const el = document.getElementById(id); if(el){ el.value = v; return el.value; } return v; };
-  if(S.view === 'inst'){ S.fKind = set('f-kind', g('kind')); S.fCountry = set('f-country', g('country')); S.fField = set('f-field', g('field')); S.q = set('f-q', g('q')); }
-  if(S.view === 'venue'){ S.vType = set('v-type', g('type')); S.vQ = set('v-q', g('q')); S.vField = g('field'); if(S.venues) S.vField = set('v-field', S.vField); }
-  if(S.view === 'match'){ S.mField = set('m-field', g('field')); S.mCountry = set('m-country', g('dest')); S.mKind = set('m-kind', g('kind'));
+  if(S.view === 'inst'){ S.fKind = set('f-kind', g('kind')); S.fCountry = set('f-country', g('country')); S.fField = set('f-field', FIELD_FROM_ZH[g('field')] || g('field')); S.q = set('f-q', g('q')); }
+  if(S.view === 'venue'){ S.vType = set('v-type', g('type')); S.vQ = set('v-q', g('q')); S.vField = FIELD_FROM_ZH[g('field')] || g('field'); if(S.venues) S.vField = set('v-field', S.vField); }
+  if(S.view === 'match'){ S.mField = set('m-field', FIELD_FROM_ZH[g('field')] || g('field')); S.mCountry = set('m-country', g('dest')); S.mKind = set('m-kind', g('kind'));
     if(['short','long','long6','all'].includes(g('stay'))) S.mStratum = set('m-stratum', g('stay')); }
   if(S.view === 'compare' && /^[a-z]{2}$/.test(g('dest'))){ S.cmpDest = g('dest'); S.cmpDestPicked = true; }
   if(g('open') && (S.view === 'inst' || S.view === 'match')) S.pendingOpen = g('open');

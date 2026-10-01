@@ -53,36 +53,50 @@ STRATA = {"short": (2, 3), "long": (4, 99), "long6": (6, 99), "all": (2, 99)}
 DEFAULT_STRATUM = "long"
 OUTCOMES = ("stay", "dual", "ret", "onward")
 
-# Canonical display labels stored in the data files (Chinese). The web UI is bilingual and
-# derives English labels client-side — countries via Intl.DisplayNames from the ISO code that
-# every record carries, fields via a dictionary keyed on these exact strings. Changing a label
-# here therefore changes the dictionary key on the front end; keep the two in step.
+# Display labels stored in the data files, in English. The page shows them as they are in English and
+# maps them back to Chinese for its 中文 mode with tables keyed on the ISO code (countries) and on these exact
+# field labels (fields), so a label changed here must be changed in index.html too.
+# Until 2026-09-30 the files stored Chinese labels and the page derived English client-side; these English
+# labels are what that page displayed (Chrome's Intl.DisplayNames 'en' for the ISO code, "Mainland China" for
+# cn, and the page's own field dictionary), so the switch changed no visible text. A code missing here is
+# stored as its upper-case ISO code, and the page then asks Intl.DisplayNames for a name, as it always did.
 CC_NAME = {
-    "us": "美国", "gb": "英国", "ca": "加拿大", "au": "澳大利亚", "de": "德国",
-    "fr": "法国", "jp": "日本", "sg": "新加坡", "hk": "中国香港", "tw": "中国台湾",
-    "mo": "中国澳门", "kr": "韩国", "nl": "荷兰", "ch": "瑞士", "se": "瑞典",
-    "it": "意大利", "es": "西班牙", "be": "比利时", "dk": "丹麦", "no": "挪威",
-    "fi": "芬兰", "at": "奥地利", "ie": "爱尔兰", "nz": "新西兰", "il": "以色列",
-    "ru": "俄罗斯", "in": "印度", "br": "巴西", "za": "南非", "pt": "葡萄牙",
-    "pl": "波兰", "cz": "捷克", "sa": "沙特", "ae": "阿联酋", "my": "马来西亚",
-    "th": "泰国", "cn": "中国大陆", "ir": "伊朗", "tr": "土耳其", "mx": "墨西哥",
-    "gr": "希腊", "hu": "匈牙利", "cl": "智利", "ar": "阿根廷", "vn": "越南",
-    "id": "印尼", "ph": "菲律宾", "pk": "巴基斯坦", "eg": "埃及", "ng": "尼日利亚",
+    "us": "United States", "gb": "United Kingdom", "ca": "Canada", "au": "Australia", "de": "Germany",
+    "fr": "France", "jp": "Japan", "sg": "Singapore", "hk": "Hong Kong", "tw": "Taiwan", "mo": "Macao",
+    "kr": "South Korea", "nl": "Netherlands", "ch": "Switzerland", "se": "Sweden", "it": "Italy", "es": "Spain",
+    "be": "Belgium", "dk": "Denmark", "no": "Norway", "fi": "Finland", "at": "Austria", "ie": "Ireland",
+    "nz": "New Zealand", "il": "Israel", "ru": "Russia", "in": "India", "br": "Brazil", "za": "South Africa",
+    "pt": "Portugal", "pl": "Poland", "cz": "Czechia", "sa": "Saudi Arabia", "ae": "United Arab Emirates",
+    "my": "Malaysia", "th": "Thailand", "cn": "Mainland China", "ir": "Iran", "tr": "Türkiye", "mx": "Mexico",
+    "gr": "Greece", "hu": "Hungary", "cl": "Chile", "ar": "Argentina", "vn": "Vietnam", "id": "Indonesia",
+    "ph": "Philippines", "pk": "Pakistan", "eg": "Egypt", "ng": "Nigeria", "tj": "Tajikistan", "ua": "Ukraine",
+    "by": "Belarus", "sk": "Slovakia", "bg": "Bulgaria", "uz": "Uzbekistan", "am": "Armenia",
+    "kz": "Kazakhstan", "az": "Azerbaijan", "zw": "Zimbabwe", "bd": "Bangladesh", "et": "Ethiopia",
+    "ro": "Romania", "mn": "Mongolia", "np": "Nepal", "co": "Colombia", "cu": "Cuba", "ve": "Venezuela",
+    "pe": "Peru", "ec": "Ecuador", "gt": "Guatemala", "cr": "Costa Rica", "py": "Paraguay", "bj": "Benin",
+    "tn": "Tunisia", "ke": "Kenya", "tz": "Tanzania", "pr": "Puerto Rico", "sd": "Sudan",
+    "ag": "Antigua & Barbuda", "kh": "Cambodia", "rs": "Serbia", "cy": "Cyprus", "so": "Somalia",
+    "kw": "Kuwait", "qa": "Qatar", "iq": "Iraq", "uy": "Uruguay", "st": "São Tomé & Príncipe",
+    "mz": "Mozambique",
 }
 
-# OpenAlex field name -> stored label. The English original is kept alongside as `field_en`.
-FIELD_ZH = {
-    "Medicine": "医学", "Engineering": "工程", "Computer Science": "计算机",
-    "Materials Science": "材料", "Chemistry": "化学", "Physics and Astronomy": "物理天文",
-    "Biochemistry, Genetics and Molecular Biology": "生化遗传",
-    "Agricultural and Biological Sciences": "农业生物",
-    "Environmental Science": "环境科学", "Earth and Planetary Sciences": "地球科学",
-    "Social Sciences": "社会科学", "Mathematics": "数学", "Economics, Econometrics and Finance": "经济金融",
-    "Business, Management and Accounting": "商管", "Psychology": "心理学",
-    "Energy": "能源", "Chemical Engineering": "化工", "Immunology and Microbiology": "免疫微生物",
-    "Neuroscience": "神经科学", "Pharmacology, Toxicology and Pharmaceutics": "药学",
-    "Arts and Humanities": "人文艺术", "Nursing": "护理", "Health Professions": "卫生职业",
-    "Veterinary": "兽医", "Dentistry": "口腔", "Decision Sciences": "决策科学",
+# OpenAlex field name -> stored label (shorter English). The OpenAlex original is kept alongside as `field_en`.
+FIELD_LABEL = {
+    "Medicine": "Medicine", "Engineering": "Engineering", "Computer Science": "Computer Science",
+    "Materials Science": "Materials Science", "Chemistry": "Chemistry",
+    "Physics and Astronomy": "Physics & Astronomy",
+    "Biochemistry, Genetics and Molecular Biology": "Biochemistry & Genetics",
+    "Agricultural and Biological Sciences": "Agricultural & Biological Sciences",
+    "Environmental Science": "Environmental Science",
+    "Earth and Planetary Sciences": "Earth & Planetary Sciences", "Social Sciences": "Social Sciences",
+    "Mathematics": "Mathematics", "Economics, Econometrics and Finance": "Economics & Finance",
+    "Business, Management and Accounting": "Business & Management", "Psychology": "Psychology",
+    "Energy": "Energy", "Chemical Engineering": "Chemical Engineering",
+    "Immunology and Microbiology": "Immunology & Microbiology", "Neuroscience": "Neuroscience",
+    "Pharmacology, Toxicology and Pharmaceutics": "Pharmacology & Toxicology",
+    "Arts and Humanities": "Arts & Humanities", "Nursing": "Nursing",
+    "Health Professions": "Health Professions", "Veterinary": "Veterinary", "Dentistry": "Dentistry",
+    "Decision Sciences": "Decision Sciences",
 }
 
 
@@ -267,7 +281,7 @@ def build(origin):
         fields = {}
         for k in STRATA:
             fl = sorted(
-                [{"field": FIELD_ZH.get(f, f), "field_en": f} | pct(fd)
+                [{"field": FIELD_LABEL.get(f, f), "field_en": f} | pct(fd)
                  for f, fd in ifields[iid][k].items() if fd["n"] >= MIN_N_FIELD],
                 key=lambda x: -x["n"])[:8]
             if fl:

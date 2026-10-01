@@ -12,6 +12,8 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT = os.environ.get("SOL_DATA_ROOT") or os.path.join(REPO, "data")  # mutations.py points this at broken copies
 OUTCOMES = ("stay", "dual", "ret", "onward")
 ROUNDING = 4 * 0.00005 + 1e-9        # four fractions each rounded to 4 decimals
+# Han, kana, Hangul and full-width forms: none may appear in a stored country or field name (English since 2026-09-30)
+CJK = re.compile(r"[\u1100-\u11ff\u2e80-\u9fff\ua960-\ua97f\uac00-\ud7af\uf900-\ufaff\ufe30-\ufe4f\uff00-\uffef]")
 
 
 def origins_on_disk():
@@ -120,6 +122,42 @@ class TestEveryOrigin(unittest.TestCase):
                 self.assertLessEqual(m["home_start_authors"], m["sampled_authors"])
                 self.assertEqual(m["mover_rate"], round(m["movers"] / m["home_start_authors"], 4))
                 self.assertEqual(m["arrival_year_cutoff"] + m["followup_years"] >= 2026, True)
+
+
+class TestNamesAreEnglish(unittest.TestCase):
+    """Country and field names are stored in English; the page maps them to Chinese for its 中文 mode."""
+
+    def assert_english(self, where, value):
+        self.assertIsInstance(value, str, where)
+        self.assertIsNone(CJK.search(value), f"{where}: {value!r}")
+
+    def test_origin_files(self):
+        for cc in origins_on_disk():
+            d = load(cc)
+            self.assert_english(f"data-{cc}.json meta.origin_name", d["meta"]["origin_name"])
+            for c in d["countries"]:
+                self.assert_english(f"data-{cc}.json countries[{c['cc']}].name", c["name"])
+            for it in d["institutions"]:
+                self.assert_english(f"data-{cc}.json institutions[{it['id']}].country", it["country"])
+                for k, fl in it["fields"].items():
+                    for f in fl:
+                        self.assert_english(f"data-{cc}.json institutions[{it['id']}].fields.{k}[].field", f["field"])
+
+    def test_manifest(self):
+        with open(os.path.join(ROOT, "origins.json"), encoding="utf-8") as f:
+            for o in json.load(f)["origins"]:
+                self.assert_english(f"origins.json origins[{o['cc']}].name", o["name"])
+
+    def test_venue_fields(self):
+        p = os.path.join(ROOT, "data-venues.json")
+        if not os.path.exists(p):
+            self.skipTest("no data-venues.json in this data root")
+        with open(p, encoding="utf-8") as f:
+            v = json.load(f)
+        for name in v["meta"]["fields"]:
+            self.assert_english("data-venues.json meta.fields[]", name)
+        for x in v["venues"]:
+            self.assert_english(f"data-venues.json venues[{x['id']}].field", x["field"])
 
 
 class TestHeadlineFinding(unittest.TestCase):

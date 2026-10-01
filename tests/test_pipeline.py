@@ -148,6 +148,20 @@ class TestFixtureAgainstPlan(unittest.TestCase):
                 self.assertEqual(got["n"], want["n"], f"{cc}/{s} n")
                 self.assertEqual(got["stay"], round(want["stay"] / want["n"], 4) if want["n"] else None)
 
+    def test_names_are_written_in_english(self):
+        # the weekly job writes English names; the page maps them to Chinese, so Chinese here would show in English
+        names = {"us": "United States", "ca": "Canada"}
+        self.assertIn("us", [c["cc"] for c in self.out["countries"]])
+        for c in self.out["countries"]:
+            self.assertEqual(c["name"], names[c["cc"]])
+        self.assertEqual(self.out["meta"]["origin_name"], "XA")          # a code with no label stays the bare code
+        fields = {(f["field_en"], f["field"]) for i in self.out["institutions"] for fl in i["fields"].values() for f in fl}
+        self.assertIn(("Physics and Astronomy", "Physics & Astronomy"), fields)
+        for i in self.out["institutions"]:
+            self.assertEqual(i["country"], names.get(i["cc"], i["cc"].upper()))
+        for _, label in fields:
+            self.assertRegex(label, r"^[\x20-\x7e]+$")
+
     def test_manifest_written(self):
         man = read_json(os.path.join(self.box.web, "origins.json"))["origins"]
         self.assertEqual([o["cc"] for o in man], ["xa"])
