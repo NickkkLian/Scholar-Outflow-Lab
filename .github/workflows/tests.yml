@@ -15,6 +15,9 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
       - name: pipeline on the synthetic fixture + invariants on the published data
         run: python -m unittest discover -s tests -v
 
@@ -25,6 +28,9 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
       - name: a corrupted fixture record must fail the suite
         run: |
           if SOL_BREAK=1 python -m unittest discover -s tests; then

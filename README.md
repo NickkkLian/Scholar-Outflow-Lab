@@ -10,7 +10,7 @@ public data with a zero-dependency stack.
 
 **Live:** https://nickkklian.github.io/Scholar-Outflow-Lab/ — English by default, 中文 toggle in the header.
 
-![Origin comparison — the same destination, different starting points](docs/screenshot-compare.png)
+![US stay rates after four or more years, by origin — sample sizes and all four outcomes](docs/screenshot-match.png)
 
 ---
 
@@ -179,7 +179,13 @@ resumes from the last completed seed.
 python3 -m unittest discover -s tests -v
 ```
 
-Standard library only, like the pipeline. Two layers:
+Python standard library, plus Node.js 22 for the first-screen renderer tests (built-in `vm`, no packages to install).
+Three layers:
+
+- **The first screen against the published data.** The page's real JavaScript renderer must show four origins on
+  one percentage axis, with stay rates and sample sizes read from the JSON, four outcomes making a whole, plain
+  definitions, and the relative-comparison warning immediately under the chart in English and Chinese. A changed
+  input checks that the headline, sample size and interval respond to the data.
 
 - **The pipeline against a plan it did not write.** `tests/make_fixture.py` generates 200 synthetic careers
   (origin `xa`, a private-use code; `Synthetic University …` institutions) and decides every person's

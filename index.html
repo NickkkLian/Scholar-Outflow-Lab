@@ -65,14 +65,19 @@ a{color:var(--accent-text);text-underline-offset:.18em;text-decoration-thickness
 /* ===== the finding (first screen) ===== */
 .finding{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-1);padding:var(--space-5);margin-bottom:var(--space-4)}
 .finding .eyebrow{font:var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--text-3);margin-bottom:var(--space-2)}
-.finding h1{font-size:var(--text-2xl);max-width:26ch}
+.finding h1{font-size:var(--text-2xl);max-width:32ch}
 .finding .lede{color:var(--text-2);font-size:var(--text-sm);margin:var(--space-2) 0 var(--space-4);max-width:var(--measure)}
-.f-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-3)}
-.f-cell{border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-3);background:var(--bg);min-width:0}
-.f-cell h2{font-size:var(--text-md);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.f-big{font:var(--weight-semibold) var(--text-3xl)/1.1 var(--font-mono);font-variant-numeric:tabular-nums;margin:var(--space-1) 0}
-.f-meta{font:var(--weight-regular) var(--text-2xs)/1.5 var(--font-mono);color:var(--text-3)}
-.f-cell .bar{margin-top:var(--space-2)}
+.f-row{margin-bottom:var(--space-3)}
+.f-label{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-2);margin-bottom:var(--space-1);font-size:var(--text-sm)}
+.f-label h2{font-size:var(--text-md)}
+.f-label .mono{white-space:nowrap;font-size:var(--text-sm)}
+.f-label small{font-size:var(--text-2xs);color:var(--text-2);font-weight:var(--weight-regular)}
+.f-row .cmp-n{text-align:right;margin-top:var(--space-1)}
+#finding-grid .bar{height:18px;gap:0;border-radius:0}
+.f-axis{display:flex;justify-content:space-between;font:var(--weight-regular) var(--text-2xs)/1 var(--font-mono);color:var(--text-3)}
+.f-limit{font-size:var(--text-xs);color:var(--text-2);margin:var(--space-3) 0;max-width:var(--measure)}
+.f-whole{font-size:var(--text-xs);font-weight:var(--weight-semibold);margin:0 0 var(--space-2)}
+#finding-legend{gap:var(--space-1) var(--space-4);margin:0}
 .f-foot{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-4);margin-top:var(--space-4)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-1);height:var(--control-h);padding:0 var(--space-4);border-radius:var(--radius-sm);border:1px solid var(--border-input);background:var(--paper);color:var(--text);font-size:var(--text-sm);font-weight:var(--weight-medium);text-decoration:none;white-space:nowrap;transition:background-color var(--dur-fast) var(--ease-out),border-color var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out)}
 @media (hover:hover) and (pointer:fine){.btn:hover{background:var(--surface-hover)}}
@@ -206,9 +211,6 @@ tbody tr[tabindex]:focus-visible{outline-offset:-2px}
 .honest dd{margin:0;max-width:var(--measure);line-height:var(--leading-relaxed)}
 .foot{font:var(--weight-regular) var(--text-2xs)/1.5 var(--font-mono);color:var(--text-3);margin-bottom:var(--space-3)}
 
-@media (max-width:900px){
-  .f-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
 @media (max-width:720px){
   .wrap{padding:var(--space-3) var(--gutter)}
   .tb-in{gap:var(--space-2)}
@@ -222,7 +224,6 @@ tbody tr[tabindex]:focus-visible{outline-offset:-2px}
   .drawer .panel{padding:var(--space-4)}
   .finding{padding:var(--space-4)}
   .finding h1{font-size:var(--text-xl)}
-  .f-big{font-size:var(--text-2xl)}
   .chart{--ci-label:96px;--ci-val:64px}
   .ci-row,.ci-axis{gap:var(--space-2)}
   .gh{display:none}
@@ -319,10 +320,12 @@ table.data th.num button{justify-content:flex-end;width:100%}
     <div class="eyebrow" id="finding-eyebrow"></div>
     <h1 id="finding-h"></h1>
     <p class="lede" id="finding-lede"></p>
-    <div class="f-grid" id="finding-grid"></div>
+    <div id="finding-grid"></div>
+    <p class="f-limit" id="finding-limit"></p>
+    <p class="f-whole" id="finding-whole"></p>
+    <div class="legend" id="finding-legend"></div>
     <div class="f-foot">
       <button class="btn btn-primary" id="finding-cta" type="button"></button>
-      <div class="legend" id="finding-legend" style="margin:0"></div>
     </div>
   </section>
   <div class="notice" id="notice"></div>
@@ -510,9 +513,11 @@ en: {
   title:'Scholar Outflow Lab · Where home-grown researchers end up',
   brandLogo:'Scholar Outflow <b>Lab</b>', brandSub:'Where researchers from 13 countries ended up — every rate shown with its sample size.',
   skip:'Skip to content',
-  fEyebrow:'The finding', fTitle:'Same destination, different starting points',
-  fLede:'Researchers who started publishing in each country and later spent four or more years in the United States — the share whose last known affiliation is still there. Same sampling, same computation; compare relative levels, not the absolute percentages.',
-  fStay:'stayed in the US', fMeta:(n,ci)=>`n = ${n.toLocaleString()}<br>95% CI ${ci}`,
+  fEyebrow:'The finding', fTitle:'US stay rates after 4+ years, by origin',
+  fLede:'Researchers who started publishing at home, then spent 4+ years in the US. Stay rate: final affiliations include the US but not the origin country.',
+  fLimit:'Only relative levels and direction compare: sample frames differ by origin. Do not compare absolute percentages. Academic affiliations, not residency or visa statistics.',
+  fWhole:'Four final-affiliation outcomes · one whole = 100%',
+  fOut:{stay:'Stayed · destination, no origin',dual:'Dual · destination + origin',ret:'Returned · origin, no destination',onward:'Onward · neither; third country'},
   fCta:'Compare all origins', fLoading:'Loading the four origins…', fFail:m=>`The headline figures could not be loaded (${m}). The rest of the page does not depend on them.`, tryAgain:'Try again',
   cmpChartTitle:(dest,s)=>`Stay rate in ${dest} by starting country · ${s}`, cmpChartDest:'Destination', cmpChartAxis:'Bar: stay rate. Whisker: 95% confidence interval. Sorted by stay rate.',
   hAboutT:'About this data', hAbout:'Every number is computed by scripts/compute.py from OpenAlex authorship records (CC0) and served as static JSON; nothing is modelled or estimated by hand. The pipeline, its tests and the three corrections that made the numbers self-consistent are in the repository.',
@@ -594,9 +599,11 @@ zh: {
   title:'去向实验室 · 本土起步科研人员的流向',
   brandLogo:'去向<b>实验室</b>', brandSub:'13 个国家起步的研究者最后去了哪里——每个比率都标着样本量',
   skip:'跳到正文',
-  fEyebrow:'核心发现', fTitle:'同一个目的地，起点不同，去向差好几倍',
-  fLede:'在各国起步发表、之后在美国待满 4 年及以上的研究者中，最后已知任职机构仍在美国的比例。抽样与算法一致；比相对高低，不比绝对百分比。',
-  fStay:'留在美国', fMeta:(n,ci)=>`样本 ${n.toLocaleString()}<br>95% 区间 ${ci}`,
+  fEyebrow:'核心发现', fTitle:'在美国待满 4 年后，各起点的留下率',
+  fLede:'在本国起步发表、之后在美国待满 4 年及以上的研究者。留下率：最后已知署名包含美国、不含来源国的比例。',
+  fLimit:'只比较相对高低与方向：各来源国的样本框不同，不比较绝对百分比。学术署名是代理指标，不是居留或签证统计。',
+  fWhole:'四种末位署名去向 · 合计 100%',
+  fOut:{stay:'留下 · 有目的国、无来源国',dual:'双挂 · 目的国与来源国',ret:'回流 · 有来源国、无目的国',onward:'转道 · 两国均无、在第三国'},
   fCta:'对比全部起点', fLoading:'正在载入四个起点的数据…', fFail:m=>`核心数字载入失败（${m}）。页面其余部分不受影响。`, tryAgain:'重试',
   cmpChartTitle:(dest,s)=>`${dest} 的留下率 · 按起点 · ${s}`, cmpChartDest:'目的国', cmpChartAxis:'实心条：留下率。须线：95% 置信区间。按留下率排序。',
   hAboutT:'关于这些数据', hAbout:'每个数字都由 scripts/compute.py 从 OpenAlex 署名记录（CC0）算出，以静态 JSON 提供；没有人工估算或建模。流水线、测试与让数字自洽的三处口径修正都在仓库里。',
@@ -1073,8 +1080,10 @@ function renderFinding(){
   document.getElementById('finding-eyebrow').textContent = t('fEyebrow');
   document.getElementById('finding-h').textContent = t('fTitle');
   document.getElementById('finding-lede').textContent = t('fLede');
+  document.getElementById('finding-limit').textContent = t('fLimit');
+  document.getElementById('finding-whole').textContent = t('fWhole');
   document.getElementById('finding-cta').textContent = t('fCta');
-  document.getElementById('finding-legend').innerHTML = OUT_KEYS.map(([k,c]) => `<span><i style="background:${c}"></i>${t('out')[k]}</span>`).join('');
+  document.getElementById('finding-legend').innerHTML = OUT_KEYS.map(([k,c]) => `<span><i style="background:${c}"></i>${t('fOut')[k]}</span>`).join('');
   const grid = document.getElementById('finding-grid');
   const ready = FINDING_ORIGINS.every(cc => S.allData[cc]);
   if(!ready){
@@ -1090,12 +1099,11 @@ function renderFinding(){
     const us = (d.countries || []).find(c => c.cc === 'us');
     return us && us.strata.long ? {cc, name: originName(d.meta), s: us.strata.long} : null;
   }).filter(Boolean).sort((a,b) => b.s.stay - a.s.stay);
-  grid.innerHTML = rows.map(r => `<div class="f-cell">
-      <h2>${esc(r.name)}</h2>
-      <div class="f-big">${pc(r.s.stay)}</div>
-      <div class="f-meta">${t('fStay')}<br>${t('fMeta')(r.s.n, r.s.stay_ci ? pc(r.s.stay_ci[0]) + '–' + pc(r.s.stay_ci[1]) : '—')}</div>
-      <div class="bar" role="img" aria-label="${OUT_KEYS.map(([k]) => t('out')[k] + ' ' + pc(r.s[k])).join(', ')}">${OUT_KEYS.map(([k,c]) => r.s[k] ? `<span style="width:${r.s[k]*100}%;background:${c}"></span>` : '').join('')}</div>
-    </div>`).join('');
+  grid.innerHTML = rows.map(r => `<div class="f-row">
+      <div class="f-label"><h2>${esc(r.name)}</h2><b class="mono">${pc(r.s.stay)} <small>n = ${r.s.n.toLocaleString()}</small></b></div>
+      <div class="bar" role="img" aria-label="${esc(r.name)}: ${OUT_KEYS.map(([k]) => t('out')[k] + ' ' + pc(r.s[k])).join(', ')}; n = ${r.s.n}; 95% CI ${r.s.stay_ci ? r.s.stay_ci.map(pc).join('–') : '—'}">${OUT_KEYS.map(([k,c]) => `<span title="${t('out')[k]} ${pc(r.s[k])}" style="width:${r.s[k]*100}%;background:${c}"></span>`).join('')}</div>
+      <div class="cmp-n">95% CI ${r.s.stay_ci ? r.s.stay_ci.map(pc).join('–') : '—'}</div>
+    </div>`).join('') + `<div class="f-axis" aria-hidden="true">${[0,25,50,75,100].map(v => `<span>${v}%</span>`).join('')}</div>`;
 }
 
 /* ── compare chart: one destination, every origin, stay rate with its 95% interval ── */
