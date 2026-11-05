@@ -488,9 +488,10 @@ th { position:static; }
 #v-inst th { overflow-wrap:normal; word-break:normal; }
 
 
-/* Keep the name, range and value together while matching the filter-panel edge. */
+/* Share the label and value columns so every row uses the same range axis. */
 @media(min-width:1101px) {
- .m-card { grid-template-columns:28px max-content minmax(120px,1fr) max-content; }
+ #match-list { display:grid; grid-template-columns:48px fit-content(26rem) minmax(120px,1fr) max-content; column-gap:16px; }
+ .m-card { grid-column:1/-1; grid-template-columns:subgrid; }
  .m-main > .muted { width:min-content; min-width:100%; }
 }
 @media(min-width:701px) and (max-width:1100px) {
