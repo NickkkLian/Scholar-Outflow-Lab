@@ -8,10 +8,10 @@
 <meta name="theme-color" content="#e6f1ef" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#102b30" media="(prefers-color-scheme: dark)">
 <title>Scholar Outflow Lab · Where home-grown researchers end up</title>
-<link rel="icon" href="favicon.svg?v=3.0.0" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=3.0.0">
-<link rel="stylesheet" href="fonts.css?v=3.0.0">
-<link rel="stylesheet" href="design-tokens.css?v=3.0.0">
+<link rel="icon" href="favicon.svg?v=3.1.0" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=3.1.0">
+<link rel="stylesheet" href="fonts.css?v=3.1.0">
+<link rel="stylesheet" href="design-tokens.css?v=3.1.0">
 <style>
 /* Scholar Outflow Lab — consumes design tokens only (design-tokens.css). */
 /* ===== Fallback faces: until the web fonts load (or if they never do), system fonts are scaled to the measured widths so line lengths and column widths do not jump ===== */
@@ -49,7 +49,7 @@ a{color:var(--accent-text);text-underline-offset:.18em;text-decoration-thickness
 .brand .logo{font-family:var(--font-display);font-weight:var(--display-weight);font-size:var(--text-lg);white-space:nowrap;letter-spacing:-0.01em;font-variation-settings:"opsz" var(--opsz-title)}
 .brand .logo b{font-weight:inherit}
 .brand .sub{font-size:var(--text-xs);color:var(--on-band-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.origin-pick{display:flex;align-items:center;gap:var(--space-2);font:var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--on-band-2);margin-right:auto}
+.origin-pick{display:flex;align-items:center;gap:var(--space-2);font:var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);letter-spacing:normal;text-transform:none;color:var(--on-band-2);margin-right:auto}
 .origin-pick select{height:30px;padding:0 var(--space-2);font:var(--weight-regular) var(--text-sm)/1 var(--font-sans);text-transform:none;letter-spacing:normal;color:var(--text)}
 .tabs{display:flex;gap:2px;background:transparent;padding:3px;border-radius:var(--radius-md);max-width:100%;overflow-x:auto;border:1px solid var(--band-line)}
 .tab{border:none;background:transparent;height:30px;padding:0 var(--space-3);border-radius:var(--radius-sm);font-weight:var(--weight-medium);color:var(--on-band-2);font-size:var(--text-sm);white-space:nowrap;transition:background-color var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out)}
@@ -95,7 +95,7 @@ a{color:var(--accent-text);text-underline-offset:.18em;text-decoration-thickness
 .seg button.on{background:var(--paper);color:var(--text);box-shadow:var(--shadow-1),inset 0 0 0 1px var(--border-input)}
 select,input[type=search]{border:1px solid var(--border-input);background:var(--surface);color:var(--text);height:var(--control-h);padding:0 var(--space-3);border-radius:var(--radius-sm);font-size:var(--text-sm);max-width:100%}
 input[type=search]{min-width:190px;flex:1 1 190px}
-.lbl{font:var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--text-3)}
+.lbl{font:var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);letter-spacing:normal;text-transform:none;color:var(--text-3)}
 
 .legend{display:flex;gap:var(--space-4);flex-wrap:wrap;font-size:var(--text-xs);color:var(--text-2);margin-bottom:var(--space-3)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:var(--space-1);vertical-align:-1px}
@@ -161,11 +161,11 @@ tbody tr{cursor:pointer}
 .close{position:absolute;right:var(--space-4);top:var(--space-4);border:1px solid var(--border-input);background:var(--surface);border-radius:var(--radius-sm);height:30px;padding:0 var(--space-3);font-size:var(--text-xs)}
 .kv{display:flex;gap:var(--space-2) var(--space-3);flex-wrap:wrap;font-size:var(--text-xs);color:var(--text-2);margin:var(--space-2) 0 var(--space-4)}
 .kv span{white-space:nowrap}
-.sec-t{font:var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--text-3);margin:var(--space-5) 0 var(--space-2)}
+.sec-t{font:var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);letter-spacing:normal;text-transform:none;color:var(--text-3);margin:var(--space-5) 0 var(--space-2)}
 
 .ask{border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-4);background:var(--paper);margin-bottom:var(--space-4)}
 .ask-row{display:flex;gap:var(--space-3);flex-wrap:wrap}
-.ask-row label{display:flex;flex-direction:column;gap:var(--space-1);font:var(--weight-semibold) var(--text-2xs)/1.2 var(--font-sans);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--text-3);flex:1 1 190px;min-width:0}
+.ask-row label{display:flex;flex-direction:column;gap:var(--space-1);font:var(--weight-semibold) var(--text-2xs)/1.2 var(--font-sans);letter-spacing:normal;text-transform:none;color:var(--text-3);flex:1 1 190px;min-width:0}
 .ask-row select{width:100%;text-transform:none;letter-spacing:normal;font-weight:var(--weight-regular)}
 .ask-note{margin:var(--space-3) 0 0;font-size:var(--text-xs);color:var(--text-2);max-width:var(--measure)}
 .ask-note b{color:var(--text)}
@@ -202,7 +202,7 @@ tbody tr[tabindex]:focus-visible{outline-offset:-2px}
 /* ===== footer (honest block) ===== */
 .honest{border-top:1px solid var(--band-line);font-size:var(--text-xs);color:var(--on-band-2);background:var(--band);padding:var(--space-10) var(--gutter) var(--space-12)}
 .honest dl{margin-block:0}
-.honest dt{font-weight:var(--weight-semibold);color:var(--on-band);font-family:var(--font-sans);font-size:var(--text-2xs);letter-spacing:var(--tracking-caps);text-transform:uppercase;margin-bottom:var(--space-2)}
+.honest dt{font-weight:var(--weight-semibold);color:var(--on-band);font-family:var(--font-sans);font-size:var(--text-2xs);letter-spacing:normal;text-transform:none;margin-bottom:var(--space-2)}
 .honest dd{margin:0;max-width:var(--measure);line-height:var(--leading-relaxed)}
 .foot{font:var(--weight-regular) var(--text-2xs)/1.5 var(--font-mono);color:var(--text-3);margin-bottom:var(--space-3)}
 
@@ -279,7 +279,7 @@ table.data th.num button{justify-content:flex-end;width:100%}
 @media (pointer:coarse){.origin-pick select{height:var(--touch-min)}}   /* the origin picker was 30px tall beside 44px neighbours */
 /* ===== end of family layer v3.1 ===== */
 </style>
-<link rel="stylesheet" href="atlas.css?v=3.0.0">
+<link rel="stylesheet" href="atlas.css?v=3.1.0">
 </head>
 <body>
 
@@ -434,8 +434,8 @@ table.data th.num button{justify-content:flex-end;width:100%}
   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="drawer-title"><button class="close" data-close id="drawer-close"></button><div id="drawer-body"></div></div>
 </div>
 
-<script src="appearance.js?v=3.0.0"></script>
-<script src="map.js?v=3.0.0"></script>
+<script src="appearance.js?v=3.1.0"></script>
+<script src="map.js?v=3.1.0"></script>
 <script>
 /* ── i18n ─────────────────────────────────────────────────────────────
    Default is English; the toggle persists in localStorage.
@@ -523,7 +523,7 @@ en: {
   hNvT:'Not verified here', hNv:'Not visa or immigration statistics and not advice. The sample frame excludes anyone who left before publishing at home; "stayed" means the last known affiliation, not residency. Institutions are parsed from affiliation strings and some mismatches remain; field labels are coarse. Absolute values drift with sampling choices.',
   hSrcT:'Source', hSrc:'MIT · data OpenAlex, CC0 · built by Nick Lian',
   origin:'Origin', langBtn:'中文',
-  tabs:{match:'Path Finder',country:'Destinations',inst:'Institutions',compare:'Origin Compare',venue:'Venues',doc:'Methodology'},
+  tabs:{match:'Path finder',country:'Destinations',inst:'Institutions',compare:'Origin comparison',venue:'Venues',doc:'Methodology'},
   darkMode:'Dark mode', settingsBtn:'Settings',
   notice:`<b>This is not immigration advice, and not visa statistics.</b>
     The data is a migration proxy built from academic authorship records and covers only people who publish;
@@ -592,7 +592,7 @@ en: {
   foot:(d)=>`Data ${esc(d.meta.source)} · generated ${esc(d.meta.generated_at)} · ` +
     `origin ${esc(d.meta.origin_name_disp)} · sample ${d.meta.sampled_authors.toLocaleString()} authors · ` +
     `this site does not provide immigration or legal advice`,
-  originOpt:(name,n)=>`${name} (${n} inst.)`,
+  originOpt:(name,n)=>`${name} (${n} institutions)`,
 },
 zh: {
   title:'去向实验室 · 本土起步科研人员的流向',
@@ -712,6 +712,28 @@ function stackBar(s){
   const parts = OUT_KEYS.map(([k,c]) => s[k] ? `<span style="width:${s[k]*100}%;background:${c}"></span>` : '').join('');
   const keys = OUT_KEYS.map(([k]) => `<span>${t('out')[k]} <b>${pc(s[k])}</b></span>`).join('');
   return `<div class="bar">${parts}</div><div class="bar-k">${keys}</div>`;
+}
+
+function recordsForTables(container) {
+  container.querySelectorAll('table').forEach(table => {
+    const headings = [...(table.tHead?.rows[0]?.cells || [])].map(cell => {
+      const label = cell.textContent.trim();
+      return label === '#' ? (LANG === 'en' ? 'Tier' : '分档') : label;
+    });
+    table.dataset.layout = headings.length > 3 ? 'records' : 'columns';
+    for (const row of table.tBodies[0]?.rows || []) {
+      [...row.cells].forEach((cell,index) => {
+        if (cell.querySelector(':scope > .cell-label')) return;
+        const label = document.createElement('span');
+        label.className = 'cell-label';
+        label.textContent = headings[index] || (LANG === 'en' ? '95% interval' : '95% 区间');
+        const value = document.createElement('span');
+        value.className = 'cell-value';
+        value.append(...cell.childNodes);
+        cell.replaceChildren(label,value);
+      });
+    }
+  });
 }
 
 function renderCountries(){
@@ -849,6 +871,7 @@ function renderInsts(){
       <td class="num mono">${s.n}</td>
     </tr>`;
   }).join('');
+  recordsForTables(document.getElementById('v-inst'));
 }
 
 function openInst(id){
@@ -881,6 +904,7 @@ function openInst(id){
     <div class="sec-t">${t('sources')}</div>
     <p class="small muted">ROR <a href="https://ror.org/${esc(it.ror)}" target="_blank" rel="noopener">${esc(it.ror)}</a>
        · <a href="https://openalex.org/${esc(it.id)}" target="_blank" rel="noopener">OpenAlex ${esc(it.id)}</a></p>`;
+  recordsForTables(document.getElementById('drawer-body'));
   if(!document.getElementById('drawer').classList.contains('open')) drawerOpener = document.activeElement;
   S.openInst = id;
   document.getElementById('drawer').classList.add('open');
@@ -938,7 +962,7 @@ function renderMatch(){
         <div class="muted small">${esc(country(r.it.cc, r.it.country))} · Tier ${r.it.tier}${
           r.it.kind === 'inst' ? ` · ${t('instituteTag')}` : ''}${r.scoped ? t('fieldScoped') : ''}</div>
       </div>
-      <div style="flex:1 1 150px"><div class="sbar">
+      <div class="match-measure"><div class="sbar">
         <i style="width:${(r.s.stay||0)*100}%"></i>
         <u style="left:${ci[0]*100}%;width:${Math.max((ci[1]-ci[0])*100,1)}%"></u></div>
         <div class="muted small mono" style="margin-top:4px">95% ${pc(ci[0])}–${pc(ci[1])}</div>
@@ -996,6 +1020,7 @@ function renderVenues(){
     </tr>`).join('')}</tbody></table></div>
     <p class="muted small" style="margin-top:12px">
       ${S.venues.meta.notes.map(n => esc(vnote(n))).join('　·　')}</p>`;
+  recordsForTables(document.getElementById('venue-wrap'));
 }
 
 /* ---- Origin comparison: same destination, different starting points ---- */
@@ -1063,6 +1088,7 @@ function renderCompare(){
         <div class="cmp-n">n=${c.n}</div></td>` : '<td class="num muted">—</td>').join('')}
       <td class="num hide-s cmp-gap">${(r.gap*100).toFixed(0)} pt</td>
     </tr>`).join('')}</tbody></table></div>`;
+  recordsForTables(document.getElementById('cmp-wrap'));
 }
 
 /* ── the finding: four origins, one destination, computed from the published files ── */
@@ -1073,9 +1099,10 @@ function loadData(cc){
     .then(d => (S.allData[cc] = d));
 }
 function renderFinding(){
+  const focusedOrigin = document.activeElement?.closest('#finding-grid [data-origin]')?.dataset.origin;
   const box = document.getElementById('finding');
   box.hidden = S.view !== 'match';
-  if(box.hidden) return;
+  if(box.hidden){ setMapExpanded(false); return; }
   document.getElementById('finding-eyebrow').textContent = LANG === 'en' ? 'One destination · United States' : '同一目的地 · 美国';
   document.getElementById('finding-h').textContent = LANG === 'en' ? 'US stay rates by origin' : '按来源看美国留任率';
   document.getElementById('finding-lede').textContent = LANG === 'en' ? 'Where researchers were last affiliated after working abroad' : '科研人员在海外工作后的最后已知任职地';
@@ -1104,6 +1131,7 @@ function renderFinding(){
       <div class="cmp-n">95% CI ${r.s.stay_ci ? r.s.stay_ci.map(pc).join('–') : '—'}</div>
     </div>`).join('') + `<div class="f-axis" aria-hidden="true">${[0,25,50,75,100].map(v => `<span>${v}%</span>`).join('')}</div>`;
   if(typeof renderAtlas === 'function') renderAtlas(rows);
+  if(focusedOrigin) grid.querySelector('[data-origin="'+CSS.escape(focusedOrigin)+'"]')?.focus();
 }
 
 /* ── compare chart: one destination, every origin, stay rate with its 95% interval ── */
@@ -1121,8 +1149,8 @@ function renderCompareChart(rows, list){
     ${items.map(({o, c}) => {
       const lo = c.stay_ci ? c.stay_ci[0] : c.stay, hi = c.stay_ci ? c.stay_ci[1] : c.stay;
       return `<div class="ci-row"><span class="who">${esc(country(o.cc, o.name))}</span>
-        <span class="ci-track" role="img" aria-label="${esc(country(o.cc, o.name))}: ${pc(c.stay)}, 95% CI ${pc(lo)} to ${pc(hi)}, n ${c.n}"><i style="left:0;width:${c.stay*100}%"></i><u style="left:${lo*100}%;width:${Math.max((hi-lo)*100, 0.4)}%"></u></span>
-        <span class="ci-val">${pc(c.stay)}<small>n=${c.n.toLocaleString()}</small></span></div>`;
+        <span class="ci-track" style="--stay:${c.stay*100}%;--interval-end:${hi*100}%" role="img" aria-label="${esc(country(o.cc, o.name))}: ${pc(c.stay)}, 95% CI ${pc(lo)} to ${pc(hi)}, n ${c.n}"><i style="left:0;width:${c.stay*100}%"></i><u style="left:${lo*100}%;width:${Math.max((hi-lo)*100, 0.4)}%"></u>
+          <span class="ci-val">${pc(c.stay)}<small>n=${c.n.toLocaleString()}</small></span></span></div>`;
     }).join('')}
     <div class="ci-axis" aria-hidden="true"><span></span><span class="ticks">${[0,25,50,75,100].map(v => `<b style="left:${v}%">${v}%</b>`).join('')}</span><span></span></div>
     <p class="ci-cap">${t('cmpChartAxis')}</p>
@@ -1585,9 +1613,10 @@ function renderAtlas(rows) {
   document.querySelector('.destination-label').textContent = LANG === 'en' ? 'United States' : '美国';
   document.querySelector('.map-caption').textContent = LANG === 'en' ? 'Lines locate origins and carry no volume scale. Affiliation is a proxy for research location.' : '线条只标示来源，不代表人数。学术署名是科研所在地的代理指标。';
   document.getElementById('download').textContent = LANG === 'en' ? 'Download data' : '下载数据';
-  document.getElementById('fullscreen').textContent = LANG === 'en' ? 'Expand map' : '展开地图';
+  setMapExpanded(document.getElementById('finding').classList.contains('expanded'));
   document.getElementById('affiliations-title').textContent = LANG === 'en' ? 'Last known affiliations' : '最后已知任职地';
   document.getElementById('atlas-table').innerHTML = '<div class="table-scroll"><table><thead><tr><th><button data-atlas-sort="name">' + (LANG === 'en' ? 'Origin' : '来源') + '</button></th><th><button data-atlas-sort="stay">' + (LANG === 'en' ? 'Stayed' : '留下') + '</button></th><th><button data-atlas-sort="n">n</button></th></tr></thead><tbody>' + rows.map(row => '<tr><td>' + esc(row.name) + '</td><td>' + pc(row.s.stay) + '</td><td>' + row.s.n.toLocaleString() + '</td></tr>').join('') + '</tbody></table></div>';
+  recordsForTables(document.getElementById('atlas-table'));
   document.getElementById('atlas-table').hidden = atlasMode !== 'table';
   document.getElementById('finding-grid').hidden = atlasMode === 'table';
   document.getElementById('finding').classList.toggle('chart-view', atlasMode === 'chart');
@@ -1632,14 +1661,21 @@ document.getElementById('atlas-table').addEventListener('click', event => {
   table.tBodies[0].replaceChildren(...rows);
   button.dataset.direction = direction === 1 ? 'up' : 'down';
 });
+function setMapExpanded(expanded) {
+  document.getElementById('finding').classList.toggle('expanded',expanded);
+  const button = document.getElementById('fullscreen');
+  button.textContent = LANG==='en'?(expanded?'Close expanded map':'Expand map'):(expanded?'关闭展开地图':'展开地图');
+  button.setAttribute('aria-label',button.textContent);
+}
 document.getElementById('fullscreen').onclick = () => {
-  const expanded = document.getElementById('finding').classList.toggle('expanded');
-  document.getElementById('fullscreen').textContent = LANG==='en'?(expanded?'Close expanded map':'Expand map'):(expanded?'关闭展开地图':'展开地图');
+  const expanded = !document.getElementById('finding').classList.contains('expanded');
+  setMapExpanded(expanded);
+  if(expanded) document.getElementById('finding').scrollIntoView({block:'start'});
 };
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape') {
-    document.getElementById('finding').classList.remove('expanded');
-    document.getElementById('fullscreen').textContent = LANG==='en'?'Expand map':'展开地图';
+  if (event.key === 'Escape' && document.getElementById('finding').classList.contains('expanded')) {
+    setMapExpanded(false);
+    document.getElementById('fullscreen').focus();
   }
 });
 document.getElementById('download').onclick = () => {
@@ -1666,6 +1702,7 @@ Appearance.bindToggle(document.getElementById('theme'));   // ◐ switches light
 document.getElementById('definitions-open').onclick = () => {S.view='doc';render();syncHash();};
 document.getElementById('finding-cta').onclick = () => {
   S.view = 'compare'; render(); syncHash();
+  document.querySelector('.tab[data-view="compare"]').focus();
   document.getElementById('v-compare').scrollIntoView({block: 'start'});
 };
 

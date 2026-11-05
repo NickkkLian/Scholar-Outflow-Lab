@@ -227,9 +227,11 @@ function main() {
      try are taken from the stylesheet rather than listed here — a list would be one more thing to keep in step with
      the sheet, and the point is only that deleting a rule is noticed, whichever rule it is. */
   const sheetFile = primarySheet();
-  const styles = fs.readFileSync(path.join(HERE, sheetFile), 'utf8');
-  // A duplicate in another sheet survives a one-file deletion, so probe single-owner rules.
-  const owners = classesInSheets(readSheets());
+  const sheets = readSheets();
+  const isPrimary = name => name === sheetFile || name.startsWith(sheetFile + ' <style>');
+  const styles = sheets.filter(([name]) => isPrimary(name)).map(([, css]) => css).join('\n');
+  // HTML also contains JavaScript. Probe its parsed style blocks, not script text.
+  const owners = classesInSheets(sheets);
   const candidates = [...report(readSheets()).inSource.keys()]
     .filter((c) => deleteRulesFor(styles, c).removed === 1 && owners.get(c)?.size === 1).sort();
   const WANT = 8;
@@ -241,13 +243,14 @@ function main() {
   const probes = Array.from({ length: WANT }, (_, i) => candidates[Math.floor((i * candidates.length) / WANT)]);
   const caught = [];
   for (const name of probes) {
-    const { css, removed } = deleteRulesFor(styles, name);
+    const { removed } = deleteRulesFor(styles, name);
+    const mutated = sheets.map(([file, css]) => [file, isPrimary(file) ? deleteRulesFor(css, name).css : css]);
     if (!removed) {
       console.log(`NOT APPLIED  .${name} — no rule to delete in ${sheetFile}`);
       caught.push(false);
       continue;
     }
-    const { unstyled } = report(readSheets({ [sheetFile]: css }));
+    const { unstyled } = report(mutated);
     const ok = unstyled.includes(name);
     console.log(`${ok ? 'CAUGHT     ' : 'NOT CAUGHT '} .${name} (${removed} rule${removed === 1 ? '' : 's'} deleted from ${sheetFile})` +
       (ok ? '' : `\n             reported instead: ${unstyled.join(', ') || 'nothing'}`));
