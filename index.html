@@ -8,10 +8,10 @@
 <meta name="theme-color" content="#e6f1ef" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#102b30" media="(prefers-color-scheme: dark)">
 <title>Scholar Outflow Lab · Where home-grown researchers end up</title>
-<link rel="icon" href="favicon.svg?v=3.1.0" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=3.1.0">
-<link rel="stylesheet" href="fonts.css?v=3.1.0">
-<link rel="stylesheet" href="design-tokens.css?v=3.1.0">
+<link rel="icon" href="favicon.svg?v=3.2.0" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=3.2.0">
+<link rel="stylesheet" href="fonts.css?v=3.2.0">
+<link rel="stylesheet" href="design-tokens.css?v=3.2.0">
 <style>
 /* Scholar Outflow Lab — consumes design tokens only (design-tokens.css). */
 /* ===== Fallback faces: until the web fonts load (or if they never do), system fonts are scaled to the measured widths so line lengths and column widths do not jump ===== */
@@ -279,7 +279,7 @@ table.data th.num button{justify-content:flex-end;width:100%}
 @media (pointer:coarse){.origin-pick select{height:var(--touch-min)}}   /* the origin picker was 30px tall beside 44px neighbours */
 /* ===== end of family layer v3.1 ===== */
 </style>
-<link rel="stylesheet" href="atlas.css?v=3.1.0">
+<link rel="stylesheet" href="atlas.css?v=3.2.0">
 </head>
 <body>
 
@@ -375,8 +375,9 @@ table.data th.num button{justify-content:flex-end;width:100%}
       <input type="search" id="f-q" />
       <span class="muted small" id="inst-count"></span>
     </div>
+    <p class="data-guide" id="inst-guide"></p>
     <div id="inst-coverage"></div>
-    <div style="overflow-x:auto">
+    <div id="inst-table" style="overflow-x:auto">
       <table>
         <thead><tr>
           <th data-sort="rank">#</th>
@@ -413,6 +414,7 @@ table.data th.num button{justify-content:flex-end;width:100%}
       <input type="search" id="v-q" />
       <span class="muted small" id="venue-count"></span>
     </div>
+    <p class="data-guide" id="venue-guide"></p>
     <div id="venue-wrap"></div>
   </section>
 
@@ -434,8 +436,8 @@ table.data th.num button{justify-content:flex-end;width:100%}
   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="drawer-title"><button class="close" data-close id="drawer-close"></button><div id="drawer-body"></div></div>
 </div>
 
-<script src="appearance.js?v=3.1.0"></script>
-<script src="map.js?v=3.1.0"></script>
+<script src="appearance.js?v=3.2.0"></script>
+<script src="map.js?v=3.2.0"></script>
 <script>
 /* ── i18n ─────────────────────────────────────────────────────────────
    Default is English; the toggle persists in localStorage.
@@ -516,9 +518,9 @@ en: {
   fLede:'Researchers who started publishing at home, then spent 4+ years in the US. Stay rate: final affiliations include the US but not the origin country.',
   fLimit:'Only relative levels and direction compare: sample frames differ by origin. Do not compare absolute percentages. Academic affiliations, not residency or visa statistics.',
   fWhole:'Four final-affiliation outcomes · one whole = 100%',
-  fOut:{stay:'Stayed · destination, no origin',dual:'Dual · destination + origin',ret:'Returned · origin, no destination',onward:'Onward · neither; third country'},
+  fOut:{stay:'Stayed · destination, no origin',dual:'Both countries · destination + origin',ret:'Returned · origin, no destination',onward:'Onward · neither; third country'},
   fCta:'Compare all origins', fLoading:'Loading the four origins…', fFail:m=>`The headline figures could not be loaded (${m}). The rest of the page does not depend on them.`, tryAgain:'Try again',
-  cmpChartTitle:(dest,s)=>`Stay rate in ${dest} by starting country · ${s}`, cmpChartDest:'Destination', cmpChartAxis:'Bar: stay rate. Whisker: 95% confidence interval. Sorted by stay rate.',
+  cmpChartTitle:(dest,s)=>`Stay rate in ${dest} by starting country · ${s}`, cmpChartDest:'Destination', cmpChartAxis:'The bar shows the stay rate. The line shows its estimated range (95% confidence interval): wider means less certain. Ordered by stay rate.',
   hAboutT:'About this data', hAbout:'Every number is computed by scripts/compute.py from OpenAlex authorship records (CC0) and served as static JSON; nothing is modelled or estimated by hand. The pipeline, its tests and the three corrections that made the numbers self-consistent are in the repository.',
   hNvT:'Not verified here', hNv:'Not visa or immigration statistics and not advice. The sample frame excludes anyone who left before publishing at home; "stayed" means the last known affiliation, not residency. Institutions are parsed from affiliation strings and some mismatches remain; field labels are coarse. Absolute values drift with sampling choices.',
   hSrcT:'Source', hSrc:'MIT · data OpenAlex, CC0 · built by Nick Lian',
@@ -533,15 +535,13 @@ en: {
   loading:'Loading data…', loadFail:(m)=>`Failed to load data: ${m} (serve over http locally, e.g. python3 -m http.server)`,
   cmpFail:(names,m)=>`Could not load ${names} (${m}). The table compares every origin, so it waits for all of them.`,
   strata:{short:'2–3 yrs (mostly visiting)',long:'≥4 yrs (default)',long6:'≥6 yrs',all:'Any length'},
-  out:{stay:'Stayed',dual:'Dual',ret:'Returned',onward:'Onward'},
-  legend:{stay:'Stayed (final affiliation only in destination)',dual:'Dual (both sides)',ret:'Returned (only origin)',onward:'Onward (third country)'},
+  out:{stay:'Stayed',dual:'Both countries',ret:'Returned',onward:'Onward'},
+  legend:{stay:'Stayed (final affiliation only in destination)',dual:'Both countries (origin and destination)',ret:'Returned (only origin)',onward:'Onward (third country)'},
   stayLen:'Stay length',
   lMField:'My field', lMCountry:'Destination', lMKind:'Institution type', lMStratum:'Planned stay',
   kindOpts:['Universities + institutes','Universities only','Institutes only'],
   mStratumOpts:{long:'4+ years (PhD / long-term role)',long6:'6+ years (putting down roots)',short:'2–3 years (visiting / joint program)',all:'Any length'},
-  askNote:`Ranked by the <b>lower bound of the 95% CI on the stay rate</b>, not the raw rate —
-    40% of a 25-person sample doesn't hold up, and ranking by the bound lets it sink on its own.
-    <b>Sample sizes are printed; read them.</b>`,
+  askNote:`Ordered by the cautious end of each estimated stay-rate range. Small samples rank lower when their results are less certain. The range shows uncertainty in the estimate. Ranking groups run from R1 (highest) to R4 (lowest).`,
   anyDest:'Any destination', anyFieldOverall:'Any field (overall)',
   allCountries:'All countries/regions', allFields:'All fields',
   fKindLbl:'Institution type', fCountryLbl:'Country or region', fFieldLbl:'Field', vFieldLbl:'Field', vTypeLbl:'Venue type',
@@ -549,8 +549,8 @@ en: {
   instCount:n=>n === 1 ? '1 institution' : `${n} institutions`, venueCount:(n,total)=>n < total ? `${n} of ${total.toLocaleString('en')} venues` : n === 1 ? '1 venue' : `${n} venues`,
   instEmptyT:'No institutions match.', instEmpty:'Loosen the filters, or try another stay-length stratum.', clearFilters:'Clear filters',
   venueEmptyT:'No venues match.', venueEmpty:'Loosen the field, type or search filter.',
-  th:{name:'Institution',country:'Country/Region',stay:'Stay rate',ci:'95% CI',dual:'Dual',ret:'Returned',n:'n'},
-  smallN:' · small n',
+  th:{name:'Institution',country:'Country/Region',stay:'Stay rate',ci:'Estimated range',dual:'Both countries',ret:'Returned',n:'Researchers'},
+  smallN:' · small sample',
   noCountriesT:'No destination to show.', noCountries:'No destination country has enough sample in this stratum.', showDefaultStratum:'Show ≥4 yrs (default)',
   instituteTag:'Institute',
   vTypeOpts:['Journals + conferences','Journals only','Conferences only'],
@@ -579,16 +579,16 @@ en: {
   matchNoneT:'No institution clears the sample-size floor for this combination.',
   matchNone:'Showing nothing is deliberate — inventing a number would be the dishonest option. Widen the field or destination and retry.',
   matchWiden:'Any field, any destination',
-  matchShown:(shown,n)=>`Showing the first ${shown} of ${n}, ranked by the lower end of the stay-rate interval.`,
+  matchShown:(shown,n)=>`Showing ${shown} of ${n} institutions, ordered by the cautious estimate.`,
   matchSummary:(f,c,s,n,thin)=>`<b>${esc(f)} · ${esc(c)} · ${esc(s)}</b>
     ${n === 1 ? '1 qualifying institution' : n + ' qualifying institutions'}${thin ? ` — ${thin} of them under 40 people, so their intervals are wide` : ''}.
-    These are <b>historical outcome distributions for people like this</b> — not your personal odds, and not immigration advice.`,
+    These records describe <b>where sampled researchers last worked</b>. They do not predict where you will end up.`,
   fieldScoped:' · field-scoped', stayed:'Stayed',
   drawerClose:'Close',
   secStrata:'Outcomes by length of stay', secField:s=>`By field (current stratum · ${s})`, secFieldPlain:'By field',
   fieldNoSample:'No field reaches the minimum sample size (15) in this stratum, so no numbers are shown.',
-  fieldTh:{field:'Field',stay:'Stayed',ret:'Returned',n:'n'},
-  works:'works indexed by OpenAlex', sources:'Sources', tierRank:(t,r)=>`Tier ${t} · #${r}`,
+  fieldTh:{field:'Field',stay:'Stayed',ret:'Returned',n:'Researchers'},
+  works:'works indexed by OpenAlex', sources:'Sources', tierRank:(t,r)=>`Group ${t} · #${r}`,
   foot:(d)=>`Data ${esc(d.meta.source)} · generated ${esc(d.meta.generated_at)} · ` +
     `origin ${esc(d.meta.origin_name_disp)} · sample ${d.meta.sampled_authors.toLocaleString()} authors · ` +
     `this site does not provide immigration or legal advice`,
@@ -604,7 +604,7 @@ zh: {
   fWhole:'四种末位署名去向 · 合计 100%',
   fOut:{stay:'留下 · 有目的国、无来源国',dual:'双挂 · 目的国与来源国',ret:'回流 · 有来源国、无目的国',onward:'转道 · 两国均无、在第三国'},
   fCta:'对比全部起点', fLoading:'正在载入四个起点的数据…', fFail:m=>`核心数字载入失败（${m}）。页面其余部分不受影响。`, tryAgain:'重试',
-  cmpChartTitle:(dest,s)=>`${dest} 的留下率 · 按起点 · ${s}`, cmpChartDest:'目的国', cmpChartAxis:'实心条：留下率。须线：95% 置信区间。按留下率排序。',
+  cmpChartTitle:(dest,s)=>`${dest} 的留下率 · 按起点 · ${s}`, cmpChartDest:'目的国', cmpChartAxis:'实心条表示留下率，横线表示估计范围（95% 置信区间）；范围越宽，结果越不确定。按留下率排序。',
   hAboutT:'关于这些数据', hAbout:'每个数字都由 scripts/compute.py 从 OpenAlex 署名记录（CC0）算出，以静态 JSON 提供；没有人工估算或建模。流水线、测试与让数字自洽的三处口径修正都在仓库里。',
   hNvT:'这里没有核实的', hNv:'不是签证或移民统计，也不构成建议。样本框不含本科即出国、在国内没发过论文的人；「留下」指最后已知任职机构，不等于居留身份。机构从署名字符串解析，仍有错配；学科标签很粗。绝对值随口径漂移。',
   hSrcT:'来源', hSrc:'MIT · 数据 OpenAlex，CC0 · Nick Lian 制作',
@@ -618,22 +618,21 @@ zh: {
   loading:'载入数据中…', loadFail:(m)=>`数据载入失败：${m}（本地需用 http 打开，例如 python3 -m http.server）`,
   cmpFail:(names,m)=>`${names} 的数据没载入（${m}）。这张表要比较所有起点，所以会等它们都到齐。`,
   strata:{short:'2–3 年（多为访问）',long:'≥4 年（默认）',long6:'≥6 年',all:'不限'},
-  out:{stay:'留下',dual:'双挂',ret:'回流',onward:'转道'},
-  legend:{stay:'留下（末位只在目的国）',dual:'双挂（两边都挂）',ret:'回流（末位只在来源国）',onward:'转道（去了第三国）'},
+  out:{stay:'留下',dual:'两国任职',ret:'回流',onward:'转道'},
+  legend:{stay:'留下（末位只在目的国）',dual:'两国任职（来源国和目的国）',ret:'回流（末位只在来源国）',onward:'转道（去了第三国）'},
   stayLen:'停留时长',
   lMField:'我的学科', lMCountry:'想去', lMKind:'机构类型', lMStratum:'打算待',
   kindOpts:['高校 + 研究所','只看高校','只看研究所'],
   mStratumOpts:{long:'4 年以上（读博/长期职位）',long6:'6 年以上（长期扎根）',short:'2–3 年（访问/联培）',all:'不限'},
-  askNote:`按「留下率的 95% 置信下界」排序，不是按原始比率——
-    25 人样本里的 40% 站不住脚，按下界排它自己会掉下去。<b>样本量一并列出，请自己看清楚。</b>`,
+  askNote:`按留下率估计范围中较谨慎的一端排序。样本少、结果不确定时，排名会降低。范围表示估计的不确定程度。机构分组从 R1（最高）到 R4（最低）。`,
   anyDest:'不限目的地', anyFieldOverall:'不限学科（看整体）',
   allCountries:'全部国家/地区', allFields:'全部学科',
   fKindLbl:'机构类型', fCountryLbl:'国家/地区', fFieldLbl:'学科', vFieldLbl:'学科', vTypeLbl:'期刊或会议',
   searchInst:'搜校名…', searchVenue:'搜刊名/出版方…',
-  instCount:n=>`${n} 所`, venueCount:(n,total)=>n < total ? `${total} 本中的前 ${n} 本` : `${n} 本`,
+  instCount:n=>`${n} 所`, venueCount:(n,total)=>n < total ? `${total.toLocaleString('en-US')} 本中的前 ${n.toLocaleString('en-US')} 本` : `${n} 本`,
   instEmptyT:'没有符合条件的机构。', instEmpty:'放宽筛选，或换一个停留时长分层试试。', clearFilters:'清空筛选',
   venueEmptyT:'没有符合条件的期刊会议。', venueEmpty:'放宽学科、类型或搜索条件。',
-  th:{name:'机构',country:'国家/地区',stay:'留下率',ci:'95% 区间',dual:'双挂',ret:'回流',n:'样本'},
+  th:{name:'机构',country:'国家/地区',stay:'留下率',ci:'估计范围',dual:'两国任职',ret:'回流',n:'研究者人数'},
   smallN:' · 样本少',
   noCountriesT:'没有可显示的目的国。', noCountries:'该分层下没有样本量足够的目的国。', showDefaultStratum:'看 ≥4 年（默认）',
   instituteTag:'研究所',
@@ -661,16 +660,16 @@ zh: {
   matchNoneT:'这个组合下没有样本量达标的机构。',
   matchNone:'样本不够就不出分，是刻意的——硬凑一个数出来才是骗人。放宽学科或目的地再试。',
   matchWiden:'任意学科、任意目的地',
-  matchShown:(shown,n)=>`只列出前 ${shown} 所（共 ${n} 所），按留下率区间的下限排序。`,
+  matchShown:(shown,n)=>`显示 ${n} 所中的前 ${shown} 所，按较谨慎的估计排序。`,
   matchSummary:(f,c,s,n,thin)=>`<b>${esc(f)} · ${esc(c)} · ${esc(s)}</b>
     共 ${n} 所达标机构${thin ? `，其中 ${thin} 所样本不足 40 人，区间会很宽` : ''}。
-    这里给的是<b>历史上同类人群的去向分布</b>，不是你个人的成功概率，更不是移民建议。`,
+    这里记录的是<b>样本中研究者最后在哪里任职</b>，不能预测你个人的去向。`,
   fieldScoped:' · 已按学科细分', stayed:'留下',
   drawerClose:'关闭',
   secStrata:'各停留时长下的去向', secField:s=>`按学科（当前分层 · ${s}）`, secFieldPlain:'按学科',
   fieldNoSample:'该分层下没有学科达到最小样本量（15 人），不出分。',
-  fieldTh:{field:'学科',stay:'留下',ret:'回流',n:'n'},
-  works:'OpenAlex 收录论文', sources:'来源', tierRank:(t,r)=>`Tier ${t} · 第 ${r} 位`,
+  fieldTh:{field:'学科',stay:'留下',ret:'回流',n:'研究者人数'},
+  works:'OpenAlex 收录论文', sources:'来源', tierRank:(t,r)=>`分组 ${t} · 第 ${r} 位`,
   foot:(d)=>`数据 ${esc(d.meta.source)} · 生成于 ${esc(d.meta.generated_at)} · ` +
     `起点 ${esc(d.meta.origin_name_disp)} · 样本 ${d.meta.sampled_authors.toLocaleString()} 人 · ` +
     `本站不提供移民/法律建议`,
@@ -690,6 +689,7 @@ const S = {data:null, venues:null, origin:(/^[a-z]{2}$/.test(HASH_STATE.get('ori
            mField:'', mCountry:'', mKind:'', mStratum:'long',
            vField:'', vType:'', vQ:'', vSortKey:'h', vSortDir:-1, cSortKey:null, cSortDir:0};
 const OUT_KEYS = [['stay','var(--o-stay)'],['dual','var(--o-dual)'],['ret','var(--o-ret)'],['onward','var(--o-onward)']];
+const sampleSize = n => LANG==='en' ? 'Sample: '+n.toLocaleString('en-US') : '样本：'+n.toLocaleString('en-US')+' 人';
 const pc = v => v==null ? '—' : (v*100).toFixed(1)+'%';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 // meta.origin_name arrives in English from the data files; display per language.
@@ -714,11 +714,20 @@ function stackBar(s){
   return `<div class="bar">${parts}</div><div class="bar-k">${keys}</div>`;
 }
 
+function fitTables() {
+  for (const table of document.querySelectorAll('table[data-layout]')) {
+    if (!table.checkVisibility()) continue;
+    table.classList.remove('as-records');
+    const region=table.parentElement;
+    const phoneRecords=(innerWidth<=700 && table.dataset.layout==='records') || (table.closest('#v-inst') && region.clientWidth<900);
+    table.classList.toggle('as-records',phoneRecords || table.scrollWidth>region.clientWidth+1);
+  }
+}
 function recordsForTables(container) {
   container.querySelectorAll('table').forEach(table => {
     const headings = [...(table.tHead?.rows[0]?.cells || [])].map(cell => {
       const label = cell.textContent.trim();
-      return label === '#' ? (LANG === 'en' ? 'Tier' : '分档') : label;
+      return label === '#' ? (LANG === 'en' ? 'Ranking group' : '排名分组') : label;
     });
     table.dataset.layout = headings.length > 3 ? 'records' : 'columns';
     for (const row of table.tBodies[0]?.rows || []) {
@@ -734,6 +743,7 @@ function recordsForTables(container) {
       });
     }
   });
+  fitTables();
 }
 
 function renderCountries(){
@@ -747,7 +757,7 @@ function renderCountries(){
   g.innerHTML = rows.map(({c,s}) => `
     <div class="c-card">
       <div class="c-head"><h2>${esc(country(c.cc, c.name))}</h2>
-        <span class="n">n=${s.n}${s.n < 150 ? t('smallN') : ''}</span></div>
+        <span class="n">${sampleSize(s.n)}${s.n < 150 ? t('smallN') : ''}</span></div>
       ${stackBar(s)}
     </div>`).join('');
   if(!rows.length){ const p = document.createElement('p'); p.className = 'muted';
@@ -856,6 +866,7 @@ function renderInsts(){
   const holder = document.getElementById('inst-coverage');
   if(holder) holder.innerHTML = coverageNote();
   document.getElementById('inst-empty').hidden = rows.length > 0;
+  document.getElementById('inst-table').hidden = !rows.length;
   document.getElementById('inst-body').innerHTML = rows.map(({it,s}) => {
     const ci = s.stay_ci || [0,0];
     return `<tr data-id="${it.id}" tabindex="0">
@@ -868,7 +879,7 @@ function renderInsts(){
         <u style="left:${ci[0]*100}%;width:${Math.max((ci[1]-ci[0])*100,1)}%"></u></div></td>
       <td class="num mono hide-s">${pc(s.dual)}</td>
       <td class="num mono hide-s">${pc(s.ret)}</td>
-      <td class="num mono">${s.n}</td>
+      <td class="num mono">${s.n.toLocaleString('en-US')}</td>
     </tr>`;
   }).join('');
   recordsForTables(document.getElementById('v-inst'));
@@ -881,7 +892,7 @@ function openInst(id){
     const s = it.strata[k];
     if(!s || !s.n) return '';
     return `<div style="margin:12px 0">
-      <div class="c-head"><span class="small"><b>${t('strata')[k]}</b></span><span class="n">n=${s.n}</span></div>
+      <div class="c-head"><span class="small"><b>${t('strata')[k]}</b></span><span class="n">${sampleSize(s.n)}</span></div>
       ${stackBar(s)}</div>`;
   }).join('');
   const fl = (it.fields || {})[S.stratum] || [];
@@ -890,7 +901,7 @@ function openInst(id){
     <table><thead><tr><th>${t('fieldTh').field}</th><th class="num">${t('fieldTh').stay}</th><th class="num">${t('fieldTh').ret}</th><th class="num">${t('fieldTh').n}</th></tr></thead>
     <tbody>${fl.map(f => `<tr style="cursor:default"><td>${esc(field(f.field))}</td>
       <td class="num mono">${pc(f.stay)}</td><td class="num mono">${pc(f.ret)}</td>
-      <td class="num mono">${f.n}</td></tr>`).join('')}</tbody></table>` : `
+      <td class="num mono">${f.n.toLocaleString('en-US')}</td></tr>`).join('')}</tbody></table>` : `
     <div class="sec-t">${t('secFieldPlain')}</div>
     <p class="small muted">${t('fieldNoSample')}</p>`;
   document.getElementById('drawer-body').innerHTML = `
@@ -908,6 +919,7 @@ function openInst(id){
   if(!document.getElementById('drawer').classList.contains('open')) drawerOpener = document.activeElement;
   S.openInst = id;
   document.getElementById('drawer').classList.add('open');
+  fitTables();
   pageParts().forEach(el => { el.inert = true; });
   syncHash();
   document.getElementById('drawer-close').focus();
@@ -959,16 +971,16 @@ function renderMatch(){
       <span class="m-rank">${i+1}</span>
       <div class="m-main">
         <h3>${esc(r.it.name)}</h3>
-        <div class="muted small">${esc(country(r.it.cc, r.it.country))} · Tier ${r.it.tier}${
+        <div class="muted small">${esc(country(r.it.cc, r.it.country))} · ${LANG==='en'?'Group':'分组'} ${r.it.tier}${
           r.it.kind === 'inst' ? ` · ${t('instituteTag')}` : ''}${r.scoped ? t('fieldScoped') : ''}</div>
       </div>
       <div class="match-measure"><div class="sbar">
         <i style="width:${(r.s.stay||0)*100}%"></i>
         <u style="left:${ci[0]*100}%;width:${Math.max((ci[1]-ci[0])*100,1)}%"></u></div>
-        <div class="muted small mono" style="margin-top:4px">95% ${pc(ci[0])}–${pc(ci[1])}</div>
+        <div class="muted small mono" style="margin-top:4px">${LANG==='en'?'Range':'范围'}: ${pc(ci[0])}–${pc(ci[1])}</div>
       </div>
       <div class="m-num"><div class="big">${pc(r.s.stay)}</div>
-        <div class="sub">${t('stayed')} · n=${r.s.n}</div></div>
+        <div class="sub">${sampleSize(r.s.n)}</div></div>
     </div>`;
   }).join('');
 }
@@ -1085,7 +1097,7 @@ function renderCompare(){
     <tbody>${shown.map(r => `<tr style="cursor:default">
       <td>${esc(country(r.dc, r.name))}</td>
       ${r.cells.map(c => c ? `<td class="num"><span class="cmp-hi">${pc(c.stay)}</span>
-        <div class="cmp-n">n=${c.n}</div></td>` : '<td class="num muted">—</td>').join('')}
+        <div class="cmp-n">${sampleSize(c.n)}</div></td>` : '<td class="num muted">—</td>').join('')}
       <td class="num hide-s cmp-gap">${(r.gap*100).toFixed(0)} pt</td>
     </tr>`).join('')}</tbody></table></div>`;
   recordsForTables(document.getElementById('cmp-wrap'));
@@ -1126,9 +1138,9 @@ function renderFinding(){
     return us && us.strata[S.stratum] ? {cc, name: originName(d.meta), s: us.strata[S.stratum]} : null;
   }).filter(Boolean).sort((a,b) => b.s.stay - a.s.stay);
   grid.innerHTML = rows.map(r => `<div class="f-row" data-origin="${r.cc}" tabindex="0" role="button">
-      <div class="f-label"><h2>${esc(r.name)}</h2><b class="mono">${pc(r.s.stay)} <small>n = ${r.s.n.toLocaleString()}</small></b></div>
-      <div class="bar" role="img" aria-label="${esc(r.name)}: ${OUT_KEYS.map(([k]) => t('out')[k] + ' ' + pc(r.s[k])).join(', ')}; n = ${r.s.n}; 95% CI ${r.s.stay_ci ? r.s.stay_ci.map(pc).join('–') : '—'}">${OUT_KEYS.map(([k,c]) => `<span title="${t('out')[k]} ${pc(r.s[k])}" style="width:${r.s[k]*100}%;background:${c}"></span>`).join('')}</div>
-      <div class="cmp-n">95% CI ${r.s.stay_ci ? r.s.stay_ci.map(pc).join('–') : '—'}</div>
+      <div class="f-label"><h2>${esc(r.name)}</h2><b class="mono">${pc(r.s.stay)} <small>${sampleSize(r.s.n)}</small></b></div>
+      <div class="bar" role="img" aria-label="${esc(r.name)}: ${OUT_KEYS.map(([k]) => t('out')[k] + ' ' + pc(r.s[k])).join(', ')}; ${sampleSize(r.s.n)}; ${t('th').ci} ${r.s.stay_ci ? r.s.stay_ci.map(pc).join('–') : '—'}">${OUT_KEYS.map(([k,c]) => `<span title="${t('out')[k]} ${pc(r.s[k])}" style="width:${r.s[k]*100}%;background:${c}"></span>`).join('')}</div>
+      <div class="cmp-n">${t('th').ci} ${r.s.stay_ci ? r.s.stay_ci.map(pc).join('–') : '—'}</div>
     </div>`).join('') + `<div class="f-axis" aria-hidden="true">${[0,25,50,75,100].map(v => `<span>${v}%</span>`).join('')}</div>`;
   if(typeof renderAtlas === 'function') renderAtlas(rows);
   if(focusedOrigin) grid.querySelector('[data-origin="'+CSS.escape(focusedOrigin)+'"]')?.focus();
@@ -1149,8 +1161,8 @@ function renderCompareChart(rows, list){
     ${items.map(({o, c}) => {
       const lo = c.stay_ci ? c.stay_ci[0] : c.stay, hi = c.stay_ci ? c.stay_ci[1] : c.stay;
       return `<div class="ci-row"><span class="who">${esc(country(o.cc, o.name))}</span>
-        <span class="ci-track" style="--stay:${c.stay*100}%;--interval-end:${hi*100}%" role="img" aria-label="${esc(country(o.cc, o.name))}: ${pc(c.stay)}, 95% CI ${pc(lo)} to ${pc(hi)}, n ${c.n}"><i style="left:0;width:${c.stay*100}%"></i><u style="left:${lo*100}%;width:${Math.max((hi-lo)*100, 0.4)}%"></u>
-          <span class="ci-val">${pc(c.stay)}<small>n=${c.n.toLocaleString()}</small></span></span></div>`;
+        <span class="ci-track" style="--stay:${c.stay*100}%;--interval-end:${hi*100}%" role="img" aria-label="${esc(country(o.cc, o.name))}: ${pc(c.stay)}, ${t('th').ci} ${pc(lo)} to ${pc(hi)}, ${sampleSize(c.n)}"><i style="left:0;width:${c.stay*100}%"></i><u style="left:${lo*100}%;width:${Math.max((hi-lo)*100, 0.4)}%"></u>
+          <span class="ci-val">${pc(c.stay)}<small>${sampleSize(c.n)}</small></span></span></div>`;
     }).join('')}
     <div class="ci-axis" aria-hidden="true"><span></span><span class="ticks">${[0,25,50,75,100].map(v => `<b style="left:${v}%">${v}%</b>`).join('')}</span><span></span></div>
     <p class="ci-cap">${t('cmpChartAxis')}</p>
@@ -1228,7 +1240,7 @@ function renderDoc(){
     <h2>Four mutually exclusive outcomes (sum to 100%)</h2>
     <ul>
       <li><b>Stayed</b> — final known affiliations include the destination, not ${on}</li>
-      <li><b>Dual</b> — both sides. Very common among Chinese researchers (foreign post + home
+      <li><b>Both countries</b> — origin and destination. Very common among Chinese researchers (foreign post + home
           co-appointment); kept separate so it inflates neither side</li>
       <li><b>Returned</b> — only ${on}</li>
       <li><b>Onward</b> — neither; moved to a third country</li>
@@ -1241,16 +1253,15 @@ function renderDoc(){
        and watch the numbers separate — that separation is itself the finding.</p>
 
     <h2>How Tiers are assigned</h2>
-    <p>Institutions are ranked by the <b>lower bound of the 95% CI</b> on the default-stratum stay rate,
-       then cut into quartiles <code>R1</code>–<code>R4</code>. Two deliberate choices:</p>
+    <p>Institutions are ranked by the <b>cautious end of the estimated range (the 95% confidence interval)</b> on the default-stratum stay rate,
+       then divided into four equally sized groups: <code>R1</code> is the highest and <code>R4</code> the lowest. Two deliberate choices:</p>
     <ul>
       <li><b>Percentiles, not absolute cutoffs</b> — absolute values drift with sampling; relative position
           within the same batch is stable.</li>
       <li><b>The bound, not the raw rate</b> — 40% of 25 people versus 30% of 300: the former's true value
-          may be far lower. Ranking by the bound lets small-sample flukes sink on their own, with no extra
-          rules needed.</li>
+          may be far lower. Using the cautious end of the range reduces the influence of small, uncertain samples.</li>
     </ul>
-    <p>Dual counts toward neither side of the ranking — its meaning is inherently ambiguous.</p>
+    <p>Researchers affiliated with both countries count toward neither side of the ranking — its meaning is inherently ambiguous.</p>
 
     <h2>What cross-origin comparison can and cannot tell you</h2>
     <p>The Origin Compare page puts the same destination's stay rates side by side across origins.
@@ -1442,6 +1453,7 @@ function applyChrome(){
     const b = document.getElementById(id); if(b){ b.setAttribute('aria-label', t(key)); b.title = t(key); } });
   document.querySelectorAll('.tab').forEach(b => b.textContent = t('tabs')[b.dataset.view]);
   document.getElementById('notice').innerHTML = '<p>' + t('notice') + '</p>';
+  document.querySelector('.research-notes > summary').textContent = LANG==='en'?'How to read the data':'如何理解这些数据';
   document.getElementById('skip').textContent = t('skip');
   ['hAboutT','hNvT','hSrcT'].forEach(k => document.getElementById({hAboutT:'h-about-t',hNvT:'h-nv-t',hSrcT:'h-src-t'}[k]).textContent = t(k));
   document.getElementById('h-about').textContent = t('hAbout');
@@ -1463,6 +1475,12 @@ function applyChrome(){
   ['l-stratum1','l-stratum2','l-stratum3'].forEach(id => document.getElementById(id).textContent = t('stayLen'));
   document.getElementById('legend').innerHTML = OUT_KEYS.map(([k,c]) =>
     `<span><i style="background:${c}"></i>${t('legend')[k]}</span>`).join('');
+  document.getElementById('inst-guide').textContent = LANG==='en'
+    ? 'Estimated range shows uncertainty in the stay rate (95% confidence interval); wider means less certain. Ranking groups run from R1 (highest) to R4 (lowest), using the cautious end of the range.'
+    : '估计范围表示留下率的不确定程度（95% 置信区间），越宽越不确定。按较谨慎的一端排名，分组从 R1（最高）到 R4（最低）。';
+  document.getElementById('venue-guide').textContent = LANG==='en'
+    ? 'Citation groups within each field: V1 is the highest (top 10%), V2 the next 20%, V3 the next 30%, and V4 the lowest 40%. Groups use the h-index, a measure of how often a venue’s papers have been cited.'
+    : '在同一学科内按论文引用情况分组：V1 最高（前 10%），V2 为接下来的 20%，V3 为接下来的 30%，V4 最低（后 40%）。依据为 h-index，即论文被引用情况的指标。';
   const th = t('th');
   setTh('th-name', th.name);
   setTh('th-country', th.country);
@@ -1473,6 +1491,13 @@ function applyChrome(){
   setTh('th-n', th.n);
   document.getElementById('f-q').placeholder = t('searchInst');
   document.getElementById('inst-empty').replaceChildren(emptyState('instEmptyT', 'instEmpty', clearInstFilters));
+  if(S.venues){
+    const fieldSelect=document.getElementById('v-field');
+    fieldSelect.replaceChildren(...[['',t('allFields')],...S.venues.meta.fields.map(name=>[name,field(name)])].map(([value,label])=>{
+      const option=document.createElement('option');option.value=value;option.textContent=label;return option;
+    }));
+    fieldSelect.value=S.vField;
+  }
   const vt = document.getElementById('v-type'); const vtVal = S.vType;
   vt.innerHTML = ['','journal','conference'].map((v,i) => `<option value="${v}">${t('vTypeOpts')[i]}</option>`).join('');
   vt.value = vtVal;
@@ -1615,7 +1640,7 @@ function renderAtlas(rows) {
   document.getElementById('download').textContent = LANG === 'en' ? 'Download data' : '下载数据';
   setMapExpanded(document.getElementById('finding').classList.contains('expanded'));
   document.getElementById('affiliations-title').textContent = LANG === 'en' ? 'Last known affiliations' : '最后已知任职地';
-  document.getElementById('atlas-table').innerHTML = '<div class="table-scroll"><table><thead><tr><th><button data-atlas-sort="name">' + (LANG === 'en' ? 'Origin' : '来源') + '</button></th><th><button data-atlas-sort="stay">' + (LANG === 'en' ? 'Stayed' : '留下') + '</button></th><th><button data-atlas-sort="n">n</button></th></tr></thead><tbody>' + rows.map(row => '<tr><td>' + esc(row.name) + '</td><td>' + pc(row.s.stay) + '</td><td>' + row.s.n.toLocaleString() + '</td></tr>').join('') + '</tbody></table></div>';
+  document.getElementById('atlas-table').innerHTML = '<div class="table-scroll"><table><thead><tr><th><button data-atlas-sort="name">' + (LANG === 'en' ? 'Origin' : '来源') + '</button></th><th><button data-atlas-sort="stay">' + (LANG === 'en' ? 'Stayed' : '留下') + '</button></th><th><button data-atlas-sort="n">' + (LANG === 'en' ? 'Researchers' : '研究者人数') + '</button></th></tr></thead><tbody>' + rows.map(row => '<tr><td>' + esc(row.name) + '</td><td>' + pc(row.s.stay) + '</td><td>' + row.s.n.toLocaleString() + '</td></tr>').join('') + '</tbody></table></div>';
   recordsForTables(document.getElementById('atlas-table'));
   document.getElementById('atlas-table').hidden = atlasMode !== 'table';
   document.getElementById('finding-grid').hidden = atlasMode === 'table';
@@ -1698,6 +1723,7 @@ document.getElementById('download').onclick = () => {
 
 applyChrome();
 renderFinding();
+window.addEventListener('resize',fitTables);
 Appearance.bindToggle(document.getElementById('theme'));   // ◐ switches light/dark only (appearance.js)
 document.getElementById('definitions-open').onclick = () => {S.view='doc';render();syncHash();};
 document.getElementById('finding-cta').onclick = () => {
