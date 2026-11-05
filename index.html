@@ -2,18 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<script>/* appearance boot — runs before any stylesheet so the stored palette and light/dark apply on the first paint */(function(){try{var d=document.documentElement,L=window.localStorage,t=L.getItem('nl-theme'),s=L.getItem('nl-scheme');if(s===null){var o=L.getItem('theme')||L.getItem('qm-theme');if(o==='dark'||o==='light')s=o;}if(t==='paper'||t==='ink')d.setAttribute('data-theme',t);if(s==='dark'||s==='light')d.setAttribute('data-scheme',s);}catch(e){}})();</script>
+<script>(function(){try{var s=localStorage.getItem('r3-theme')||localStorage.getItem('nl-scheme')||localStorage.getItem('qm-theme')||localStorage.getItem('theme');document.documentElement.dataset.theme=s==='dark'?'dark':'light';}catch(e){document.documentElement.dataset.theme='light';}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="description" content="Where researchers from 13 countries ended up — every rate shown with its sample size. Scholar Outflow Lab: stay rates by destination and institution, stratified by length of stay, from OpenAlex authorship records.">
-<meta name="theme-color" content="#f7e9e8" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#130e15" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#e6f1ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#102b30" media="(prefers-color-scheme: dark)">
 <title>Scholar Outflow Lab · Where home-grown researchers end up</title>
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..600;1,9..144,400&family=Inter:wght@400..600&family=Space+Mono:wght@400;700&display=swap">
-<link rel="stylesheet" href="design-tokens.css">
+<link rel="icon" href="favicon.svg?v=3.0.0" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=3.0.0">
+<link rel="stylesheet" href="fonts.css?v=3.0.0">
+<link rel="stylesheet" href="design-tokens.css?v=3.0.0">
 <style>
 /* Scholar Outflow Lab — consumes design tokens only (design-tokens.css). */
 /* ===== Fallback faces: until the web fonts load (or if they never do), system fonts are scaled to the measured widths so line lengths and column widths do not jump ===== */
@@ -57,14 +55,13 @@ a{color:var(--accent-text);text-underline-offset:.18em;text-decoration-thickness
 .tab{border:none;background:transparent;height:30px;padding:0 var(--space-3);border-radius:var(--radius-sm);font-weight:var(--weight-medium);color:var(--on-band-2);font-size:var(--text-sm);white-space:nowrap;transition:background-color var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out)}
 @media (hover:hover) and (pointer:fine){.tab:hover{color:var(--on-band)}}
 .tab.active{background:var(--band-line);color:var(--on-band);box-shadow:inset 0 0 0 1px var(--on-band-2);font-weight:var(--weight-medium)}
-.icon-btn,.lang-btn,.gh{display:inline-flex;align-items:center;justify-content:center;height:30px;min-width:30px;padding:0 var(--space-2);border-radius:var(--radius-sm);border:1px solid transparent;background:transparent;color:var(--on-band-2);font-size:var(--text-sm);font-weight:var(--weight-medium);text-decoration:none;transition:background-color var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out)}
-@media (hover:hover) and (pointer:fine){.icon-btn:hover,.lang-btn:hover,.gh:hover{background:var(--band-line);color:var(--on-band)}}
+.icon-btn,.lang-btn{display:inline-flex;align-items:center;justify-content:center;height:30px;min-width:30px;padding:0 var(--space-2);border-radius:var(--radius-sm);border:1px solid transparent;background:transparent;color:var(--on-band-2);font-size:var(--text-sm);font-weight:var(--weight-medium);text-decoration:none;transition:background-color var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out)}
+@media (hover:hover) and (pointer:fine){.icon-btn:hover,.lang-btn:hover{background:var(--band-line);color:var(--on-band)}}
 
 .wrap{max-width:var(--content-max);margin:0 auto;padding:var(--space-5) var(--gutter)}
 
 /* ===== the finding (first screen) ===== */
 .finding{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-1);padding:var(--space-5);margin-bottom:var(--space-4)}
-.finding .eyebrow{font:var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--text-3);margin-bottom:var(--space-2)}
 .finding h1{font-size:var(--text-2xl);max-width:32ch}
 .finding .lede{color:var(--text-2);font-size:var(--text-sm);margin:var(--space-2) 0 var(--space-4);max-width:var(--measure)}
 .f-row{margin-bottom:var(--space-3)}
@@ -78,12 +75,10 @@ a{color:var(--accent-text);text-underline-offset:.18em;text-decoration-thickness
 .f-limit{font-size:var(--text-xs);color:var(--text-2);margin:var(--space-3) 0;max-width:var(--measure)}
 .f-whole{font-size:var(--text-xs);font-weight:var(--weight-semibold);margin:0 0 var(--space-2)}
 #finding-legend{gap:var(--space-1) var(--space-4);margin:0}
-.f-foot{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-4);margin-top:var(--space-4)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-1);height:var(--control-h);padding:0 var(--space-4);border-radius:var(--radius-sm);border:1px solid var(--border-input);background:var(--paper);color:var(--text);font-size:var(--text-sm);font-weight:var(--weight-medium);text-decoration:none;white-space:nowrap;transition:background-color var(--dur-fast) var(--ease-out),border-color var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out)}
 @media (hover:hover) and (pointer:fine){.btn:hover{background:var(--surface-hover)}}
 .btn:active{transform:scale(var(--press-scale))}
-.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-@media (hover:hover) and (pointer:fine){.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}}
+@media (hover:hover) and (pointer:fine){}
 /* the button inside an empty state, beside a sentence rather than in a row of its own; height only, so the
    coarse-pointer rule above still raises it to the touch target on a phone */
 .btn-sm{height:26px;padding:0 var(--space-3);font-size:var(--text-xs)}
@@ -226,7 +221,6 @@ tbody tr[tabindex]:focus-visible{outline-offset:-2px}
   .finding h1{font-size:var(--text-xl)}
   .chart{--ci-label:96px;--ci-val:64px}
   .ci-row,.ci-axis{gap:var(--space-2)}
-  .gh{display:none}
 }
 /* ===== Family layer v3.1: band surfaces, pressed and focus states, touch targets =====
    The band (top bar, signature panel, footer) is the anchor surface: deep in Plaster and Ink, a whiter paper in
@@ -237,13 +231,10 @@ tbody tr[tabindex]:focus-visible{outline-offset:-2px}
 .topbar .pill::before{background:var(--warning)}
 .topbar .btn,.plate .btn{background:transparent;border-color:var(--band-line);color:var(--on-band)}
 .topbar .btn-ghost,.plate .btn-ghost{border-color:transparent}
-.topbar .btn-primary,.plate .btn-primary{background:var(--on-band);border-color:var(--on-band);color:var(--band)}
 /* a disabled primary on the band keeps the disabled look: the band rule above has the same weight as .btn[disabled]
-   and comes later, so without this it would paint a disabled button like a live one (hover too) */
-.topbar .btn.btn-primary[disabled],.plate .btn.btn-primary[disabled]{color:var(--text-disabled);background:var(--neutral-tint);border-color:var(--border)}
+   and comes later{color:var(--text-disabled);background:var(--neutral-tint);border-color:var(--border)}
 @media (hover:hover) and (pointer:fine){
   .topbar .btn:hover,.plate .btn:hover{background:var(--band-line);border-color:var(--band-line)}
-  .topbar .btn-primary:hover,.plate .btn-primary:hover{background:var(--on-band-2);border-color:var(--on-band-2)}
 }
 .topbar :focus-visible,.plate :focus-visible,.honest :focus-visible{outline-color:var(--on-band)}
 /* Focus scrolls clear of the sticky top bar: a control reached by Tab, or <main> after the skip link, never lands under
@@ -284,10 +275,11 @@ table.data th.num button{justify-content:flex-end;width:100%}
 @media (max-width:767px){#theme{display:none}}
 #nl-settings-button{flex:none}
 /* touch: the bar's own controls reach 44px too (the family rule only knows .btn / .nav a) */
-@media (pointer:coarse){.tab,.icon-btn,.lang-btn,.gh{min-height:var(--touch-min)}.icon-btn{min-width:var(--touch-min)}}
+@media (pointer:coarse){.tab,.icon-btn,.lang-btn{min-height:var(--touch-min)}.icon-btn{min-width:var(--touch-min)}}
 @media (pointer:coarse){.origin-pick select{height:var(--touch-min)}}   /* the origin picker was 30px tall beside 44px neighbours */
 /* ===== end of family layer v3.1 ===== */
 </style>
+<link rel="stylesheet" href="atlas.css?v=3.0.0">
 </head>
 <body>
 
@@ -297,7 +289,32 @@ table.data th.num button{justify-content:flex-end;width:100%}
     <svg viewBox="0 0 24 24" width="24" height="24" fill="none" aria-hidden="true" focusable="false"><rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="currentColor" stroke-width="2"/><rect x="14" y="6" width="4" height="4" rx="1" fill="var(--point)"/><path d="M7.5 15.5h.01" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M11 15.5h6.5m0 0L15 13m2.5 2.5L15 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <div class="logo" id="brand-logo">Scholar Outflow <b>Lab</b></div><div class="sub" id="brand-sub"></div>
   </a>
-  <label class="origin-pick" id="origin-wrap" hidden>
+  <button class="lang-btn" id="lang-btn" title="Switch language"></button>
+  <button class="icon-btn" id="theme" aria-label="Dark mode" aria-pressed="false" title="Dark mode"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
+  <button class="definitions-open" id="definitions-open">Data and definitions</button>
+</div></header>
+
+<main class="wrap" id="main" tabindex="-1">
+  <h1 class="view-h" id="view-h" hidden></h1>
+  <section class="finding atlas" id="finding" hidden aria-labelledby="finding-h">
+    <div class="atlas-title"><h1 id="finding-h"></h1><p class="lede" id="finding-lede"></p><span class="badge" id="finding-eyebrow"></span></div>
+<div class="map" aria-label="Researcher origin map"><div id="world-map"></div><svg class="routes" viewBox="0 0 1000 420" aria-hidden="true"><defs><linearGradient id="arc"><stop offset="0" stop-color="var(--accent)" stop-opacity=".18"/><stop offset="1" stop-color="var(--accent)"/></linearGradient><clipPath id="route-reveal"><rect class="arc-reveal" width="1000" height="420"/></clipPath></defs><g clip-path="url(#route-reveal)"><path data-origin="ir" d="M648 154Q440 10 222 130"/><path data-origin="in" d="M717 182Q450 -10 222 130"/><path data-origin="cn" d="M789 145Q490 -50 222 130"/><path data-origin="br" d="M358 275Q250 260 222 130"/><circle cx="222" cy="130" r="6"/></g></svg><span class="destination-label">United States</span><button class="origin-label iran" data-origin="ir">Iran 74.5%</button><button class="origin-label india" data-origin="in">India 52.4%</button><button class="origin-label china" data-origin="cn">China 67.8%</button><button class="origin-label brazil" data-origin="br">Brazil 60.7%</button></div>
+
+<p class="map-caption">Lines locate origins and carry no volume scale. Affiliation is a proxy for research location.</p>
+    <aside class="comparison">
+      <div class="comparison-heading"><h2 id="affiliations-title">Last known affiliations</h2>
+      <div class="view-switch" role="group" aria-label="Data view"><button data-mode="map" aria-pressed="true">Map</button><button data-mode="chart" aria-pressed="false">Chart</button><button data-mode="table" aria-pressed="false">Table</button></div></div>
+      <div class="duration" role="group" aria-label="Time abroad"><button data-stratum="short">2–3 years</button><button data-stratum="long" aria-pressed="true">4+ years</button><button data-stratum="long6">6+ years</button><button data-stratum="all">All</button></div>
+      <div class="legend" id="finding-legend"></div>
+      <div id="finding-grid"></div>
+      <p class="f-limit" id="finding-limit"></p>
+      <p class="f-whole" id="finding-whole"></p>
+      <div id="atlas-table" hidden></div>
+    </aside>
+<div class="selected-origin"><p id="origin-description">Iran to the United States</p><strong id="origin-stay">74.5%</strong><p id="origin-detail">Still affiliated only with the US after 4 or more years abroad.</p></div><div class="map-actions"><button id="fullscreen" aria-label="Expand the map">Expand map</button><button id="download">Download data</button></div>
+    <button class="btn" id="finding-cta" type="button"></button>
+  </section>
+  <nav class="research-nav" aria-label="Research views">  <label class="origin-pick" id="origin-wrap" hidden>
     <span id="origin-lbl">Origin</span><select id="origin-sel"></select>
   </label>
   <div class="tabs">
@@ -308,27 +325,8 @@ table.data th.num button{justify-content:flex-end;width:100%}
     <button class="tab" data-view="venue"></button>
     <button class="tab" data-view="doc"></button>
   </div>
-  <button class="lang-btn" id="lang-btn" title="Switch language"></button>
-  <button class="icon-btn" id="theme" aria-label="Dark mode" aria-pressed="false" title="Dark mode"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
-  <button type="button" class="icon-btn" id="nl-settings-button" aria-haspopup="dialog" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10.34 5.10L10.58 2.51L13.42 2.51L13.66 5.10A7.1 7.1 0 0 1 15.71 5.95L17.71 4.28L19.72 6.29L18.05 8.29A7.1 7.1 0 0 1 18.90 10.34L21.49 10.58L21.49 13.42L18.90 13.66A7.1 7.1 0 0 1 18.05 15.71L19.72 17.71L17.71 19.72L15.71 18.05A7.1 7.1 0 0 1 13.66 18.90L13.42 21.49L10.58 21.49L10.34 18.90A7.1 7.1 0 0 1 8.29 18.05L6.29 19.72L4.28 17.71L5.95 15.71A7.1 7.1 0 0 1 5.10 13.66L2.51 13.42L2.51 10.58L5.10 10.34A7.1 7.1 0 0 1 5.95 8.29L4.28 6.29L6.29 4.28L8.29 5.95A7.1 7.1 0 0 1 10.34 5.10Z"/><circle cx="12" cy="12" r="3"/></svg></button>
-  <a class="gh" href="https://github.com/NickkkLian/Scholar-Outflow-Lab" rel="noopener">GitHub</a>
-</div></header>
-
-<main class="wrap" id="main" tabindex="-1">
-  <h1 class="view-h" id="view-h" hidden></h1>
-  <section class="finding" id="finding" hidden aria-labelledby="finding-h">
-    <div class="eyebrow" id="finding-eyebrow"></div>
-    <h1 id="finding-h"></h1>
-    <p class="lede" id="finding-lede"></p>
-    <div id="finding-grid"></div>
-    <p class="f-limit" id="finding-limit"></p>
-    <p class="f-whole" id="finding-whole"></p>
-    <div class="legend" id="finding-legend"></div>
-    <div class="f-foot">
-      <button class="btn btn-primary" id="finding-cta" type="button"></button>
-    </div>
-  </section>
-  <div class="notice" id="notice"></div>
+</nav>
+  <details class="research-notes"><summary>How to read the data</summary><div class="notice" id="notice"></div></details>
 
   <div id="loading" class="muted"></div>
 
@@ -436,7 +434,8 @@ table.data th.num button{justify-content:flex-end;width:100%}
   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="drawer-title"><button class="close" data-close id="drawer-close"></button><div id="drawer-body"></div></div>
 </div>
 
-<script src="appearance.js"></script>
+<script src="appearance.js?v=3.0.0"></script>
+<script src="map.js?v=3.0.0"></script>
 <script>
 /* ── i18n ─────────────────────────────────────────────────────────────
    Default is English; the toggle persists in localStorage.
@@ -1077,13 +1076,13 @@ function renderFinding(){
   const box = document.getElementById('finding');
   box.hidden = S.view !== 'match';
   if(box.hidden) return;
-  document.getElementById('finding-eyebrow').textContent = t('fEyebrow');
-  document.getElementById('finding-h').textContent = t('fTitle');
-  document.getElementById('finding-lede').textContent = t('fLede');
+  document.getElementById('finding-eyebrow').textContent = LANG === 'en' ? 'One destination · United States' : '同一目的地 · 美国';
+  document.getElementById('finding-h').textContent = LANG === 'en' ? 'US stay rates by origin' : '按来源看美国留任率';
+  document.getElementById('finding-lede').textContent = LANG === 'en' ? 'Where researchers were last affiliated after working abroad' : '科研人员在海外工作后的最后已知任职地';
   document.getElementById('finding-limit').textContent = t('fLimit');
   document.getElementById('finding-whole').textContent = t('fWhole');
   document.getElementById('finding-cta').textContent = t('fCta');
-  document.getElementById('finding-legend').innerHTML = OUT_KEYS.map(([k,c]) => `<span><i style="background:${c}"></i>${t('fOut')[k]}</span>`).join('');
+  document.getElementById('finding-legend').innerHTML = OUT_KEYS.map(([k,c]) => `<span title="${esc(t('fOut')[k])}"><i style="background:${c}"></i>${LANG==='en'?({stay:'Stayed',dual:'Both countries',ret:'Returned',onward:'Moved on'})[k]:t('out')[k]}</span>`).join('');
   const grid = document.getElementById('finding-grid');
   const ready = FINDING_ORIGINS.every(cc => S.allData[cc]);
   if(!ready){
@@ -1097,13 +1096,14 @@ function renderFinding(){
   const rows = FINDING_ORIGINS.map(cc => {
     const d = S.allData[cc];
     const us = (d.countries || []).find(c => c.cc === 'us');
-    return us && us.strata.long ? {cc, name: originName(d.meta), s: us.strata.long} : null;
+    return us && us.strata[S.stratum] ? {cc, name: originName(d.meta), s: us.strata[S.stratum]} : null;
   }).filter(Boolean).sort((a,b) => b.s.stay - a.s.stay);
-  grid.innerHTML = rows.map(r => `<div class="f-row">
+  grid.innerHTML = rows.map(r => `<div class="f-row" data-origin="${r.cc}" tabindex="0" role="button">
       <div class="f-label"><h2>${esc(r.name)}</h2><b class="mono">${pc(r.s.stay)} <small>n = ${r.s.n.toLocaleString()}</small></b></div>
       <div class="bar" role="img" aria-label="${esc(r.name)}: ${OUT_KEYS.map(([k]) => t('out')[k] + ' ' + pc(r.s[k])).join(', ')}; n = ${r.s.n}; 95% CI ${r.s.stay_ci ? r.s.stay_ci.map(pc).join('–') : '—'}">${OUT_KEYS.map(([k,c]) => `<span title="${t('out')[k]} ${pc(r.s[k])}" style="width:${r.s[k]*100}%;background:${c}"></span>`).join('')}</div>
       <div class="cmp-n">95% CI ${r.s.stay_ci ? r.s.stay_ci.map(pc).join('–') : '—'}</div>
     </div>`).join('') + `<div class="f-axis" aria-hidden="true">${[0,25,50,75,100].map(v => `<span>${v}%</span>`).join('')}</div>`;
+  if(typeof renderAtlas === 'function') renderAtlas(rows);
 }
 
 /* ── compare chart: one destination, every origin, stay rate with its 95% interval ── */
@@ -1405,9 +1405,10 @@ function applyChrome(){
   document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-CN';
   document.title = t('title');
   document.getElementById('brand-logo').innerHTML = t('brandLogo');
-  document.getElementById('brand-sub').textContent = t('brandSub');
+  document.getElementById('brand-sub').textContent = LANG==='en'?'Research mobility · 13 origins':'科研流动 · 13 个来源';
   document.getElementById('origin-lbl').textContent = t('origin');
   document.getElementById('lang-btn').textContent = t('langBtn');
+  document.getElementById('definitions-open').textContent=LANG==='en'?'Data and definitions':'数据与定义';
   // the two top-bar icon buttons are named in the page language (◐ keeps one fixed name; aria-pressed carries its state)
   [['theme', 'darkMode'], ['nl-settings-button', 'settingsBtn']].forEach(([id, key]) => {
     const b = document.getElementById(id); if(b){ b.setAttribute('aria-label', t(key)); b.title = t(key); } });
@@ -1523,6 +1524,7 @@ function loadOrigin(cc){
     if(!HASH_STATE.applied){ HASH_STATE.applied = true; applyHashState(); }
     document.getElementById('foot').innerHTML = t('foot')(d);
     render();
+    document.documentElement.dataset.ready='true';
     if(S.pendingOpen){ const id = S.pendingOpen; S.pendingOpen = null; openInst(id); }
   }).catch(e => {
     ld.hidden = false; ld.dataset.err = '1'; ld.setAttribute('role', 'alert');
@@ -1547,10 +1549,121 @@ fetch('data/origins.json').then(r => r.ok ? r.json() : null).then(m => {
   return loadOrigin(list[0] ? list[0].cc : 'cn');
 }).catch(() => loadOrigin('cn'));
 
+
+let atlasSelected = 'ir';
+let atlasMode = 'map';
+function renderAtlas(rows) {
+  const selected = rows.find(row => row.cc === atlasSelected) || rows[0];
+  if (!selected) return;
+  document.querySelectorAll('.origin-label').forEach(button => {
+    const row = rows.find(row => row.cc === button.dataset.origin);
+    if (!row) return;
+    button.textContent = (row.cc === 'cn' && LANG === 'en' ? 'China' : row.name) + ' ' + pc(row.s.stay);
+    button.setAttribute('aria-pressed', String(row.cc === selected.cc));
+  });
+  document.querySelectorAll('.routes path').forEach(path => path.classList.toggle('active', path.dataset.origin === selected.cc));
+  document.querySelectorAll('#finding-grid .f-row').forEach(row => {
+    row.setAttribute('aria-pressed', String(row.dataset.origin === selected.cc));
+    const data = rows.find(item=>item.cc===row.dataset.origin);
+    if(data?.s.stay_ci) {
+      row.style.setProperty('--low', data.s.stay_ci[0]*100+'%');
+      row.style.setProperty('--high', data.s.stay_ci[1]*100+'%');
+    }
+  });
+  document.querySelectorAll('[data-stratum]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.stratum === S.stratum)));
+  document.getElementById('origin-description').textContent = selected.name + (LANG === 'en' ? ' to the United States' : ' → 美国');
+  document.getElementById('origin-stay').textContent = pc(selected.s.stay);
+  document.getElementById('origin-detail').textContent = LANG === 'en'
+    ? 'Still affiliated only with the US after ' + ({short:'2–3',long:'4 or more',long6:'6 or more',all:'2 or more'}[S.stratum]) + ' years abroad.'
+    : '最后任职地仅为美国。海外时长 ' + t('strata')[S.stratum];
+  document.querySelectorAll('[data-mode]').forEach(button => {
+    button.textContent = LANG === 'en' ? ({map:'Map',chart:'Chart',table:'Table'})[button.dataset.mode] : ({map:'地图',chart:'图表',table:'表格'})[button.dataset.mode];
+  });
+  document.querySelectorAll('[data-stratum]').forEach(button => {
+    button.textContent = LANG === 'en' ? ({short:'2–3 years',long:'4+ years',long6:'6+ years',all:'All'})[button.dataset.stratum] : ({short:'2–3 年',long:'4 年以上',long6:'6 年以上',all:'全部'})[button.dataset.stratum];
+  });
+  document.querySelector('.destination-label').textContent = LANG === 'en' ? 'United States' : '美国';
+  document.querySelector('.map-caption').textContent = LANG === 'en' ? 'Lines locate origins and carry no volume scale. Affiliation is a proxy for research location.' : '线条只标示来源，不代表人数。学术署名是科研所在地的代理指标。';
+  document.getElementById('download').textContent = LANG === 'en' ? 'Download data' : '下载数据';
+  document.getElementById('fullscreen').textContent = LANG === 'en' ? 'Expand map' : '展开地图';
+  document.getElementById('affiliations-title').textContent = LANG === 'en' ? 'Last known affiliations' : '最后已知任职地';
+  document.getElementById('atlas-table').innerHTML = '<div class="table-scroll"><table><thead><tr><th><button data-atlas-sort="name">' + (LANG === 'en' ? 'Origin' : '来源') + '</button></th><th><button data-atlas-sort="stay">' + (LANG === 'en' ? 'Stayed' : '留下') + '</button></th><th><button data-atlas-sort="n">n</button></th></tr></thead><tbody>' + rows.map(row => '<tr><td>' + esc(row.name) + '</td><td>' + pc(row.s.stay) + '</td><td>' + row.s.n.toLocaleString() + '</td></tr>').join('') + '</tbody></table></div>';
+  document.getElementById('atlas-table').hidden = atlasMode !== 'table';
+  document.getElementById('finding-grid').hidden = atlasMode === 'table';
+  document.getElementById('finding').classList.toggle('chart-view', atlasMode === 'chart');
+  document.documentElement.dataset.ready = 'true';
+}
+document.querySelectorAll('[data-stratum]').forEach(button => button.onclick = () => {
+  S.stratum = button.dataset.stratum;
+  ['seg-stratum','seg-stratum2','seg-stratum3'].forEach(id => stratumSeg(document.getElementById(id)));
+  renderFinding();
+  syncHash();
+});
+document.querySelectorAll('[data-mode]').forEach(button => button.onclick = () => {
+  atlasMode = button.dataset.mode;
+  document.querySelectorAll('[data-mode]').forEach(other => other.setAttribute('aria-pressed', String(other === button)));
+  renderFinding();
+});
+document.getElementById('finding').addEventListener('click', event => {
+  const row = event.target.closest('[data-origin]');
+  if (row) { atlasSelected = row.dataset.origin; renderFinding(); }
+});
+function highlightAtlas(event) {
+  const row = event.target.closest('[data-origin]');
+  if (!row) return;
+  document.querySelectorAll('.routes path').forEach(path=>path.classList.toggle('active',path.dataset.origin===row.dataset.origin));
+}
+document.getElementById('finding').addEventListener('pointerover', highlightAtlas);
+document.getElementById('finding').addEventListener('focusin', highlightAtlas);
+document.getElementById('finding-grid').addEventListener('keydown', event => {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    event.target.closest('[data-origin]')?.click();
+  }
+});
+document.getElementById('atlas-table').addEventListener('click', event => {
+  const button = event.target.closest('[data-atlas-sort]');
+  if (!button) return;
+  const table = button.closest('table');
+  const rows = [...table.tBodies[0].rows];
+  const index = [...button.closest('tr').cells].indexOf(button.closest('th'));
+  const direction = button.dataset.direction === 'up' ? -1 : 1;
+  rows.sort((a,b) => a.cells[index].textContent.localeCompare(b.cells[index].textContent, undefined, {numeric:true}) * direction);
+  table.tBodies[0].replaceChildren(...rows);
+  button.dataset.direction = direction === 1 ? 'up' : 'down';
+});
+document.getElementById('fullscreen').onclick = () => {
+  const expanded = document.getElementById('finding').classList.toggle('expanded');
+  document.getElementById('fullscreen').textContent = LANG==='en'?(expanded?'Close expanded map':'Expand map'):(expanded?'关闭展开地图':'展开地图');
+};
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    document.getElementById('finding').classList.remove('expanded');
+    document.getElementById('fullscreen').textContent = LANG==='en'?'Expand map':'展开地图';
+  }
+});
+document.getElementById('download').onclick = () => {
+  const rows = ['Origin,Duration,Stayed,Both countries,Returned,Moved on,Sample size,CI low,CI high'];
+  for (const cc of FINDING_ORIGINS) {
+    const data = S.allData[cc];
+    if (!data) continue;
+    const us = data.countries.find(country => country.cc === 'us');
+    for (const [key,result] of Object.entries(us.strata)) {
+      rows.push([data.meta.origin_name,key,result.stay,result.dual,result.ret,result.onward,result.n,...result.stay_ci].join(','));
+    }
+  }
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(new Blob([rows.join('\n')], {type:'text/csv'}));
+  link.href = url;
+  link.download = 'scholar-stay-rates.csv';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+
 applyChrome();
 renderFinding();
 Appearance.bindToggle(document.getElementById('theme'));   // ◐ switches light/dark only (appearance.js)
-Appearance.bindSettings(document.getElementById('nl-settings-button'), () => ({ strings: Appearance.STRINGS[LANG === 'en' ? 'en' : 'zh'] }));   // Settings, in the page language
+document.getElementById('definitions-open').onclick = () => {S.view='doc';render();syncHash();};
 document.getElementById('finding-cta').onclick = () => {
   S.view = 'compare'; render(); syncHash();
   document.getElementById('v-compare').scrollIntoView({block: 'start'});

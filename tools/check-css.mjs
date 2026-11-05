@@ -228,8 +228,10 @@ function main() {
      the sheet, and the point is only that deleting a rule is noticed, whichever rule it is. */
   const sheetFile = primarySheet();
   const styles = fs.readFileSync(path.join(HERE, sheetFile), 'utf8');
+  // A duplicate in another sheet survives a one-file deletion, so probe single-owner rules.
+  const owners = classesInSheets(readSheets());
   const candidates = [...report(readSheets()).inSource.keys()]
-    .filter((c) => deleteRulesFor(styles, c).removed === 1).sort();
+    .filter((c) => deleteRulesFor(styles, c).removed === 1 && owners.get(c)?.size === 1).sort();
   const WANT = 8;
   if (candidates.length < WANT) {
     console.log(`NOT APPLIED  only ${candidates.length} classes in ${sheetFile} have exactly one rule to delete`);

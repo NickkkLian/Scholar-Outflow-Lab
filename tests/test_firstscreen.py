@@ -25,7 +25,7 @@ class TestFirstScreen(unittest.TestCase):
                 self.assertIn(text, chart)
         for tick in ("0%", "25%", "50%", "75%", "100%"):
             self.assertIn(tick, chart)
-        self.assertIn("4+", page["finding-h"]["textContent"])
+        self.assertIn('data-stratum="long" aria-pressed="true">4+ years', (ROOT / 'index.html').read_text())
         self.assertIn("US", page["finding-h"]["textContent"])
 
     def test_four_outcomes_are_one_whole_with_plain_definitions(self):
@@ -48,7 +48,7 @@ class TestFirstScreen(unittest.TestCase):
 
     def test_relative_comparison_warning_is_directly_under_chart_in_both_languages(self):
         html = (ROOT / "index.html").read_text()
-        self.assertRegex(html[html.index('<section class="finding"'):html.index('<!-- Path finder -->')],
+        self.assertRegex(html[html.index('<section class="finding atlas"'):html.index('<!-- Path finder -->')],
                          r'id="finding-grid"[^>]*></div>\s*<p[^>]*id="finding-limit"')
         for lang, words in [("en", ("relative levels", "sample frames", "absolute percentages")),
                             ("zh", ("相对", "样本框", "绝对百分比"))]:

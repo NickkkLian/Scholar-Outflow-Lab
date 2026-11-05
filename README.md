@@ -1,7 +1,5 @@
 # Scholar Outflow Lab
 
-![Scholar Outflow Lab](.github/header.png)
-
 **Where researchers from 13 countries ended up — every rate shown with its sample size.**
 
 Researchers who started their careers in one country, followed by destination country and destination institution,
@@ -10,7 +8,7 @@ public data with a zero-dependency stack.
 
 **Live:** https://nickkklian.github.io/Scholar-Outflow-Lab/ — English by default, 中文 toggle in the header.
 
-![US stay rates after four or more years, by origin — sample sizes and all four outcomes](docs/screenshot-match.png)
+![The approved map with US stay rates, sample sizes, intervals and four outcomes](docs/screenshot-match.png)
 
 ---
 
@@ -23,6 +21,8 @@ It does **not** answer "which country is easiest to immigrate to" or "what are a
 The sample is people with authorship records in [OpenAlex](https://openalex.org); anyone who left
 before ever publishing at home is simply not in the frame, and "stayed" means *the last known
 affiliation is in that country* — not a work permit or permanent residency. Every page says so.
+
+The opening map compares four origins using the published JSON. Map, Chart and Table share the same duration controls. **Compare all origins** opens the full comparison. The six research views, origin picker and methodology remain below the map, with their existing hash links.
 
 ## The finding worth seeing
 
@@ -62,7 +62,6 @@ flukes sink on their own, with no extra rules).
 ### Pipeline
 
 ```mermaid
-%%{init: {"theme": "base", "themeVariables": {"darkMode": false, "fontFamily": "Inter, BlinkMacSystemFont, Segoe UI, Helvetica Neue, Helvetica, Arial", "primaryColor": "#dae7db", "mainBkg": "#dae7db", "primaryTextColor": "#1d1b24", "nodeTextColor": "#1d1b24", "textColor": "#1d1b24", "primaryBorderColor": "#2f5859", "nodeBorder": "#2f5859", "secondaryColor": "#fae8eb", "tertiaryColor": "#f7e9e8", "lineColor": "#5f7f76", "arrowheadColor": "#5f7f76", "defaultLinkColor": "#5f7f76", "edgeLabelBackground": "#fae8eb", "clusterBkg": "#f7e9e8", "clusterBorder": "#a8707a", "titleColor": "#7d2d44"}}}%%
 flowchart LR
   OA["OpenAlex API<br/>CC0, no key"] --> INST["scripts/institutions.py<br/>ROR whitelist"]
   OA --> HARV["scripts/harvest.py<br/>sampled careers per origin"]
@@ -137,12 +136,15 @@ Zero cost, zero accounts, zero third-party packages.
 |---|---|---|
 | Data | OpenAlex REST API, CC0 | Free, no key; 1,000 requests/day on the free tier |
 | Processing | Python 3 standard library only | Nothing to install; the pipeline is the documentation |
-| Front end | One static `index.html`, vanilla JS | Mobile-first, dark-mode aware, bilingual, deploys straight to GitHub Pages |
+| Front end | Static HTML, CSS and vanilla JS with local fonts | Mobile-first, dark-mode aware, bilingual, deploys straight to GitHub Pages |
 | Hosting | GitHub Pages from `main` | The computed JSON sits in `data/` beside the page; no server |
 | Automation | launchd + a shell script | Runs once a week within the quota; see below |
 
 ```
-index.html              single-file front end (EN/中文 toggle; names are stored in English, 中文 maps them back)
+index.html              front-end entry point (EN/中文 toggle; names are stored in English, 中文 maps them back)
+atlas.css, map.js       approved map styling and local Natural Earth geometry
+fonts/                  licensed, self-hosted Cormorant and National Park WOFF2
+appearance.js           one header light/dark toggle
 data/data-<cc>.json     computed metrics per origin country — what the page reads
 data/data-venues.json   journal / conference board (13,086 venues, 26 fields)
 data/origins.json       manifest of generated origins — drives the origin switcher
