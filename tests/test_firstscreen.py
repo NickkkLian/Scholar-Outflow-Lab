@@ -75,7 +75,7 @@ class TestFirstScreen(unittest.TestCase):
         comparison = html[html.index('<aside class="comparison">'):html.index('</aside>')]
         self.assertIn('id="finding-cta"', comparison)
         self.assertIn('id="cohort-more"', comparison)
-        for lang, words in [("en", ("published at home", "final US affiliation")),
+        for lang, words in [("en", ("Published at home", "US affiliation")),
                             ("zh", ("来源国", "美国"))]:
             definition = render(lang)["cohort-definition"]["textContent"]
             for word in words:

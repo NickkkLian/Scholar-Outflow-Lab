@@ -484,7 +484,7 @@ th { position:static; }
 #finding.chart-view .map #world-map,#finding.chart-view .map .routes { opacity:.2; }
 
 /* Keep the comparison route and its definition beside the opening controls. */
-.comparison #finding-cta { position:static; margin:calc(8 * var(--suite-px, 1px)) 0 0; padding:0; height:auto; min-height:calc(32 * var(--suite-px, 1px)); text-align:left; white-space:normal; justify-content:flex-start; }
+.comparison #finding-cta { position:static; margin:calc(8 * var(--suite-px, 1px)) 0 0; padding:.45em .9em; border-radius:calc(999 * var(--suite-px, 1px)); height:auto; min-height:calc(32 * var(--suite-px, 1px)); text-align:left; white-space:normal; justify-content:flex-start; }
 .comparison > .cohort-note { display:block; margin:calc(6 * var(--suite-px, 1px)) 0 0; font:calc(12 * var(--suite-px, 1px))/1.35 var(--body); color:var(--muted); }
 #cohort-more { display:inline; padding:0; height:auto; min-height:0; background:none; color:var(--accent); font:inherit; text-decoration:underline; }
 
@@ -493,13 +493,19 @@ th { position:static; }
 #finding.chart-view #finding-legend, #finding.chart-view #finding-whole { display:none; }
 #finding-chart[hidden] { display:none; }
 #finding-chart .chart { margin:calc(12 * var(--suite-px, 1px)) 0 0; padding:0; box-shadow:none; }
+#finding-chart .ci-track u { top:calc(20 * var(--suite-px, 1px)); bottom:auto; height:calc(8 * var(--suite-px, 1px)); }
+#finding.chart-view .duration { width:fit-content; max-width:100%; justify-content:flex-start; }
+#finding.chart-view .duration button { flex:0 0 auto; }
 @media(min-width:1101px) {
  #finding.chart-view .comparison { top:calc(170 * var(--suite-px, 1px)); left:calc(32 * var(--suite-px, 1px)); right:calc(32 * var(--suite-px, 1px)); width:auto; }
  #finding.chart-view .comparison-heading { display:flex; align-items:center; gap:calc(20 * var(--suite-px, 1px)); }
  #finding.chart-view .view-switch { margin-top:0; }
- #finding.chart-view .duration { max-width:calc(600 * var(--suite-px, 1px)); }
  #finding.chart-view .ci-row { min-height:calc(46 * var(--suite-px, 1px)); }
  #finding.chart-view .ci-track { height:calc(46 * var(--suite-px, 1px)); }
+ #finding:not(.chart-view) #finding-legend { grid-template-columns:repeat(4,max-content); gap:calc(8 * var(--suite-px, 1px)); margin:calc(8 * var(--suite-px, 1px)) 0 calc(4 * var(--suite-px, 1px)); }
+ #finding:not(.chart-view) #finding-grid .f-row { padding:calc(4 * var(--suite-px, 1px)) calc(8 * var(--suite-px, 1px)); }
+ #finding:not(.chart-view) #finding-grid .f-label { margin-bottom:calc(4 * var(--suite-px, 1px)); }
+ #finding:not(.chart-view) #finding-grid .cmp-n { margin-top:calc(4 * var(--suite-px, 1px)); }
 }
 @media(max-width:1100px) {
  #finding.chart-view .comparison { margin-top:calc(16 * var(--suite-px, 1px)); }

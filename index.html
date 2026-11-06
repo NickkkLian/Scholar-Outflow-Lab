@@ -1121,7 +1121,7 @@ function renderFinding(){
   document.getElementById('finding-limit').textContent = t('fLimit');
   document.getElementById('finding-whole').textContent = t('fWhole');
   document.getElementById('finding-cta').textContent = t('fCta');
-  document.getElementById('cohort-definition').textContent = LANG === 'en' ? 'Researchers who published at home, then spent time in the US. Stayed means a final US affiliation without the origin.' : '曾在来源国发表、后来在美国工作的人。留下指最后任职地包括美国而不包括来源国。';
+  document.getElementById('cohort-definition').textContent = LANG === 'en' ? 'Published at home, then worked in the US. Stayed: US affiliation, not origin.' : '曾在来源国发表，后来在美国工作。留下：最后任职地包括美国，不包括来源国。';
   document.getElementById('cohort-more').textContent = LANG === 'en' ? 'Data and definitions' : '数据与定义';
   document.getElementById('finding-legend').innerHTML = OUT_KEYS.map(([k,c]) => `<span title="${esc(t('fOut')[k])}"><i style="background:${c}"></i>${LANG==='en'?({stay:'Stayed',dual:'Both countries',ret:'Returned',onward:'Moved on'})[k]:t('out')[k]}</span>`).join('');
   const grid = document.getElementById('finding-grid');
