@@ -26,7 +26,6 @@ header > span { font-size: calc(12 * var(--suite-px, 1px)); color: var(--muted);
 .comparison h2 { font-family: var(--body); font-size: calc(16 * var(--suite-px, 1px)); }
 .view-switch { margin-top: calc(12 * var(--suite-px, 1px)); }
 .comparison > p { font-size: calc(12 * var(--suite-px, 1px)); color: var(--muted); margin-top: calc(16 * var(--suite-px, 1px)); }
-.comparison > p:first-of-type { display: none; }
 .duration { margin-top: calc(8 * var(--suite-px, 1px)); width: 100%; }
 .duration button { flex: 1; padding: 0 calc(8 * var(--suite-px, 1px)); font-size: calc(12 * var(--suite-px, 1px)); }
 .legend { display: grid; grid-template-columns: 1fr 1fr; gap: calc(4 * var(--suite-px, 1px)) calc(16 * var(--suite-px, 1px)); margin-top: calc(16 * var(--suite-px, 1px)); font-size: calc(12 * var(--suite-px, 1px)); color: var(--muted); }
@@ -483,6 +482,28 @@ th { position:static; }
 
 #finding.chart-view .map { opacity:1; }
 #finding.chart-view .map #world-map,#finding.chart-view .map .routes { opacity:.2; }
+
+/* Keep the comparison route and its definition beside the opening controls. */
+.comparison #finding-cta { position:static; margin:calc(8 * var(--suite-px, 1px)) 0 0; padding:0; height:auto; min-height:calc(32 * var(--suite-px, 1px)); text-align:left; white-space:normal; justify-content:flex-start; }
+.comparison > .cohort-note { display:block; margin:calc(6 * var(--suite-px, 1px)) 0 0; font:calc(12 * var(--suite-px, 1px))/1.35 var(--body); color:var(--muted); }
+#cohort-more { display:inline; padding:0; height:auto; min-height:0; background:none; color:var(--accent); font:inherit; text-decoration:underline; }
+
+/* Chart mode uses the full plotting width instead of leaving a faded map. */
+#finding.chart-view .map, #finding.chart-view .map-caption, #finding.chart-view .selected-origin, #finding.chart-view .map-actions { display:none; }
+#finding.chart-view #finding-legend, #finding.chart-view #finding-whole { display:none; }
+#finding-chart[hidden] { display:none; }
+#finding-chart .chart { margin:calc(12 * var(--suite-px, 1px)) 0 0; padding:0; box-shadow:none; }
+@media(min-width:1101px) {
+ #finding.chart-view .comparison { top:calc(170 * var(--suite-px, 1px)); left:calc(32 * var(--suite-px, 1px)); right:calc(32 * var(--suite-px, 1px)); width:auto; }
+ #finding.chart-view .comparison-heading { display:flex; align-items:center; gap:calc(20 * var(--suite-px, 1px)); }
+ #finding.chart-view .view-switch { margin-top:0; }
+ #finding.chart-view .duration { max-width:calc(600 * var(--suite-px, 1px)); }
+ #finding.chart-view .ci-row { min-height:calc(46 * var(--suite-px, 1px)); }
+ #finding.chart-view .ci-track { height:calc(46 * var(--suite-px, 1px)); }
+}
+@media(max-width:1100px) {
+ #finding.chart-view .comparison { margin-top:calc(16 * var(--suite-px, 1px)); }
+}
 
 #v-inst th { overflow-wrap:normal; word-break:normal; }
 

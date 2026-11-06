@@ -63,6 +63,44 @@ class TestFirstScreen(unittest.TestCase):
             self.assertIn(text, chart)
         self.assertNotIn("74.5%", chart)
 
+    def test_opening_chart_reuses_percentage_axis_with_real_intervals_and_counts(self):
+        chart = render(changed=True)["finding-chart"]["innerHTML"]
+        self.assertEqual(chart.count('class="ci-row"'), 4)
+        for text in ("Iran", "50.0%", "600", "46.0%", "54.0%", "0%", "100%"):
+            self.assertIn(text, chart)
+        self.assertNotIn("74.5%", chart)
+
+    def test_opening_controls_explain_cohort_and_link_to_comparison(self):
+        html = (ROOT / "index.html").read_text()
+        comparison = html[html.index('<aside class="comparison">'):html.index('</aside>')]
+        self.assertIn('id="finding-cta"', comparison)
+        self.assertIn('id="cohort-more"', comparison)
+        for lang, words in [("en", ("published at home", "final US affiliation")),
+                            ("zh", ("来源国", "美国"))]:
+            definition = render(lang)["cohort-definition"]["textContent"]
+            for word in words:
+                self.assertIn(word, definition)
+        self.assertNotIn("one genuinely interesting thing this site has to show", html)
+
+    def test_opening_actions_route_to_comparison_and_definitions(self):
+        # Run the shipped handlers with a short-stay selection already in state.
+        script = r'''
+const fs = require('fs'), vm = require('vm');
+const html = fs.readFileSync('index.html', 'utf8');
+const start = html.indexOf("document.getElementById('cohort-more').onclick");
+const end = html.indexOf("document.querySelector('.tabs').onclick", start);
+const nodes = {};
+const context = { S: {view:'match', stratum:'short'}, render() {}, syncHash() {},
+  document: {getElementById(id) {return nodes[id] ||= {scrollIntoView() {}}},
+             querySelector() {return {focus() {}}}} };
+vm.runInNewContext(html.slice(start, end), context);
+nodes['finding-cta'].onclick();
+if (context.S.view !== 'compare' || context.S.stratum !== 'short') process.exit(1);
+nodes['cohort-more'].onclick();
+if (context.S.view !== 'doc' || context.S.stratum !== 'short') process.exit(2);
+'''
+        subprocess.run(['node', '-e', script], cwd=ROOT, check=True)
+
 
 if __name__ == "__main__":
     unittest.main()

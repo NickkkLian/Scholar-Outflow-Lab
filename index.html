@@ -305,14 +305,16 @@ table.data th.num button{justify-content:flex-end;width:100%}
       <div class="comparison-heading"><h2 id="affiliations-title">Last known affiliations</h2>
       <div class="view-switch" role="group" aria-label="Data view"><button data-mode="map" aria-pressed="true">Map</button><button data-mode="chart" aria-pressed="false">Chart</button><button data-mode="table" aria-pressed="false">Table</button></div></div>
       <div class="duration" role="group" aria-label="Time abroad"><button data-stratum="short">2–3 years</button><button data-stratum="long" aria-pressed="true">4+ years</button><button data-stratum="long6">6+ years</button><button data-stratum="all">All</button></div>
+      <button class="btn" id="finding-cta" type="button"></button>
+      <p class="cohort-note"><span id="cohort-definition"></span> <button type="button" id="cohort-more"></button></p>
       <div class="legend" id="finding-legend"></div>
       <div id="finding-grid"></div>
       <p class="f-limit" id="finding-limit"></p>
       <p class="f-whole" id="finding-whole"></p>
+      <div id="finding-chart" hidden></div>
       <div id="atlas-table" hidden></div>
     </aside>
 <div class="selected-origin"><p id="origin-description">Iran to the United States</p><strong id="origin-stay">74.5%</strong><p id="origin-detail">Still affiliated only with the US after 4 or more years abroad.</p></div><div class="map-actions"><button id="fullscreen" aria-label="Expand the map">Expand map</button><button id="download">Download data</button></div>
-    <button class="btn" id="finding-cta" type="button"></button>
   </section>
   <nav class="research-nav" aria-label="Research views">  <label class="origin-pick" id="origin-wrap" hidden>
     <span id="origin-lbl">Origin</span><select id="origin-sel"></select>
@@ -519,7 +521,7 @@ en: {
   fLimit:'Only relative levels and direction compare: sample frames differ by origin. Do not compare absolute percentages. Academic affiliations, not residency or visa statistics.',
   fWhole:'Four final-affiliation outcomes · one whole = 100%',
   fOut:{stay:'Stayed · destination, no origin',dual:'Both countries · destination + origin',ret:'Returned · origin, no destination',onward:'Onward · neither; third country'},
-  fCta:'Compare all origins', fLoading:'Loading the four origins…', fFail:m=>`The headline figures could not be loaded (${m}). The rest of the page does not depend on them.`, tryAgain:'Try again',
+  fCta:'Compare all origins and destinations', fLoading:'Loading the four origins…', fFail:m=>`The headline figures could not be loaded (${m}). The rest of the page does not depend on them.`, tryAgain:'Try again',
   cmpChartTitle:(dest,s)=>`Stay rate in ${dest} by starting country · ${s}`, cmpChartDest:'Destination', cmpChartAxis:'The bar shows the stay rate. The line shows its estimated range (95% confidence interval): wider means less certain. Ordered by stay rate.',
   hAboutT:'About this data', hAbout:'Every number is computed by scripts/compute.py from OpenAlex authorship records (CC0) and served as static JSON; nothing is modelled or estimated by hand. The pipeline, its tests and the three corrections that made the numbers self-consistent are in the repository.',
   hNvT:'Not verified here', hNv:'Not visa or immigration statistics and not advice. The sample frame excludes anyone who left before publishing at home; "stayed" means the last known affiliation, not residency. Institutions are parsed from affiliation strings and some mismatches remain; field labels are coarse. Absolute values drift with sampling choices.',
@@ -565,7 +567,6 @@ en: {
   cmpLoading:'Loading per-origin data…',
   cmpNote:(r,o)=>`${r} destinations · ${o} origins`,
   cmpWarn:`Read it <b>across each row</b> — same destination, different origin, and the stay rate can differ several-fold.
-    That is the one genuinely interesting thing this site has to show.<br>
     <b>Caveat:</b> every origin uses the same sampling and computation, but the <b>sample frames differ</b>
     (each is "people who once published under that country's affiliation"), so compare
     <b>relative levels and direction</b>, not absolute values.`,
@@ -603,7 +604,7 @@ zh: {
   fLimit:'只比较相对高低与方向：各来源国的样本框不同，不比较绝对百分比。学术署名是代理指标，不是居留或签证统计。',
   fWhole:'四种末位署名去向 · 合计 100%',
   fOut:{stay:'留下 · 有目的国、无来源国',dual:'双挂 · 目的国与来源国',ret:'回流 · 有来源国、无目的国',onward:'转道 · 两国均无、在第三国'},
-  fCta:'对比全部起点', fLoading:'正在载入四个起点的数据…', fFail:m=>`核心数字载入失败（${m}）。页面其余部分不受影响。`, tryAgain:'重试',
+  fCta:'对比全部来源和目的地', fLoading:'正在载入四个起点的数据…', fFail:m=>`核心数字载入失败（${m}）。页面其余部分不受影响。`, tryAgain:'重试',
   cmpChartTitle:(dest,s)=>`${dest} 的留下率 · 按起点 · ${s}`, cmpChartDest:'目的国', cmpChartAxis:'实心条表示留下率，横线表示估计范围（95% 置信区间）；范围越宽，结果越不确定。按留下率排序。',
   hAboutT:'关于这些数据', hAbout:'每个数字都由 scripts/compute.py 从 OpenAlex 署名记录（CC0）算出，以静态 JSON 提供；没有人工估算或建模。流水线、测试与让数字自洽的三处口径修正都在仓库里。',
   hNvT:'这里没有核实的', hNv:'不是签证或移民统计，也不构成建议。样本框不含本科即出国、在国内没发过论文的人；「留下」指最后已知任职机构，不等于居留身份。机构从署名字符串解析，仍有错配；学科标签很粗。绝对值随口径漂移。',
@@ -647,7 +648,6 @@ zh: {
   cmpLoading:'载入各来源数据中…',
   cmpNote:(r,o)=>`${r} 个目的国 · ${o} 个起点`,
   cmpWarn:`读法：<b>同一行比着看</b>——同一个目的国，起点不同，留下率可以差好几倍。
-    这是本站唯一真正有意思的地方。<br>
     <b>注意：</b>各来源国的抽样口径一致，但<b>样本框本身不同</b>（都是「曾在本国机构署名发表」的人），
     所以跨来源比的是<b>相对高低与方向</b>，不是绝对值。`,
   cmpThDest:'目的国', cmpThGap:'最大差',
@@ -1121,6 +1121,8 @@ function renderFinding(){
   document.getElementById('finding-limit').textContent = t('fLimit');
   document.getElementById('finding-whole').textContent = t('fWhole');
   document.getElementById('finding-cta').textContent = t('fCta');
+  document.getElementById('cohort-definition').textContent = LANG === 'en' ? 'Researchers who published at home, then spent time in the US. Stayed means a final US affiliation without the origin.' : '曾在来源国发表、后来在美国工作的人。留下指最后任职地包括美国而不包括来源国。';
+  document.getElementById('cohort-more').textContent = LANG === 'en' ? 'Data and definitions' : '数据与定义';
   document.getElementById('finding-legend').innerHTML = OUT_KEYS.map(([k,c]) => `<span title="${esc(t('fOut')[k])}"><i style="background:${c}"></i>${LANG==='en'?({stay:'Stayed',dual:'Both countries',ret:'Returned',onward:'Moved on'})[k]:t('out')[k]}</span>`).join('');
   const grid = document.getElementById('finding-grid');
   const ready = FINDING_ORIGINS.every(cc => S.allData[cc]);
@@ -1142,8 +1144,21 @@ function renderFinding(){
       <div class="bar" role="img" aria-label="${esc(r.name)}: ${OUT_KEYS.map(([k]) => t('out')[k] + ' ' + pc(r.s[k])).join(', ')}; ${sampleSize(r.s.n)}; ${t('th').ci} ${r.s.stay_ci ? r.s.stay_ci.map(pc).join('–') : '—'}">${OUT_KEYS.map(([k,c]) => `<span title="${t('out')[k]} ${pc(r.s[k])}" style="width:${r.s[k]*100}%;background:${c}"></span>`).join('')}</div>
       <div class="cmp-n">${t('th').ci} ${r.s.stay_ci ? r.s.stay_ci.map(pc).join('–') : '—'}</div>
     </div>`).join('') + `<div class="f-axis" aria-hidden="true">${[0,25,50,75,100].map(v => `<span>${v}%</span>`).join('')}</div>`;
+  document.getElementById('finding-chart').innerHTML = `<div class="chart">${renderCIPlot(rows.map(r => ({name:r.name, c:r.s})))}</div>`;
   if(typeof renderAtlas === 'function') renderAtlas(rows);
   if(focusedOrigin) grid.querySelector('[data-origin="'+CSS.escape(focusedOrigin)+'"]')?.focus();
+}
+
+/* Shared percentage axis and confidence intervals for both comparisons. */
+function renderCIPlot(items){
+  return `${items.map(({name, c}) => {
+    const lo = c.stay_ci ? c.stay_ci[0] : c.stay, hi = c.stay_ci ? c.stay_ci[1] : c.stay;
+    return `<div class="ci-row"><span class="who">${esc(name)}</span>
+      <span class="ci-track" style="--stay:${c.stay*100}%;--interval-end:${hi*100}%" role="img" aria-label="${esc(name)}: ${pc(c.stay)}, ${t('th').ci} ${pc(lo)} to ${pc(hi)}, ${sampleSize(c.n)}"><i style="left:0;width:${c.stay*100}%"></i><u style="left:${lo*100}%;width:${Math.max((hi-lo)*100, 0.4)}%"></u>
+        <span class="ci-val">${pc(c.stay)}<small>${sampleSize(c.n)}</small></span></span></div>`;
+  }).join('')}
+  <div class="ci-axis" aria-hidden="true"><span></span><span class="ticks">${[0,25,50,75,100].map(v => `<b style="left:${v}%">${v}%</b>`).join('')}</span><span></span></div>
+  <p class="ci-cap">${t('cmpChartAxis')}</p>`;
 }
 
 /* ── compare chart: one destination, every origin, stay rate with its 95% interval ── */
@@ -1158,14 +1173,7 @@ function renderCompareChart(rows, list){
   el.innerHTML = `<div class="chart">
     <div class="chart-head"><h2>${esc(t('cmpChartTitle')(destName, t('strata')[S.stratum]))}</h2>
       <label class="lbl" for="cmp-dest">${t('cmpChartDest')}</label><select id="cmp-dest">${opts}</select></div>
-    ${items.map(({o, c}) => {
-      const lo = c.stay_ci ? c.stay_ci[0] : c.stay, hi = c.stay_ci ? c.stay_ci[1] : c.stay;
-      return `<div class="ci-row"><span class="who">${esc(country(o.cc, o.name))}</span>
-        <span class="ci-track" style="--stay:${c.stay*100}%;--interval-end:${hi*100}%" role="img" aria-label="${esc(country(o.cc, o.name))}: ${pc(c.stay)}, ${t('th').ci} ${pc(lo)} to ${pc(hi)}, ${sampleSize(c.n)}"><i style="left:0;width:${c.stay*100}%"></i><u style="left:${lo*100}%;width:${Math.max((hi-lo)*100, 0.4)}%"></u>
-          <span class="ci-val">${pc(c.stay)}<small>${sampleSize(c.n)}</small></span></span></div>`;
-    }).join('')}
-    <div class="ci-axis" aria-hidden="true"><span></span><span class="ticks">${[0,25,50,75,100].map(v => `<b style="left:${v}%">${v}%</b>`).join('')}</span><span></span></div>
-    <p class="ci-cap">${t('cmpChartAxis')}</p>
+    ${renderCIPlot(items.map(({o,c}) => ({name:country(o.cc, o.name), c})))}
   </div>`;
   // the chart is rebuilt on every pick, select included: focus goes back to the new select (it fell to <body>)
   el.querySelector('#cmp-dest').onchange = e => { S.cmpDest = e.target.value; S.cmpDestPicked = true; renderCompare(); syncHash(); document.getElementById('cmp-dest').focus(); };
@@ -1264,8 +1272,7 @@ function renderDoc(){
     <p>Researchers affiliated with both countries count toward neither side of the ranking — its meaning is inherently ambiguous.</p>
 
     <h2>What cross-origin comparison can and cannot tell you</h2>
-    <p>The Origin Compare page puts the same destination's stay rates side by side across origins.
-       <b>It is the one genuinely interesting thing this site has to show</b> — the same destination can
+    <p>The Origin Compare page puts the same destination's stay rates side by side across origins. The same destination can
        differ three- to five-fold by origin, and the direction is consistent across dozens of shared
        destinations. That is not noise.</p>
     <p>But be precise about what it supports:</p>
@@ -1643,7 +1650,8 @@ function renderAtlas(rows) {
   document.getElementById('atlas-table').innerHTML = '<div class="table-scroll"><table><thead><tr><th><button data-atlas-sort="name">' + (LANG === 'en' ? 'Origin' : '来源') + '</button></th><th><button data-atlas-sort="stay">' + (LANG === 'en' ? 'Stayed' : '留下') + '</button></th><th><button data-atlas-sort="n">' + (LANG === 'en' ? 'Researchers' : '研究者人数') + '</button></th></tr></thead><tbody>' + rows.map(row => '<tr><td>' + esc(row.name) + '</td><td>' + pc(row.s.stay) + '</td><td>' + row.s.n.toLocaleString() + '</td></tr>').join('') + '</tbody></table></div>';
   recordsForTables(document.getElementById('atlas-table'));
   document.getElementById('atlas-table').hidden = atlasMode !== 'table';
-  document.getElementById('finding-grid').hidden = atlasMode === 'table';
+  document.getElementById('finding-grid').hidden = atlasMode !== 'map';
+  document.getElementById('finding-chart').hidden = atlasMode !== 'chart';
   document.getElementById('finding').classList.toggle('chart-view', atlasMode === 'chart');
   document.documentElement.dataset.ready = 'true';
 }
@@ -1726,6 +1734,7 @@ renderFinding();
 window.addEventListener('resize',fitTables);
 Appearance.bindToggle(document.getElementById('theme'));   // ◐ switches light/dark only (appearance.js)
 document.getElementById('definitions-open').onclick = () => {S.view='doc';render();syncHash();};
+document.getElementById('cohort-more').onclick = () => {S.view='doc';render();syncHash(); document.getElementById('v-doc').scrollIntoView({block:'start'});};
 document.getElementById('finding-cta').onclick = () => {
   S.view = 'compare'; render(); syncHash();
   document.querySelector('.tab[data-view="compare"]').focus();
