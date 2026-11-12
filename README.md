@@ -1,33 +1,15 @@
 # Scholar Outflow Lab
 
-**Where researchers from 13 countries ended up — every rate shown with its sample size.**
+**Where researchers from 13 countries ended up, and how much that depends on the country they came from.**
 
-Researchers who started their careers in one country, followed by destination country and destination institution,
+Pick an origin and a destination to see who stayed, who returned, who holds posts in both and who moved on,
 stratified by how long they stayed. Thirteen origin countries, 1.43 million sampled authors, built entirely on free
-public data with a zero-dependency stack.
+public data ([OpenAlex](https://openalex.org), CC0) with a zero-dependency stack.
 
 **Live:** https://nickkklian.github.io/Scholar-Outflow-Lab/ — English by default, 中文 toggle in the header.
 
-![The approved map with US stay rates, sample sizes, intervals and four outcomes](docs/screenshot-match.png)
-
----
-
-## What it answers — and what it deliberately doesn't
-
-It answers one narrow question well: *of researchers who began publishing in country X and later
-held a position abroad, where did they end up, and how does that depend on how long they stayed?*
-
-It does **not** answer "which country is easiest to immigrate to" or "what are a student's odds".
-The sample is people with authorship records in [OpenAlex](https://openalex.org); anyone who left
-before ever publishing at home is simply not in the frame, and "stayed" means *the last known
-affiliation is in that country* — not a work permit or permanent residency. Every page says so.
-
-The opening map compares four origins using the published JSON. Map, Chart and Table share the same duration controls. **Compare all origins** opens the full comparison. The six research views, origin picker and methodology remain below the map, with their existing hash links.
-
-## The finding worth seeing
-
-The **Origin Compare** view puts the same destination side by side across origins. For stays of
-four or more years in the United States:
+Researchers who began publishing at home and then held a post in the United States for four or more years, by
+origin, and the share who stayed:
 
 | Origin | Stay rate | n |
 |---|---|---|
@@ -36,10 +18,23 @@ four or more years in the United States:
 | Brazil | 40.2% | 1,442 |
 | Mainland China | 19.1% | 8,610 |
 
-Same destination, same sampling, same computation — a three- to four-fold spread, and the
-direction holds across the shared destinations. Because the *sample frames* differ by origin
-(each is "people who once published under that country's affiliation"), the site is explicit
-that only relative levels and direction are comparable, never the absolute percentages.
+Same destination, same sampling, same computation: a three- to four-fold spread. Compare relative levels and
+direction, not absolute percentages: each origin's sample frame differs (see [How it's computed](#how-its-computed)).
+
+![The map with US stay rates, sample sizes, intervals and four outcomes](docs/screenshot-match.png)
+
+---
+
+## What's on the site
+
+The site opens on a map comparing four origins, read from the published JSON. Map, Chart and Table share the same
+duration controls, and **Compare all origins** opens the full comparison. Below the map sit six research views, an
+origin picker and the methodology, each with its own hash link.
+
+The **Origin Compare** view puts the same destination side by side across origins; the table above is its United
+States column for stays of four or more years. The direction holds across the shared destinations. Each origin's
+sample is "people who once published under that country's affiliation", which is why only relative levels and
+direction are comparable.
 
 ## How it's computed
 
@@ -59,6 +54,18 @@ drift with sampling; relative position within a batch is stable), and the confid
 than the raw rate (40% of 25 people versus 30% of 300 — ranking by the bound lets small-sample
 flukes sink on their own, with no extra rules).
 
+Two things the data showed along the way, and why the definitions look the way they do:
+
+- **Many researchers hold posts in two countries at once.** A large share of Chinese researchers hold a foreign post
+  *and* a home co-appointment at the same time, so "dual" is its own outcome rather than being counted as both
+  stayed and returned.
+- **Length of stay changes the answer.** The 2–3-year band is dominated by visiting scholars and joint-training
+  students, who were always going home. National University of Singapore, Chinese origin: **2.1%** stayed after
+  2–3 years (n=144), **10.7%** after ≥4 (n=289), **13.0%** after ≥6 (n=185). The default stratum is ≥4 years for
+  that reason.
+
+The full story of these corrections, and one hypothesis that did not survive, is in [DOCS.md](DOCS.md).
+
 ### Pipeline
 
 ```mermaid
@@ -73,8 +80,7 @@ flowchart LR
   VJ --> PAGE
 ```
 
-`compute.py` never publishes a half-finished re-harvest (it keeps using the previous file until the new
-one has more rows), and `scripts/daily.sh` runs the rounds on a schedule within the free quota.
+`scripts/daily.sh` runs the rounds on a schedule within the free quota.
 
 ### Download the data
 
@@ -86,48 +92,6 @@ sample sizes) and
 [data-venues.json](https://nickkklian.github.io/Scholar-Outflow-Lab/data/data-venues.json) (the venue
 board). The Methodology page on the site links all of them.
 
-## Three corrections that rescued the result
-
-These are the reason the numbers are trustworthy, so they are documented rather than hidden.
-
-1. **Dual affiliation had to become its own category.** The first version reported "stayed" and
-   "did not return" as independent rates and produced *stayed 38% > did-not-return 25%* — a
-   logical impossibility. The cause: a large share of Chinese researchers hold a foreign post
-   *and* a home co-appointment at the same time. With four exclusive classes the totals are
-   100% by construction and the numbers became self-consistent.
-2. **Stratifying by length of stay is not optional.** The 2–3-year band is dominated by visiting
-   scholars and joint-training students, who were always going home; pooled, they dilute every
-   institution toward the same low rate. National University of Singapore, Chinese origin:
-   **2.1%** stayed after 2–3 years (n=144), **10.7%** after ≥4 (n=289), **13.0%** after ≥6
-   (n=185). The default stratum is ≥4 years for that reason.
-3. **People already affiliated with the destination in their first year are not movers.**
-   Without that filter, researchers who had always been in Taiwan or Hong Kong counted as
-   "moved there and stayed" — 15.2% of ≥4-year arrivals — and a few Taiwanese universities
-   topped the board. After the fix the top of the ranking returned to places that match
-   intuition.
-
-### And one hypothesis that did not survive
-
-Early data suggested that much of computer science was being filed under "Engineering" because
-the field label came from an author's *first* OpenAlex topic. The proposed fix — vote across all
-topics — was implemented, and the entire Chinese sample was re-harvested under it
-(235,059 authors, 31% larger than v1). Result: the share of CS relative to Engineering went from
-15.6% to 14.5% — no improvement once sample growth is accounted for. The root cause is OpenAlex's
-own topic→field taxonomy, which places applied CS under Engineering. The finding is recorded in
-the pipeline comments so nobody re-runs the experiment, and the limitation is stated on the site.
-
-## Known limitations
-
-- A proxy built from academic affiliation records — not visa or immigration statistics, and not
-  immigration or legal advice.
-- The sample frame excludes anyone who left before publishing at home.
-- Institutions are parsed by OpenAlex from affiliation strings; the ROR + output whitelist and a
-  generic-name blacklist remove most mismatches, not all. Research institutes are noisier than
-  universities, so the UI offers a "universities only" filter.
-- Field labels are coarse (see above). Conference coverage in OpenAlex is thin.
-- Absolute values drift with sampling choices; compare across institutions, countries and
-  origins, not against external figures.
-
 ## Architecture
 
 Zero cost, zero accounts, zero third-party packages.
@@ -138,11 +102,11 @@ Zero cost, zero accounts, zero third-party packages.
 | Processing | Python 3 standard library only | Nothing to install; the pipeline is the documentation |
 | Front end | Static HTML, CSS and vanilla JS with local fonts | Mobile-first, dark-mode aware, bilingual, deploys straight to GitHub Pages |
 | Hosting | GitHub Pages from `main` | The computed JSON sits in `data/` beside the page; no server |
-| Automation | launchd + a shell script | Runs once a week within the quota; see below |
+| Automation | launchd + a shell script | Runs once a week within the quota; see [DOCS.md](DOCS.md#automation-and-what-it-learned-the-hard-way) |
 
 ```
 index.html              front-end entry point (EN/中文 toggle; names are stored in English, 中文 maps them back)
-atlas.css, map.js       approved map styling and local Natural Earth geometry
+atlas.css, map.js       map styling and local Natural Earth geometry
 fonts/                  licensed, self-hosted Cormorant and National Park WOFF2
 appearance.js           one header light/dark toggle
 data/data-<cc>.json     computed metrics per origin country — what the page reads
@@ -175,69 +139,32 @@ requests per day, and one origin at 24 seeds needs about 1,200 — split it acro
 `--seeds 12`. Hitting the limit exits cleanly with the reset time; re-running the same command
 resumes from the last completed seed.
 
+## Known limitations
+
+- A proxy built from academic affiliation records — not visa or immigration statistics, and not
+  immigration or legal advice. It does not answer "which country is easiest to immigrate to" or
+  "what are a student's odds".
+- "Stayed" means the last known affiliation is in that country, not an immigration status.
+- The sample is people with authorship records in OpenAlex: anyone who left before ever publishing at home is not
+  in the frame.
+- Institutions are parsed by OpenAlex from affiliation strings; the ROR + output whitelist and a
+  generic-name blacklist remove most mismatches, not all. Research institutes are noisier than
+  universities, so the UI offers a "universities only" filter.
+- Field labels are coarse: OpenAlex's own taxonomy files applied computer science under Engineering
+  ([details](DOCS.md#and-one-hypothesis-that-did-not-survive)). Conference coverage in OpenAlex is thin.
+- Absolute values drift with sampling choices; compare across institutions, countries and
+  origins, not against external figures.
+
 ## Tests
 
 ```bash
 python3 -m unittest discover -s tests -v
-```
-
-Python standard library, plus Node.js 22 for the first-screen renderer tests (built-in `vm`, no packages to install).
-Three layers:
-
-- **The first screen against the published data.** The page's real JavaScript renderer must show four origins on
-  one percentage axis, with stay rates and sample sizes read from the JSON, four outcomes making a whole, plain
-  definitions, and the relative-comparison warning immediately under the chart in English and Chinese. A changed
-  input checks that the headline, sample size and interval respond to the data.
-
-- **The pipeline against a plan it did not write.** `tests/make_fixture.py` generates 200 synthetic careers
-  (origin `xa`, a private-use code; `Synthetic University …` institutions) and decides every person's
-  destination, length of stay and final affiliation itself, writing the counts it intended to
-  `tests/fixtures/expected.json`. The real `scripts/compute.py` then runs on those careers and every published
-  count and fraction has to match. Ten further records each hit one exclusion rule (single-year visit,
-  arrival inside the follow-up window, already there in the first year, started abroad, …) and must count
-  nowhere. Separate cases pin dual affiliation as its own outcome, the stratum boundaries, one count per person
-  per country, ranking by the Wilson lower bound rather than the raw rate, the no-timestamp-only-rewrite guard
-  and the partial-re-harvest guard.
-- **Invariants on the data the site serves.** For all thirteen `data-<cc>.json` files: the four outcomes sum to
-  100% (within rounding) for every country, institution and field block; each stay rate sits inside its
-  interval; ranks follow the lower bound and tiers are the quartiles; strata nest; nothing below the
-  publication floor is published; `origins.json` matches the files; country and field names are English (no CJK
-  characters; the page maps them to Chinese for its 中文 mode); and the headline table above is what the data says.
-
-```bash
-SOL_BREAK=1 python3 -m unittest discover -s tests
 python3 tests/mutations.py
 ```
 
-The first corrupts one fixture record and must fail. The second breaks one rule in `compute.py` or one number
-in the published data at a time — 13 mutations — and requires the test guarding it to go red, so a
-test that has stopped guarding anything is noticed.
-
-## Automation, and what it learned the hard way
-
-`scripts/daily.sh` runs once a week (launchd, Mondays 18:00 local — after the 00:00 UTC quota reset
-in both daylight-saving regimes); until early September it ran every day. Tasks are ordered "cheapest
-and most unlocking first", every step is resumable, and a run that runs out of quota simply continues
-at the next one.
-
-Three guards exist because each corresponding failure actually happened:
-
-- **Never publish partial data.** During a multi-day re-harvest, `compute.py` uses whichever of
-  the new file and its backup has more rows. The rule is dumb on purpose. It went in the same
-  evening that a harvest hit the quota at 19k of 180k authors and the recompute ran anyway: on
-  the live site, mainland China, the largest origin, shrank from 175 institutions to 3.
-- **Only commit when the substance changed.** The generated timestamp is excluded from the
-  comparison. The daily job's first trial run committed and pushed a data file whose only change
-  was that timestamp; left alone, every scheduled run would have done the same. The job also
-  stages data files only — never source: an early version staged the page as well, and a
-  hand-made front-end change went out under a "data update" message.
-- **Derive the country list from the files on disk.** Two origins were once harvested in full and
-  then never computed or published, because a hard-coded list in the recompute loop wasn't
-  updated. The loop now scans for `careers_*.jsonl`.
-
-The job is now in maintenance mode: all queued work is complete, so a weekly run does exactly two
-things — snapshot traffic and run an idempotent recompute — with zero OpenAlex quota and zero
-attention required.
+The first runs the renderer, pipeline and published-data tests; the second breaks one rule or one published
+number at a time — 13 mutations — and each must turn its test red. What each layer checks is in
+[DOCS.md](DOCS.md#tests).
 
 ## Data and license
 
